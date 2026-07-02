@@ -31,7 +31,8 @@
 			{% set inputId = formId ~ '-' ~ field.handle %}
 			{% set fieldErrors = errors[field.handle] ?? [] %}
 			{% set value = values[field.handle] ?? null %}
-			<div class="col-12">
+			{# Half-width fields sit side by side from md up #}
+			<div class="col-12 {{ (field.width ?? 'full') == 'half' ? 'col-md-6' }}">
 				{% if field.type == 'checkbox' %}
 					<div class="form-check">
 						<input

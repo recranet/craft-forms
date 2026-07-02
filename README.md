@@ -6,7 +6,7 @@ Form builder plugin for Craft CMS 5. Built for the Elloro Craft boilerplate as a
 
 ## Features
 
-- **Form builder in the CP** — editors manage forms as an ordered field list (text, email, tel, textarea, select, checkbox), with per-form notification recipients and subjects. Forms are content (database), so they're editable on production where `allowAdminChanges` is off.
+- **Form builder in the CP** — drag & drop field cards (text, email, tel, textarea, select, checkbox) with per-field width (full/half for side-by-side columns), auto-suggested handles, and per-form notification recipients and subjects. Forms are content (database), so they're editable on production where `allowAdminChanges` is off.
 - **Stored submissions** — every submission (including spam-flagged ones) is saved as an element, browsable per form in the CP, searchable, with statuses Valid/Spam.
 - **Honest reCAPTCHA v3** — three verdicts instead of one:
   - *pass* → submission goes through

@@ -111,6 +111,7 @@ class FormsController extends Controller
 				'type' => $row['type'] ?? 'text',
 				'required' => (bool)($row['required'] ?? false),
 				'options' => trim((string)($row['options'] ?? '')),
+				'width' => in_array($row['width'] ?? '', ['full', 'half'], true) ? $row['width'] : 'full',
 			];
 		}
 

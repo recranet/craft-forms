@@ -1,4 +1,8 @@
-{# Form edit screen: name/handle, field rows via Craft's EditableTable, notification settings. #}
+{# Form edit screen: name/handle, drag & drop field builder, notification settings.
+   The builder renders each field as a draggable card (Garnish.DragSort, the same
+   drag JS Craft uses for Matrix). Field inputs are indexed (fields[0][label], …)
+   and reindexed by JS after every reorder/delete so PHP receives them in visual
+   order. #}
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
 
@@ -13,6 +17,76 @@
 		<button type="submit" class="btn submit">Save</button>
 	</div>
 {% endblock %}
+
+{# A single field card. Used for saved fields; the JS <template> clone uses the
+   same markup with a fresh index. #}
+{% macro fieldCard(field, index, fieldTypes) %}
+	<div class="ef-field" data-type="{{ field.type }}">
+		<div class="ef-field__bar">
+			<a class="move icon ef-field__move" title="Drag to reorder" role="button" aria-label="Drag to reorder"></a>
+			<strong class="ef-field__title">{{ field.label ?: 'New field' }}</strong>
+			<span class="ef-field__badge">{{ field.type }}</span>
+			<button type="button" class="delete icon ef-field__delete" title="Delete field" aria-label="Delete field"></button>
+		</div>
+		<div class="ef-field__grid">
+			<div class="ef-cell--wide">
+				<label class="ef-label">Label</label>
+				<input
+					type="text"
+					class="text fullwidth ef-input-label"
+					name="fields[{{ index }}][label]"
+					value="{{ field.label }}"
+					autocomplete="off"
+				/>
+			</div>
+			<div>
+				<label class="ef-label">Handle</label>
+				<input
+					type="text"
+					class="text fullwidth code ef-input-handle"
+					name="fields[{{ index }}][handle]"
+					value="{{ field.handle }}"
+					autocomplete="off"
+					{% if not field.handle %}data-auto="1"{% endif %}
+				/>
+			</div>
+			<div>
+				<label class="ef-label">Type</label>
+				<div class="select fullwidth">
+					<select name="fields[{{ index }}][type]" class="ef-input-type">
+						{% for type in fieldTypes %}
+							<option value="{{ type }}" {{ field.type == type ? 'selected' }}>{{ type|capitalize }}</option>
+						{% endfor %}
+					</select>
+				</div>
+			</div>
+			<div>
+				<label class="ef-label">Width</label>
+				<div class="select fullwidth">
+					<select name="fields[{{ index }}][width]">
+						<option value="full" {{ (field.width ?? 'full') == 'full' ? 'selected' }}>Full</option>
+						<option value="half" {{ (field.width ?? 'full') == 'half' ? 'selected' }}>Half</option>
+					</select>
+				</div>
+			</div>
+			<div class="ef-cell--wide ef-field__options" {{ field.type == 'select' ? '' : 'hidden' }}>
+				<label class="ef-label">Options (comma-separated)</label>
+				<input type="text" class="text fullwidth" name="fields[{{ index }}][options]" value="{{ field.options ?? '' }}" />
+			</div>
+			<div class="ef-field__required">
+				<input
+					type="checkbox"
+					class="checkbox"
+					id="ef-required-{{ index }}"
+					name="fields[{{ index }}][required]"
+					value="1"
+					{{ field.required ? 'checked' }}
+				/>
+				<label for="ef-required-{{ index }}">Required</label>
+			</div>
+		</div>
+	</div>
+{% endmacro %}
 
 {% block content %}
 	{{ actionInput('elloro-forms/forms/save') }}
@@ -46,31 +120,39 @@
 
 	<hr />
 
-	{{
-		forms.editableTableField({
-			label: 'Fields',
-			instructions: 'The fields of this form, in order. For select fields, list the options comma-separated.',
-			id: 'fields',
-			name: 'fields',
-			cols: {
-				label: { heading: 'Label', type: 'singleline' },
-				handle: { heading: 'Handle', type: 'singleline', class: 'code' },
-				type: {
-					heading: 'Type',
-					type: 'select',
-					options: fieldTypes|map(type => { label: type|capitalize, value: type })
-				},
-				required: { heading: 'Required', type: 'checkbox' },
-				options: { heading: 'Options', type: 'singleline' }
-			},
-			rows: form.fields,
-			errors: form.getErrors('fields'),
-			allowAdd: true,
-			allowDelete: true,
-			allowReorder: true,
-			addRowLabel: 'Add a field'
-		})
-	}}
+	<div class="field">
+		<div class="heading"><label>Fields</label></div>
+		<div class="instructions"><p>Drag the cards to reorder. Half-width fields sit side by side on the site.</p></div>
+		{% if form.getErrors('fields') %}
+			<ul class="errors">
+				{% for error in form.getErrors('fields') %}<li>{{ error }}</li>{% endfor %}
+			</ul>
+		{% endif %}
+
+		<div id="ef-builder" class="ef-builder">
+			<div class="ef-builder__fields">
+				{% for field in form.fields %}
+					{{ _self.fieldCard(field, loop.index0, fieldTypes) }}
+				{% endfor %}
+			</div>
+
+			<div class="ef-builder__add">
+				<div class="btn add icon menubtn" role="button" tabindex="0">Add a field</div>
+				<div class="menu">
+					<ul>
+						{% for type in fieldTypes %}
+							<li><a data-ef-add="{{ type }}">{{ type|capitalize }}</a></li>
+						{% endfor %}
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		{# Blank card cloned by JS when adding a field; __INDEX__/__TYPE__ are replaced #}
+		<template id="ef-field-template">
+			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes) }}
+		</template>
+	</div>
 
 	<hr />
 
@@ -122,4 +204,108 @@
 			Delete form
 		</button>
 	{% endif %}
+{% css %}
+	.ef-builder__fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+	.ef-field { border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); }
+	.ef-field.draghelper { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); }
+	.ef-field__bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--hairline-color); }
+	.ef-field__move { cursor: grab; }
+	.ef-field__title { flex: 1; }
+	.ef-field__badge { font-size: 11px; text-transform: uppercase; color: var(--medium-text-color); background: var(--gray-100); border-radius: 3px; padding: 2px 6px; }
+	.ef-field__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 14px; padding: 12px; }
+	.ef-cell--wide { grid-column: span 2; }
+	.ef-field__required { display: flex; align-items: center; gap: 6px; align-self: end; padding-bottom: 4px; }
+	.ef-label { display: block; font-size: 12px; font-weight: 600; color: var(--medium-text-color); margin-bottom: 4px; }
+	@media (max-width: 900px) { .ef-field__grid { grid-template-columns: 1fr 1fr; } }
+{% endcss %}
+
+{% js %}
+	(function () {
+		var list = document.querySelector('#ef-builder .ef-builder__fields');
+		var template = document.getElementById('ef-field-template');
+		var uid = 1000; // fresh index seed for added cards; renumber() makes them sequential
+
+		// Rewrite fields[N][...] names (and checkbox id/for pairs) to match visual order
+		function renumber() {
+			list.querySelectorAll('.ef-field').forEach(function (card, i) {
+				card.querySelectorAll('[name]').forEach(function (input) {
+					input.name = input.name.replace(/fields\[[^\]]*\]/, 'fields[' + i + ']');
+				});
+				var checkbox = card.querySelector('input[type="checkbox"]');
+				var label = card.querySelector('.ef-field__required label');
+				if (checkbox && label) {
+					checkbox.id = 'ef-required-' + i;
+					label.setAttribute('for', checkbox.id);
+				}
+			});
+		}
+
+		// Drag & drop ordering via Craft's own drag implementation
+		var dragSort = new Garnish.DragSort($(list).children('.ef-field'), {
+			handle: '.ef-field__move',
+			axis: 'y',
+			onSortChange: renumber,
+		});
+
+		// camelCase handle suggestion from the label, only while untouched
+		function toHandle(label) {
+			var words = label
+				.toLowerCase()
+				.replace(/[^a-z0-9 ]/g, '')
+				.trim()
+				.split(/\s+/)
+				.filter(Boolean);
+			return words
+				.map(function (w, i) {
+					return i ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+				})
+				.join('');
+		}
+
+		list.addEventListener('input', function (event) {
+			var card = event.target.closest('.ef-field');
+			if (!card) return;
+			if (event.target.classList.contains('ef-input-label')) {
+				card.querySelector('.ef-field__title').textContent = event.target.value || 'New field';
+				var handle = card.querySelector('.ef-input-handle');
+				if (handle.dataset.auto) handle.value = toHandle(event.target.value);
+			}
+			// Manual handle edits stop the auto-suggestion
+			if (event.target.classList.contains('ef-input-handle')) delete event.target.dataset.auto;
+		});
+
+		list.addEventListener('change', function (event) {
+			if (!event.target.classList.contains('ef-input-type')) return;
+			var card = event.target.closest('.ef-field');
+			card.dataset.type = event.target.value;
+			card.querySelector('.ef-field__badge').textContent = event.target.value;
+			card.querySelector('.ef-field__options').hidden = event.target.value !== 'select';
+		});
+
+		list.addEventListener('click', function (event) {
+			if (!event.target.classList.contains('ef-field__delete')) return;
+			var card = event.target.closest('.ef-field');
+			dragSort.removeItems($(card));
+			card.remove();
+			renumber();
+		});
+
+		// "Add a field" menu: clone the template with the chosen type
+		document.querySelectorAll('[data-ef-add]').forEach(function (item) {
+			item.addEventListener('click', function () {
+				var type = item.dataset.efAdd;
+				var html = template.innerHTML.replace(/__INDEX__/g, ++uid).replace(/__TYPE__/g, type);
+				list.insertAdjacentHTML('beforeend', html);
+				var card = list.lastElementChild;
+				card.dataset.type = type;
+				card.querySelector('.ef-field__badge').textContent = type;
+				card.querySelector('.ef-input-type').value = type;
+				card.querySelector('.ef-field__options').hidden = type !== 'select';
+				dragSort.addItems($(card));
+				renumber();
+				card.querySelector('.ef-input-label').focus();
+			});
+		});
+	})();
+{% endjs %}
 {% endblock %}

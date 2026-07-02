@@ -10,11 +10,12 @@ use craft\validators\HandleValidator;
  *
  * Fields are stored as an ordered array of rows:
  * [
- *   ['handle' => 'name', 'label' => 'Naam', 'type' => 'text', 'required' => true, 'options' => ''],
+ *   ['handle' => 'name', 'label' => 'Naam', 'type' => 'text', 'required' => true, 'options' => '', 'width' => 'full'],
  *   ...
  * ]
  * Supported types: text, email, tel, textarea, select, checkbox.
  * For select fields, `options` holds comma-separated choices.
+ * `width` is 'full' or 'half' (half-width fields render side by side).
  *
  * Notification settings live on the form so editors can manage recipients
  * per form on production (forms are content, not project config).
