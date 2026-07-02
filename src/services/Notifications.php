@@ -38,7 +38,7 @@ class Notifications extends Component
 
 		// Reply-to the submitter when the form has an email field
 		$emailHandle = $form->getEmailFieldHandle();
-		$submitterEmail = $emailHandle ? ($submission->content[$emailHandle] ?? null) : null;
+		$submitterEmail = $emailHandle ? ($submission->formData[$emailHandle] ?? null) : null;
 
 		if ($submitterEmail) {
 			$message->setReplyTo($submitterEmail);
@@ -64,7 +64,7 @@ class Notifications extends Component
 		}
 
 		$emailHandle = $form->getEmailFieldHandle();
-		$submitterEmail = $emailHandle ? ($submission->content[$emailHandle] ?? null) : null;
+		$submitterEmail = $emailHandle ? ($submission->formData[$emailHandle] ?? null) : null;
 
 		if (!$submitterEmail) {
 			return true;

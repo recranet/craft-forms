@@ -48,12 +48,16 @@ class Recaptcha extends Component
 			return RecaptchaResult::spam(null, 'No reCAPTCHA token submitted');
 		}
 
+		// User IP is only available on web requests (not console/queue)
+		$request = Craft::$app->getRequest();
+		$remoteIp = $request instanceof \craft\web\Request ? $request->getUserIP() : null;
+
 		try {
 			$response = Craft::createGuzzleClient(['timeout' => 5])->post(self::VERIFY_URL, [
 				'form_params' => [
 					'secret' => $secret,
 					'response' => $token,
-					'remoteip' => Craft::$app->getRequest()->getUserIP(),
+					'remoteip' => $remoteIp,
 				],
 			]);
 			$data = Json::decode((string)$response->getBody());
@@ -73,20 +77,27 @@ class Recaptcha extends Component
 			return RecaptchaResult::spam(null, 'Invalid reCAPTCHA token: ' . implode(', ', $errorCodes));
 		}
 
-		$score = (float)($data['score'] ?? 0);
+		// No score in a successful response = v2-style keys (e.g. Google's test
+		// keys). Success without score counts as a pass, not spam.
+		$score = isset($data['score']) ? (float)$data['score'] : null;
 
-		if ($score < $settings->recaptchaThreshold) {
+		if ($score !== null && $score < $settings->recaptchaThreshold) {
 			return RecaptchaResult::spam($score, sprintf('reCAPTCHA score %.2f below threshold %.2f', $score, $settings->recaptchaThreshold));
 		}
 
-		return RecaptchaResult::pass($score);
+		return RecaptchaResult::pass($score ?? 1.0);
 	}
 
 	/**
 	 * Health check for the configured keys, callable from the console
-	 * (deploy) and the settings screen. Sends a dummy token: a secret-key
-	 * problem surfaces as invalid-input-secret, a healthy setup returns only
-	 * invalid-input-response (the dummy token being rejected, as expected).
+	 * (deploy) and the settings screen.
+	 *
+	 * Limitation: Google validates the token BEFORE the secret, so with a
+	 * dummy token a wrong secret is indistinguishable from a healthy setup
+	 * (both return invalid-input-response). This check therefore catches
+	 * missing keys and connectivity problems; a wrong-but-present secret is
+	 * only detectable at runtime, where real tokens make Google return
+	 * invalid-input-secret — which verify() reports as a config ERROR.
 	 *
 	 * @return array{ok: bool, message: string}
 	 */
@@ -120,6 +131,9 @@ class Recaptcha extends Component
 			return ['ok' => false, 'message' => 'Secret key rejected by Google: ' . implode(', ', $errorCodes)];
 		}
 
-		return ['ok' => true, 'message' => 'Secret key accepted by Google.'];
+		return [
+			'ok' => true,
+			'message' => 'Keys are present and Google is reachable. Note: a wrong (but well-formed) secret can only be detected on real submissions — check the submissions index for "Accepted despite reCAPTCHA error" flags after deploying.',
+		];
 	}
 }

@@ -28,7 +28,7 @@ class Install extends Migration
 		$this->createTable('{{%elloroforms_submissions}}', [
 			'id' => $this->integer()->notNull(),
 			'formId' => $this->integer()->notNull(),
-			'content' => $this->text(),
+			'formData' => $this->text(),
 			'isSpam' => $this->boolean()->notNull()->defaultValue(false),
 			'spamReason' => $this->string(),
 			'PRIMARY KEY([[id]])',

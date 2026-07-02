@@ -58,7 +58,7 @@ class SubmissionsController extends Controller
 
 		$submission = new Submission([
 			'formId' => $form->id,
-			'content' => $content,
+			'formData' => $content,
 		]);
 
 		// Honeypot: a filled hidden field is a hard spam signal

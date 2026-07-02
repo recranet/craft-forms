@@ -25,7 +25,7 @@ class Submission extends Element
 	public ?int $formId = null;
 
 	/** @var array<string, mixed> Submitted values keyed by field handle */
-	public array $content = [];
+	public array $formData = [];
 
 	public bool $isSpam = false;
 	public ?string $spamReason = null;
@@ -137,7 +137,7 @@ class Submission extends Element
 	{
 		return implode(' ', array_map(
 			fn($value) => is_scalar($value) ? (string)$value : Json::encode($value),
-			$this->content,
+			$this->formData,
 		));
 	}
 
@@ -151,7 +151,7 @@ class Submission extends Element
 	 */
 	public function getPreviewText(): string
 	{
-		foreach ($this->content as $value) {
+		foreach ($this->formData as $value) {
 			if (is_string($value) && trim($value) !== '') {
 				return mb_strimwidth(trim($value), 0, 60, '…');
 			}
@@ -192,7 +192,7 @@ class Submission extends Element
 	{
 		$data = [
 			'formId' => $this->formId,
-			'content' => Json::encode($this->content),
+			'formData' => Json::encode($this->formData),
 			'isSpam' => $this->isSpam,
 			'spamReason' => $this->spamReason,
 		];

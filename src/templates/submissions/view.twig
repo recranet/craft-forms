@@ -31,7 +31,7 @@
 				<tr>
 					<th class="light">{{ field.label }}</th>
 					<td>
-						{% set value = submission.content[field.handle] ?? null %}
+						{% set value = submission.formData[field.handle] ?? null %}
 						{% if field.type == 'checkbox' %}
 							{{ value ? 'Yes' : 'No' }}
 						{% else %}

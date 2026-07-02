@@ -3,7 +3,7 @@
 <h2>{{ form.name }}</h2>
 <table cellpadding="6" cellspacing="0" border="0">
 	{% for field in form.fields %}
-		{% set value = submission.content[field.handle] ?? null %}
+		{% set value = submission.formData[field.handle] ?? null %}
 		<tr>
 			<td style="vertical-align: top;"><strong>{{ field.label }}</strong></td>
 			<td>

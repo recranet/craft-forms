@@ -47,7 +47,7 @@ class SubmissionQuery extends ElementQuery
 
 		$this->query->select([
 			'elloroforms_submissions.formId',
-			'elloroforms_submissions.content',
+			'elloroforms_submissions.formData',
 			'elloroforms_submissions.isSpam',
 			'elloroforms_submissions.spamReason',
 		]);
@@ -66,9 +66,9 @@ class SubmissionQuery extends ElementQuery
 	/**
 	 * Decode the JSON content column when populating elements.
 	 */
-	protected function createElement(array $row): \craft\base\ElementInterface
+	public function createElement(array $row): \craft\base\ElementInterface
 	{
-		$row['content'] = Json::decodeIfJson($row['content'] ?? '[]') ?? [];
+		$row['formData'] = Json::decodeIfJson($row['formData'] ?? '[]') ?? [];
 		$row['isSpam'] = (bool)($row['isSpam'] ?? false);
 
 		return parent::createElement($row);

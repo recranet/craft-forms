@@ -12,7 +12,7 @@ Form builder plugin for Craft CMS 5. Built for the Elloro Craft boilerplate as a
   - *pass* → submission goes through
   - *spam* (low score, invalid token) → stored + flagged, visitor sees success (no bot tip-off), no email sent
   - *error* (bad keys, Google down) → **never treated as spam.** Fail-open (default): submission accepted + flagged with the reason, warning logged, note in the notification email. Fail-closed: visitor sees a real error.
-- **Deploy health check** — `php craft elloro-forms/recaptcha/check` validates the secret key against Google and exits non-zero on config problems. Add it to the deploy flow.
+- **Deploy health check** — `php craft elloro-forms/recaptcha/check` catches missing keys and Google connectivity problems, exits non-zero. Add it to the deploy flow. Note: Google validates tokens before secrets, so a wrong-but-present secret only surfaces at runtime — where `verify()` reports it as a config error (visible in the CP and the notification email), not as spam.
 - **Honeypot** — hidden field, configurable name.
 - **Notifications + confirmations** — HTML emails, reply-to set to the submitter, optional confirmation email. Templates overridable per project.
 - **Multi-locale** — front-end strings translated for nl/en/de/fr/es/it.
