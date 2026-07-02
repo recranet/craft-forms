@@ -1,0 +1,61 @@
+{# Plugin settings: reCAPTCHA config + honeypot. Keys support $ENV_VAR syntax. #}
+{% import '_includes/forms' as forms %}
+
+{{
+	forms.lightswitchField({
+		label: 'Enable reCAPTCHA v3',
+		instructions: 'Verify submissions with Google reCAPTCHA v3.',
+		name: 'recaptchaEnabled',
+		on: settings.recaptchaEnabled
+	})
+}}
+
+{{
+	forms.autosuggestField({
+		label: 'Site key',
+		name: 'recaptchaSiteKey',
+		suggestEnvVars: true,
+		value: settings.recaptchaSiteKey,
+		errors: settings.getErrors('recaptchaSiteKey')
+	})
+}}
+
+{{
+	forms.autosuggestField({
+		label: 'Secret key',
+		name: 'recaptchaSecretKey',
+		suggestEnvVars: true,
+		value: settings.recaptchaSecretKey,
+		errors: settings.getErrors('recaptchaSecretKey')
+	})
+}}
+
+{{
+	forms.textField({
+		label: 'Score threshold',
+		instructions: 'Submissions scoring below this (0–1) are flagged as spam. Default 0.5.',
+		name: 'recaptchaThreshold',
+		size: 5,
+		value: settings.recaptchaThreshold,
+		errors: settings.getErrors('recaptchaThreshold')
+	})
+}}
+
+{{
+	forms.lightswitchField({
+		label: 'Fail open on verification errors',
+		instructions: 'When reCAPTCHA itself breaks (bad keys, Google unreachable): **on** accepts and flags submissions with a logged warning; **off** shows visitors an error. A broken captcha is never treated as spam. Tip: run `php craft elloro-forms/recaptcha/check` on deploy.',
+		name: 'recaptchaFailOpen',
+		on: settings.recaptchaFailOpen
+	})
+}}
+
+{{
+	forms.textField({
+		label: 'Honeypot field name',
+		instructions: 'Hidden field name; submissions that fill it are flagged as spam.',
+		name: 'honeypotName',
+		value: settings.honeypotName,
+		errors: settings.getErrors('honeypotName')
+	})
+}}

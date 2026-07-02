@@ -1,0 +1,125 @@
+{# Form edit screen: name/handle, field rows via Craft's EditableTable, notification settings. #}
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set title = form.id ? form.name : 'New form' %}
+{% set selectedSubnavItem = 'forms' %}
+{% set fullPageForm = true %}
+
+{% set crumbs = [{ label: 'Forms', url: url('elloro-forms/forms') }] %}
+
+{% block actionButton %}
+	<div class="btngroup">
+		<button type="submit" class="btn submit">Save</button>
+	</div>
+{% endblock %}
+
+{% block content %}
+	{{ actionInput('elloro-forms/forms/save') }}
+	{{ redirectInput('elloro-forms/forms') }}
+	{% if form.id %}
+		{{ hiddenInput('formId', form.id) }}
+	{% endif %}
+
+	{{
+		forms.textField({
+			first: true,
+			label: 'Name',
+			name: 'name',
+			value: form.name,
+			required: true,
+			errors: form.getErrors('name')
+		})
+	}}
+
+	{{
+		forms.textField({
+			label: 'Handle',
+			instructions: 'Used in templates: `craft.elloroForms.render(\'handle\')`.',
+			name: 'handle',
+			class: 'code',
+			value: form.handle,
+			required: true,
+			errors: form.getErrors('handle')
+		})
+	}}
+
+	<hr />
+
+	{{
+		forms.editableTableField({
+			label: 'Fields',
+			instructions: 'The fields of this form, in order. For select fields, list the options comma-separated.',
+			id: 'fields',
+			name: 'fields',
+			cols: {
+				label: { heading: 'Label', type: 'singleline' },
+				handle: { heading: 'Handle', type: 'singleline', class: 'code' },
+				type: {
+					heading: 'Type',
+					type: 'select',
+					options: fieldTypes|map(type => { label: type|capitalize, value: type })
+				},
+				required: { heading: 'Required', type: 'checkbox' },
+				options: { heading: 'Options', type: 'singleline' }
+			},
+			rows: form.fields,
+			errors: form.getErrors('fields'),
+			allowAdd: true,
+			allowDelete: true,
+			allowReorder: true,
+			addRowLabel: 'Add a field'
+		})
+	}}
+
+	<hr />
+
+	{{
+		forms.textField({
+			label: 'Notification recipients',
+			instructions: 'Comma-separated email addresses. Falls back to the system email address when empty.',
+			name: 'recipients',
+			value: form.recipients,
+			errors: form.getErrors('recipients')
+		})
+	}}
+
+	{{
+		forms.textField({
+			label: 'Notification subject',
+			name: 'subject',
+			value: form.subject
+		})
+	}}
+
+	{{
+		forms.lightswitchField({
+			label: 'Send confirmation email to submitter',
+			instructions: 'Requires an email field in the form.',
+			name: 'sendConfirmation',
+			on: form.sendConfirmation
+		})
+	}}
+
+	{{
+		forms.textField({
+			label: 'Confirmation subject',
+			name: 'confirmationSubject',
+			value: form.confirmationSubject
+		})
+	}}
+
+	{% if form.id %}
+		<hr />
+		{# Delete via a separate POST to avoid nesting forms #}
+		<button
+			type="button"
+			class="btn"
+			style="color: var(--error-color);"
+			data-icon="trash"
+			onclick="if (confirm('Delete this form and all its submissions?')) { Craft.postActionRequest('elloro-forms/forms/delete', { formId: {{ form.id }} }, () => (window.location.href = '{{ url('elloro-forms/forms') }}')); }"
+		>
+			Delete form
+		</button>
+	{% endif %}
+{% endblock %}

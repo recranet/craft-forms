@@ -1,0 +1,33 @@
+{# Forms overview: list of all forms with a "new form" action. #}
+{% extends '_layouts/cp' %}
+{% set title = 'Forms' %}
+{% set selectedSubnavItem = 'forms' %}
+
+{% block actionButton %}
+	<a href="{{ url('elloro-forms/forms/new') }}" class="btn submit add icon">New form</a>
+{% endblock %}
+
+{% block content %}
+	{% if forms|length %}
+		<table class="data fullwidth">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Handle</th>
+					<th>Fields</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for form in forms %}
+					<tr>
+						<td><a href="{{ url('elloro-forms/forms/' ~ form.id) }}"><strong>{{ form.name }}</strong></a></td>
+						<td><code>{{ form.handle }}</code></td>
+						<td>{{ form.fields|length }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p>No forms yet. Create one to get started.</p>
+	{% endif %}
+{% endblock %}

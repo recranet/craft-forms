@@ -1,0 +1,25 @@
+{
+	"name": "elloro/craft-forms",
+	"description": "Form builder for Craft CMS with submissions, notifications and honest reCAPTCHA handling",
+	"type": "craft-plugin",
+	"version": "1.0.0",
+	"license": "proprietary",
+	"support": {
+		"email": "it-admin@elloro.nl"
+	},
+	"require": {
+		"php": "^8.2",
+		"craftcms/cms": "^5.0.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"elloro\\forms\\": "src/"
+		}
+	},
+	"extra": {
+		"handle": "elloro-forms",
+		"name": "Elloro Forms",
+		"developer": "Elloro",
+		"class": "elloro\\forms\\Plugin"
+	}
+}

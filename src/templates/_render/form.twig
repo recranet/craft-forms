@@ -1,0 +1,97 @@
+{# Default front-end form render (Bootstrap 5 markup, matches the boilerplate style).
+   Override per project with templates/elloro-forms/form.twig.
+   Variables: form, options (class, buttonLabel, redirect), formErrors, formContent, erroredFormHandle. #}
+
+{% set settings = craft.app.plugins.getPlugin('elloro-forms').settings %}
+{# Only show this form's errors/values when it was the one that failed #}
+{% set hasErrors = erroredFormHandle == form.handle %}
+{% set errors = hasErrors ? formErrors : {} %}
+{% set values = hasErrors ? formContent : {} %}
+{% set formId = 'form-' ~ form.handle %}
+
+<form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8">
+	{{ csrfInput() }}
+	{{ actionInput('elloro-forms/submissions/submit') }}
+	{{ redirectInput(options.redirect ?? craft.app.request.pathInfo ~ '?submitted=true') }}
+	{{ hiddenInput('formHandle', form.handle|hash) }}
+
+	{# Honeypot: visually hidden, labeled to be ignored by autofill/screen readers #}
+	<div style="position: absolute; left: -9999px;" aria-hidden="true">
+		<input type="text" name="{{ settings.honeypotName }}" tabindex="-1" autocomplete="off" />
+	</div>
+
+	{% if craft.app.session.hasFlash('success') %}
+		<div class="alert alert-success" role="status">{{ craft.app.session.getFlash('success') }}</div>
+	{% elseif craft.app.session.hasFlash('error') %}
+		<div class="alert alert-danger" role="alert">{{ craft.app.session.getFlash('error') }}</div>
+	{% endif %}
+
+	<div class="row g-3">
+		{% for field in form.fields %}
+			{% set inputId = formId ~ '-' ~ field.handle %}
+			{% set fieldErrors = errors[field.handle] ?? [] %}
+			{% set value = values[field.handle] ?? null %}
+			<div class="col-12">
+				{% if field.type == 'checkbox' %}
+					<div class="form-check">
+						<input
+							type="checkbox"
+							class="form-check-input {{ fieldErrors ? 'is-invalid' }}"
+							name="fields[{{ field.handle }}]"
+							id="{{ inputId }}"
+							value="1"
+							{{ value ? 'checked' }}
+							{{ field.required ? 'required' }}
+						/>
+						<label class="form-check-label" for="{{ inputId }}">
+							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+						</label>
+					</div>
+				{% else %}
+					<label class="form-label" for="{{ inputId }}">
+						{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+					</label>
+					{% if field.type == 'textarea' %}
+						<textarea
+							class="form-control {{ fieldErrors ? 'is-invalid' }}"
+							name="fields[{{ field.handle }}]"
+							id="{{ inputId }}"
+							rows="6"
+							{{ field.required ? 'required' }}
+						>{{ value }}</textarea>
+					{% elseif field.type == 'select' %}
+						<select
+							class="form-select {{ fieldErrors ? 'is-invalid' }}"
+							name="fields[{{ field.handle }}]"
+							id="{{ inputId }}"
+							{{ field.required ? 'required' }}
+						>
+							<option value=""></option>
+							{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
+								<option value="{{ option }}" {{ value == option ? 'selected' }}>{{ option }}</option>
+							{% endfor %}
+						</select>
+					{% else %}
+						<input
+							type="{{ field.type }}"
+							class="form-control {{ fieldErrors ? 'is-invalid' }}"
+							name="fields[{{ field.handle }}]"
+							id="{{ inputId }}"
+							value="{{ value }}"
+							{{ field.required ? 'required' }}
+						/>
+					{% endif %}
+				{% endif %}
+				{% if fieldErrors %}
+					<div class="invalid-feedback d-block">{{ fieldErrors|join(' ') }}</div>
+				{% endif %}
+			</div>
+		{% endfor %}
+
+		<div class="col-12">
+			<button type="submit" class="btn btn-primary">{{ options.buttonLabel ?? 'Send' }}</button>
+		</div>
+	</div>
+
+	{{ craft.elloroForms.recaptchaTag() }}
+</form>

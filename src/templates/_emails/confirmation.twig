@@ -1,0 +1,19 @@
+{# Confirmation email to the submitter.
+   Override per project with templates/elloro-forms/_emails/confirmation.twig. #}
+<p>{{ 'confirmation.body'|t('elloro-forms') }}</p>
+<h3>{{ form.name }}</h3>
+<table cellpadding="6" cellspacing="0" border="0">
+	{% for field in form.fields %}
+		{% set value = submission.content[field.handle] ?? null %}
+		<tr>
+			<td style="vertical-align: top;"><strong>{{ field.label }}</strong></td>
+			<td>
+				{% if field.type == 'checkbox' %}
+					{{ value ? 'Yes' : 'No' }}
+				{% else %}
+					{{ value|nl2br }}
+				{% endif %}
+			</td>
+		</tr>
+	{% endfor %}
+</table>

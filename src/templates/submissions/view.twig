@@ -1,0 +1,45 @@
+{# Single submission detail: all field values plus spam diagnostics. #}
+{% extends '_layouts/cp' %}
+{% set title = 'Submission' %}
+{% set selectedSubnavItem = 'submissions' %}
+
+{% set crumbs = [{ label: 'Submissions', url: url('elloro-forms/submissions') }] %}
+
+{% block content %}
+	{% if submission.isSpam %}
+		<div class="warning-alert warning with-icon" style="margin-bottom: 24px;">
+			<strong>Flagged as spam:</strong> {{ submission.spamReason }}
+		</div>
+	{% elseif submission.spamReason %}
+		{# Accepted despite a reCAPTCHA config error — surface it for diagnosis #}
+		<div class="warning-alert warning with-icon" style="margin-bottom: 24px;">
+			{{ submission.spamReason }}
+		</div>
+	{% endif %}
+
+	<table class="data fullwidth">
+		<tbody>
+			<tr>
+				<th class="light">Form</th>
+				<td>{{ form ? form.name : '—' }}</td>
+			</tr>
+			<tr>
+				<th class="light">Submitted</th>
+				<td>{{ submission.dateCreated|datetime('short') }}</td>
+			</tr>
+			{% for field in form.fields ?? [] %}
+				<tr>
+					<th class="light">{{ field.label }}</th>
+					<td>
+						{% set value = submission.content[field.handle] ?? null %}
+						{% if field.type == 'checkbox' %}
+							{{ value ? 'Yes' : 'No' }}
+						{% else %}
+							{{ value|nl2br }}
+						{% endif %}
+					</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}
