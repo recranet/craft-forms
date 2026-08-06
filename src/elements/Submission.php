@@ -200,7 +200,11 @@ class Submission extends Element
 			}
 
 			if (!empty($field['required']) && ($value === null || $value === '' || $value === false)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]));
+				// Editors can override the default message per field (Advanced tab)
+				$message = !empty($field['errorMessage'])
+					? $field['errorMessage']
+					: Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]);
+				$this->addError("field.{$handle}", $message);
 				continue;
 			}
 

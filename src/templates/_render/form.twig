@@ -45,9 +45,14 @@
 		{% for field in form.fields %}
 			{% set inputId = formId ~ '-' ~ field.handle %}
 			{% set errorId = inputId ~ '-error' %}
+			{% set descriptionId = inputId ~ '-description' %}
 			{% set fieldErrors = errors[field.handle] ?? [] %}
-			{% set value = values[field.handle] ?? null %}
+			{# Editor-set default value fills the initial render; posted values win on re-render #}
+			{% set value = values[field.handle] ?? field.defaultValue ?? null %}
 			{% set autocomplete = autocompleteMap[field.type] ?? null %}
+			{% set description = field.description ?? '' %}
+			{# aria-describedby points at the description and/or the error text #}
+			{% set describedBy = [description ? descriptionId, fieldErrors ? errorId]|filter(v => v)|join(' ') %}
 			{# Conditional visibility rules, if any — consumed by the inline JS below.
 			   Twig's html auto-escaping turns the JSON's double quotes into &quot;,
 			   so the encoded blob is safe inside a double-quoted attribute. #}
@@ -68,7 +73,8 @@
 							value="1"
 							{{ value ? 'checked' }}
 							{{ field.required ? 'required' }}
-							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
+							{% if fieldErrors %}aria-invalid="true"{% endif %}
+							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
 						/>
 						<label class="form-check-label" for="{{ inputId }}">
 							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
@@ -84,8 +90,10 @@
 							name="fields[{{ field.handle }}]"
 							id="{{ inputId }}"
 							rows="6"
+							{% if field.placeholder ?? false %}placeholder="{{ field.placeholder }}"{% endif %}
 							{{ field.required ? 'required' }}
-							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
+							{% if fieldErrors %}aria-invalid="true"{% endif %}
+							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
 						>{{ value }}</textarea>
 					{% elseif field.type == 'select' %}
 						<select
@@ -93,7 +101,8 @@
 							name="fields[{{ field.handle }}]"
 							id="{{ inputId }}"
 							{{ field.required ? 'required' }}
-							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
+							{% if fieldErrors %}aria-invalid="true"{% endif %}
+							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
 						>
 							<option value=""></option>
 							{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
@@ -107,11 +116,16 @@
 							name="fields[{{ field.handle }}]"
 							id="{{ inputId }}"
 							value="{{ value }}"
+							{% if field.placeholder ?? false %}placeholder="{{ field.placeholder }}"{% endif %}
 							{{ field.required ? 'required' }}
 							{% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
-							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
+							{% if fieldErrors %}aria-invalid="true"{% endif %}
+							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
 						/>
 					{% endif %}
+				{% endif %}
+				{% if description %}
+					<div class="form-text" id="{{ descriptionId }}">{{ description }}</div>
 				{% endif %}
 				{% if fieldErrors %}
 					<div class="invalid-feedback d-block" id="{{ errorId }}">{{ fieldErrors|join(' ') }}</div>
