@@ -22,19 +22,26 @@
 {# A single field card. Used for saved fields; the JS <template> clone uses the
    same markup with a fresh index. #}
 {% macro fieldCard(field, index, fieldTypes, allFields) %}
-	<div class="rf-field" data-type="{{ field.type }}">
+	{# data-width drives the builder's two-column grid (mirrors the site layout);
+	   the card starts collapsed — the bar is the toggle #}
+	<div class="rf-field" data-type="{{ field.type }}" data-width="{{ field.width ?? 'full' }}">
 		{# The uid is the field's stable identity — submissions key their values
 		   by it. It must survive every re-save; new cards post an empty uid and
 		   the Forms service assigns one. #}
 		<input type="hidden" name="fields[{{ index }}][uid]" value="{{ field.uid ?? '' }}" />
-		<div class="rf-field__bar">
+		<div class="rf-field__bar" role="button" tabindex="0" aria-expanded="false" title="{{ 'Click to edit, Alt+arrow keys to move'|t('recranet-forms') }}">
 			<a class="move icon rf-field__move" title="{{ 'Drag to reorder'|t('recranet-forms') }}" role="button" aria-label="{{ 'Drag to reorder'|t('recranet-forms') }}"></a>
+			{# Monogram icon, colored by field category (see CSS) #}
+			<span class="rf-field__icon" aria-hidden="true"></span>
 			<strong class="rf-field__title">{{ field.label ?: 'New field'|t('recranet-forms') }}</strong>
+			{# Status chips are (re)rendered by JS from the card's inputs #}
+			<span class="rf-field__chips" aria-hidden="true"></span>
 			<span class="rf-field__badge">{{ field.type }}</span>
 			<button type="button" class="btn small rf-field__duplicate" title="{{ 'Duplicate field'|t('recranet-forms') }}">{{ 'Duplicate'|t('recranet-forms') }}</button>
 			<button type="button" class="delete icon rf-field__delete" title="{{ 'Delete field'|t('recranet-forms') }}" aria-label="{{ 'Delete field'|t('recranet-forms') }}"></button>
 		</div>
 
+		<div class="rf-field__body" hidden>
 		{# Per-card tab nav; panes are toggled by JS #}
 		<nav class="rf-tabs" aria-label="{{ 'Field settings'|t('recranet-forms') }}">
 			<button type="button" class="rf-tab sel" data-rf-tab="general">{{ 'General'|t('recranet-forms') }}</button>
@@ -70,7 +77,7 @@
 					<div class="select fullwidth">
 						<select name="fields[{{ index }}][type]" class="rf-input-type">
 							{% for type in fieldTypes %}
-								<option value="{{ type }}" {{ field.type == type ? 'selected' }}>{{ type|capitalize }}</option>
+								<option value="{{ type }}" {{ field.type == type ? 'selected' }}>{{ ('fieldType.' ~ type)|t('recranet-forms') }}</option>
 							{% endfor %}
 						</select>
 					</div>
@@ -141,6 +148,8 @@
 				</div>
 			</div>
 		</div>
+		</div>
+		{# /.rf-field__body #}
 	</div>
 {% endmacro %}
 
@@ -210,13 +219,27 @@
 			</div>
 
 			<div class="rf-builder__add">
-				<div class="btn add icon menubtn" role="button" tabindex="0">{{ 'Add a field'|t('recranet-forms') }}</div>
-				<div class="menu">
-					<ul>
+				<button type="button" class="btn add icon" id="rf-palette-toggle" aria-expanded="false" aria-controls="rf-palette">
+					{{ 'Add a field'|t('recranet-forms') }}
+				</button>
+				{# Field palette: tile grid with icon, name and one-line description;
+				   the search box filters. Replaces the cramped dropdown menu. #}
+				<div class="rf-palette" id="rf-palette" hidden>
+					<input
+						type="text"
+						class="text fullwidth rf-palette__search"
+						placeholder="{{ 'Search field types…'|t('recranet-forms') }}"
+						aria-label="{{ 'Search field types…'|t('recranet-forms') }}"
+					/>
+					<div class="rf-palette__grid">
 						{% for type in fieldTypes %}
-							<li><a data-rf-add="{{ type }}">{{ type|capitalize }}</a></li>
+							<button type="button" class="rf-palette__tile" data-rf-add="{{ type }}">
+								<span class="rf-field__icon" data-icon-type="{{ type }}" aria-hidden="true"></span>
+								<span class="rf-palette__name">{{ ('fieldType.' ~ type)|t('recranet-forms') }}</span>
+								<span class="rf-palette__desc">{{ ('fieldTypeDesc.' ~ type)|t('recranet-forms') }}</span>
+							</button>
 						{% endfor %}
-					</ul>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -343,13 +366,78 @@
 	.rfs-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--hairline-color); }
 	.rfs-tab { border: 0; background: none; padding: 8px 14px; font-size: 14px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
 	.rfs-tab.sel { color: var(--text-color); background: var(--gray-100); font-weight: 600; }
-	.rf-builder__fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-	.rf-field { border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); }
-	.rf-field.draghelper { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); }
-	.rf-field__bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--hairline-color); }
+
+	/* Builder: two-column grid mirroring the site layout — half-width fields
+	   really sit side by side, so dragging feels like rearranging the page */
+	.rf-builder__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; align-items: start; }
+	.rf-field { grid-column: 1 / -1; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+	.rf-field[data-width='half'] { grid-column: span 1; }
+	.rf-field:hover { border-color: var(--medium-hairline-color, #cdd8e4); }
+	.rf-field.rf-open { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); border-color: var(--link-color, #1f5fea); }
+	.rf-field.draghelper { box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22); transform: rotate(1deg); opacity: 0.95; }
+	/* Garnish marks the drop position with .draginsertion */
+	.rf-field.draginsertion, .draginsertion { border: 2px dashed var(--link-color, #1f5fea); background: rgba(31, 95, 234, 0.06); border-radius: var(--large-border-radius); min-height: 44px; }
+	/* Landing flash for freshly added/duplicated/moved cards */
+	@keyframes rf-flash { 0% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0.45); } 100% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0); } }
+	.rf-field.rf-just-added { animation: rf-flash 0.9s ease-out 1; }
+
+	/* Collapsed-by-default bar: the whole bar toggles the body */
+	.rf-field__bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; user-select: none; }
+	.rf-field__bar:focus-visible { outline: 2px solid var(--link-color, #1f5fea); outline-offset: -2px; border-radius: var(--large-border-radius); }
+	.rf-field.rf-open .rf-field__bar { border-bottom: 1px solid var(--hairline-color); }
 	.rf-field__move { cursor: grab; }
-	.rf-field__title { flex: 1; }
+	.rf-field__title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	.rf-field__badge { font-size: 11px; text-transform: uppercase; color: var(--medium-text-color); background: var(--gray-100); border-radius: 3px; padding: 2px 6px; }
+
+	/* Monogram icon, colored by field category */
+	.rf-field__icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; background: #4a7de2; flex-shrink: 0; }
+	.rf-field__icon::before { content: 'T'; }
+	[data-type='text'] .rf-field__icon::before, [data-icon-type='text']::before { content: 'T'; }
+	[data-type='email'] .rf-field__icon::before, [data-icon-type='email']::before { content: '@'; }
+	[data-type='tel'] .rf-field__icon::before, [data-icon-type='tel']::before { content: '✆'; }
+	[data-type='textarea'] .rf-field__icon::before, [data-icon-type='textarea']::before { content: '≡'; }
+	[data-type='number'] .rf-field__icon::before, [data-icon-type='number']::before { content: '#'; }
+	[data-type='date'] .rf-field__icon::before, [data-icon-type='date']::before { content: '▦'; }
+	[data-type='url'] .rf-field__icon::before, [data-icon-type='url']::before { content: '↗'; }
+	[data-type='select'] .rf-field__icon::before, [data-icon-type='select']::before { content: '▾'; }
+	[data-type='checkbox'] .rf-field__icon::before, [data-icon-type='checkbox']::before { content: '✓'; }
+	[data-type='checkboxes'] .rf-field__icon::before, [data-icon-type='checkboxes']::before { content: '✓✓'; font-size: 9px; letter-spacing: -1px; }
+	[data-type='radio'] .rf-field__icon::before, [data-icon-type='radio']::before { content: '◉'; }
+	[data-type='consent'] .rf-field__icon::before, [data-icon-type='consent']::before { content: '§'; }
+	[data-type='hidden'] .rf-field__icon::before, [data-icon-type='hidden']::before { content: '⊘'; }
+	[data-type='heading'] .rf-field__icon::before, [data-icon-type='heading']::before { content: 'H'; }
+	[data-type='paragraph'] .rf-field__icon::before, [data-icon-type='paragraph']::before { content: '¶'; }
+	[data-type='file'] .rf-field__icon::before, [data-icon-type='file']::before { content: '↑'; }
+	/* Category colors: choice = purple, layout = gray, file = green, hidden = orange */
+	[data-type='select'] .rf-field__icon, [data-icon-type='select'],
+	[data-type='checkbox'] .rf-field__icon, [data-icon-type='checkbox'],
+	[data-type='checkboxes'] .rf-field__icon, [data-icon-type='checkboxes'],
+	[data-type='radio'] .rf-field__icon, [data-icon-type='radio'],
+	[data-type='consent'] .rf-field__icon, [data-icon-type='consent'] { background: #8a63d2; }
+	[data-type='heading'] .rf-field__icon, [data-icon-type='heading'],
+	[data-type='paragraph'] .rf-field__icon, [data-icon-type='paragraph'] { background: #8b97ad; }
+	[data-type='file'] .rf-field__icon, [data-icon-type='file'] { background: #14a06d; }
+	[data-type='hidden'] .rf-field__icon, [data-icon-type='hidden'] { background: #d98014; }
+	/* The palette tile icon is a standalone span, give it the same box */
+	.rf-palette__tile .rf-field__icon, [data-icon-type] { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; background: #4a7de2; flex-shrink: 0; }
+
+	/* Status chips on the collapsed bar */
+	.rf-field__chips { display: inline-flex; gap: 4px; }
+	.rf-chip { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--gray-100); color: var(--medium-text-color); white-space: nowrap; }
+	.rf-chip--required { background: rgba(207, 46, 46, 0.12); color: #b02525; }
+	.rf-chip--conditional { background: rgba(138, 99, 210, 0.14); color: #6b46b8; }
+
+	/* Field palette */
+	.rf-builder__add { position: relative; }
+	.rf-palette { position: absolute; z-index: 100; top: calc(100% + 6px); left: 0; width: min(560px, 90vw); padding: 12px; background: var(--white, #fff); border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+	.rf-palette__search { margin-bottom: 10px; }
+	.rf-palette__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 320px; overflow-y: auto; }
+	.rf-palette__tile { display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto; gap: 2px 10px; align-items: center; text-align: left; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; background: none; cursor: pointer; }
+	.rf-palette__tile:hover, .rf-palette__tile:focus-visible { background: var(--gray-050); border-color: var(--hairline-color); }
+	.rf-palette__tile .rf-field__icon { grid-row: 1 / span 2; }
+	.rf-palette__name { font-weight: 600; font-size: 13px; color: var(--text-color); }
+	.rf-palette__desc { grid-column: 2; font-size: 11px; color: var(--light-text-color); }
+
 	.rf-tabs { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--hairline-color); }
 	.rf-tab { border: 0; background: none; padding: 6px 10px; font-size: 12px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
 	.rf-tab.sel { color: var(--text-color); background: var(--gray-100); font-weight: 600; }
@@ -362,7 +450,7 @@
 	.rf-rule { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 	.rf-rule select, .rf-rule input { min-width: 0; }
 	.rf-conditions-mode { margin-top: 8px; }
-	@media (max-width: 900px) { .rf-field__grid { grid-template-columns: 1fr 1fr; } }
+	@media (max-width: 900px) { .rf-field__grid { grid-template-columns: 1fr 1fr; } .rf-builder__fields { grid-template-columns: 1fr; } .rf-field[data-width='half'] { grid-column: 1 / -1; } }
 {% endcss %}
 
 {% js %}
@@ -380,6 +468,10 @@
 				opContains: 'contains'|t('recranet-forms'),
 				opIsEmpty: 'is empty'|t('recranet-forms'),
 				opIsNotEmpty: 'is not empty'|t('recranet-forms'),
+				chipRequired: 'required'|t('recranet-forms'),
+				chipConditional: 'conditional'|t('recranet-forms'),
+				chipHalf: 'half width'|t('recranet-forms'),
+				movedTo: 'Moved to position {position}'|t('recranet-forms'),
 			}|json_encode|raw
 		}};
 
@@ -435,6 +527,8 @@
 
 			function serialize() {
 				jsonInput.value = state.rules.length ? JSON.stringify(state) : '';
+				// The "conditional" chip on the bar mirrors this input
+				updateChips(editor.closest('.rf-field'));
 			}
 
 			function fieldOptions(selected) {
@@ -506,6 +600,46 @@
 			render();
 		}
 
+		// Screen-reader announcements for keyboard moves
+		var live = document.createElement('div');
+		live.setAttribute('aria-live', 'polite');
+		live.className = 'visually-hidden';
+		list.parentNode.appendChild(live);
+
+		// Status chips on the collapsed bar: derived from the card's inputs so
+		// they stay honest after every edit
+		function updateChips(card) {
+			var chips = [];
+			var required = card.querySelector('.rf-field__required input[type="checkbox"]');
+			if (required && required.checked) chips.push('<span class="rf-chip rf-chip--required">' + Craft.escapeHtml(i18n.chipRequired) + '</span>');
+			var conditions = card.querySelector('.rf-conditions-json');
+			if (conditions && conditions.value) chips.push('<span class="rf-chip rf-chip--conditional">' + Craft.escapeHtml(i18n.chipConditional) + '</span>');
+			if (card.dataset.width === 'half') chips.push('<span class="rf-chip">' + Craft.escapeHtml(i18n.chipHalf) + '</span>');
+			card.querySelector('.rf-field__chips').innerHTML = chips.join('');
+		}
+
+		// Collapse/expand: the bar toggles the body; opening a card closes the
+		// others (accordion) so long forms stay scannable
+		function setOpen(card, open) {
+			card.classList.toggle('rf-open', open);
+			card.querySelector('.rf-field__body').hidden = !open;
+			card.querySelector('.rf-field__bar').setAttribute('aria-expanded', open ? 'true' : 'false');
+		}
+
+		function openCard(card) {
+			list.querySelectorAll('.rf-field.rf-open').forEach(function (other) {
+				if (other !== card) setOpen(other, false);
+			});
+			setOpen(card, true);
+		}
+
+		// Landing flash + scroll for new/duplicated cards
+		function landCard(card) {
+			card.classList.add('rf-just-added');
+			card.addEventListener('animationend', function () { card.classList.remove('rf-just-added'); }, { once: true });
+			card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		}
+
 		function initCard(card) {
 			// Tab switching within the card
 			card.querySelectorAll('.rf-tab').forEach(function (tab) {
@@ -517,15 +651,44 @@
 				});
 			});
 
+			var bar = card.querySelector('.rf-field__bar');
+
+			// Clicks on the bar toggle, except on its buttons/handle
+			bar.addEventListener('click', function (e) {
+				if (e.target.closest('button, a, input, select')) return;
+				card.classList.contains('rf-open') ? setOpen(card, false) : openCard(card);
+			});
+
+			// Keyboard: Enter/Space toggles, Alt+arrows move the card
+			bar.addEventListener('keydown', function (e) {
+				if (e.target !== bar) return;
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					card.classList.contains('rf-open') ? setOpen(card, false) : openCard(card);
+				}
+				if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+					e.preventDefault();
+					var sibling = e.key === 'ArrowUp' ? card.previousElementSibling : card.nextElementSibling;
+					if (!sibling) return;
+					e.key === 'ArrowUp' ? sibling.before(card) : sibling.after(card);
+					renumber();
+					landCard(card);
+					bar.focus();
+					var position = Array.prototype.indexOf.call(list.children, card) + 1;
+					live.textContent = i18n.movedTo.replace('{position}', position);
+				}
+			});
+
 			conditionsUI(card.querySelector('[data-rf-conditions-editor]'));
+			updateChips(card);
 		}
 
 		list.querySelectorAll('.rf-field').forEach(initCard);
 
-		// Drag & drop ordering via Craft's own drag implementation
+		// Drag & drop ordering via Craft's own drag implementation; no axis
+		// lock — the two-column grid needs free 2D dragging
 		var dragSort = new Garnish.DragSort($(list).children('.rf-field'), {
 			handle: '.rf-field__move',
-			axis: 'y',
 			onSortChange: renumber,
 		});
 
@@ -557,11 +720,22 @@
 		});
 
 		list.addEventListener('change', function (event) {
-			if (!event.target.classList.contains('rf-input-type')) return;
 			var card = event.target.closest('.rf-field');
-			card.dataset.type = event.target.value;
-			card.querySelector('.rf-field__badge').textContent = event.target.value;
-			card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(event.target.value);
+			if (!card) return;
+
+			if (event.target.classList.contains('rf-input-type')) {
+				card.dataset.type = event.target.value;
+				card.querySelector('.rf-field__badge').textContent = event.target.value;
+				card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(event.target.value);
+			}
+
+			// Width select drives the builder grid span, live
+			if (event.target.name && event.target.name.endsWith('[width]')) {
+				card.dataset.width = event.target.value;
+			}
+
+			// Any change may affect the bar chips (required, width)
+			updateChips(card);
 		});
 
 		list.addEventListener('click', function (event) {
@@ -587,12 +761,53 @@
 				initCard(clone);
 				dragSort.addItems($(clone));
 				renumber();
+				openCard(clone);
+				landCard(clone);
 				return;
 			}
 		});
 
-		// "Add a field" menu: clone the template with the chosen type
-		document.querySelectorAll('[data-rf-add]').forEach(function (item) {
+		// ---- Field palette: tile grid with search, replaces the dropdown ----
+		var paletteToggle = document.getElementById('rf-palette-toggle');
+		var palette = document.getElementById('rf-palette');
+		var paletteSearch = palette.querySelector('.rf-palette__search');
+
+		function closePalette() {
+			palette.hidden = true;
+			paletteToggle.setAttribute('aria-expanded', 'false');
+		}
+
+		paletteToggle.addEventListener('click', function () {
+			palette.hidden = !palette.hidden;
+			paletteToggle.setAttribute('aria-expanded', palette.hidden ? 'false' : 'true');
+			if (!palette.hidden) {
+				paletteSearch.value = '';
+				paletteSearch.dispatchEvent(new Event('input'));
+				paletteSearch.focus();
+			}
+		});
+
+		document.addEventListener('click', function (e) {
+			if (!palette.hidden && !e.target.closest('.rf-builder__add')) closePalette();
+		});
+
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && !palette.hidden) {
+				closePalette();
+				paletteToggle.focus();
+			}
+		});
+
+		// Search filters tiles on name + description
+		paletteSearch.addEventListener('input', function () {
+			var q = paletteSearch.value.trim().toLowerCase();
+			palette.querySelectorAll('.rf-palette__tile').forEach(function (tile) {
+				tile.hidden = q !== '' && !tile.textContent.toLowerCase().includes(q);
+			});
+		});
+
+		// Picking a tile adds a card of that type
+		palette.querySelectorAll('[data-rf-add]').forEach(function (item) {
 			item.addEventListener('click', function () {
 				var type = item.dataset.rfAdd;
 				var html = template.innerHTML.replace(/__INDEX__/g, ++uid).replace(/__TYPE__/g, type);
@@ -605,6 +820,9 @@
 				initCard(card);
 				dragSort.addItems($(card));
 				renumber();
+				closePalette();
+				openCard(card);
+				landCard(card);
 				card.querySelector('.rf-input-label').focus();
 			});
 		});
