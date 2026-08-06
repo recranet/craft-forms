@@ -99,7 +99,7 @@
 					{# Radio group: fieldset + legend gives the group an accessible name #}
 					<fieldset {% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}>
 						<legend class="form-label fs-6">
-							{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+							{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup><span class="visually-hidden">({{ 'required'|t('recranet-forms') }})</span>{% endif %}
 						</legend>
 						{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
 							<div class="form-check">
@@ -124,7 +124,7 @@
 					{% set checkedValues = value is iterable ? value : (value ? value|split(',')|map(o => o|trim) : []) %}
 					<fieldset {% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}>
 						<legend class="form-label fs-6">
-							{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+							{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup><span class="visually-hidden">({{ 'required'|t('recranet-forms') }})</span>{% endif %}
 						</legend>
 						{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
 							<div class="form-check">
@@ -251,6 +251,15 @@
    is lifted (so the browser can't block submit on an invisible field).
    Without JS nothing is ever hidden — the server discards hidden-field
    values on submit either way. #}
+{% js %}
+// After a server-side validation error, move focus to the error summary so
+// keyboard and screen-reader users land on it (it has tabindex="-1")
+(function () {
+	var summary = document.getElementById({{ (formId ~ '-errors')|json_encode|raw }});
+	if (summary) summary.focus();
+})();
+{% endjs %}
+
 {% js %}
 (function () {
 	var form = document.getElementById({{ formId|json_encode|raw }});
