@@ -13,6 +13,7 @@ use craft\helpers\UrlHelper;
 use recranet\forms\elements\db\SubmissionQuery;
 use recranet\forms\models\Form;
 use recranet\forms\Plugin;
+use recranet\forms\rules\RuleEvaluator;
 
 /**
  * A stored form submission.
@@ -144,7 +145,24 @@ class Submission extends Element
 			$byHandle[$field['handle']] = $value;
 		}
 
-		// Canonical dedupe key: same form + same content = same key
+		// Server-side enforcement of conditional visibility: values posted
+		// for fields hidden by their conditions are discarded — a no-JS or
+		// hostile client can post them even though the front end disables
+		// hidden inputs. We cascade until the hidden set is stable (a hidden
+		// field's value counts as empty for rules on other fields) instead
+		// of evaluating once, so chained conditions resolve exactly like the
+		// front-end JS, where a hidden field posts nothing.
+		foreach (RuleEvaluator::hiddenFieldUids($form->fields, $this->formData) as $uid) {
+			$this->formData[$uid] = null;
+
+			if ($field = $form->getFieldByUid($uid)) {
+				$byHandle[$field['handle']] = null;
+			}
+		}
+
+		// Canonical dedupe key: same form + same content = same key.
+		// Computed after the conditional null-out, so hidden-field junk
+		// can't make two otherwise identical submits look different.
 		$this->idempotencyKey = hash('sha256', $form->id . '|' . Json::encode($this->formData));
 
 		return $byHandle;
@@ -166,9 +184,20 @@ class Submission extends Element
 	 */
 	public function validateFormData(): void
 	{
+		// Fields hidden by their conditions are exempt from ALL validation:
+		// a field the visitor never saw is never required — whatever its
+		// required flag says — and its (discarded) value must not fail type
+		// checks either. Recomputed here from the snapshot rather than
+		// carried over from applyPost(), so validation is self-contained.
+		$hiddenUids = array_flip(RuleEvaluator::hiddenFieldUids($this->snapshot, $this->formData));
+
 		foreach ($this->snapshot as $field) {
 			$handle = $field['handle'];
 			$value = $this->formData[$field['uid']] ?? null;
+
+			if (isset($hiddenUids[$field['uid'] ?? ''])) {
+				continue;
+			}
 
 			if (!empty($field['required']) && ($value === null || $value === '' || $value === false)) {
 				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]));
