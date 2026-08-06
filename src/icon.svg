@@ -1,4 +1,40 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-	<!-- Recranet Forms plugin icon: form document with input rows and a check -->
-	<path fill="currentColor" d="M96 32h320c26.5 0 48 21.5 48 48v352c0 26.5-21.5 48-48 48H96c-26.5 0-48-21.5-48-48V80c0-26.5 21.5-48 48-48zm16 88c-8.8 0-16 7.2-16 16v48c0 8.8 7.2 16 16 16h288c8.8 0 16-7.2 16-16v-48c0-8.8-7.2-16-16-16H112zm0 128c-8.8 0-16 7.2-16 16v48c0 8.8 7.2 16 16 16h176c8.8 0 16-7.2 16-16v-48c0-8.8-7.2-16-16-16H112zm238 60 46 46 74-74c6.2-6.2 16.4-6.2 22.6 0l11.4 11.3c6.2 6.2 6.2 16.4 0 22.6l-96.7 96.7c-6.2 6.2-16.4 6.2-22.6 0l-68.7-68.6c-6.2-6.2-6.2-16.4 0-22.6l11.3-11.4c6.3-6.2 16.4-6.2 22.7 0zM112 376c-8.8 0-16 7.2-16 16v16c0 8.8 7.2 16 16 16h112c8.8 0 16-7.2 16-16v-16c0-8.8-7.2-16-16-16H112z"/>
+	<!-- Recranet Forms plugin icon: form card with input rows, a focused field
+	     and a send button with paper plane, on a rounded gradient tile -->
+	<defs>
+		<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#2f6df6"/>
+			<stop offset="1" stop-color="#1e4fd6"/>
+		</linearGradient>
+		<linearGradient id="btn" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#34d399"/>
+			<stop offset="1" stop-color="#0ea371"/>
+		</linearGradient>
+	</defs>
+
+	<!-- tile -->
+	<rect x="16" y="16" width="480" height="480" rx="104" fill="url(#bg)"/>
+
+	<!-- form card, slightly rotated for life -->
+	<g transform="rotate(-3 256 256)">
+		<rect x="112" y="88" width="288" height="336" rx="28" fill="#ffffff"/>
+		<rect x="112" y="88" width="288" height="336" rx="28" fill="none" stroke="#0b2b78" stroke-opacity=".08" stroke-width="4"/>
+
+		<!-- title bar -->
+		<rect x="148" y="126" width="150" height="20" rx="10" fill="#1e2a44"/>
+
+		<!-- field 1: filled -->
+		<rect x="148" y="176" width="70" height="12" rx="6" fill="#8b97ad"/>
+		<rect x="148" y="196" width="216" height="34" rx="10" fill="#eef2f8"/>
+		<rect x="160" y="208" width="120" height="10" rx="5" fill="#5b6a88"/>
+
+		<!-- field 2: focused (blue ring + caret) -->
+		<rect x="148" y="246" width="96" height="12" rx="6" fill="#8b97ad"/>
+		<rect x="148" y="266" width="216" height="34" rx="10" fill="#ffffff" stroke="#2f6df6" stroke-width="5"/>
+		<rect x="162" y="275" width="4" height="16" rx="2" fill="#2f6df6"/>
+
+		<!-- send button with paper plane, plane kept inside the button bounds -->
+		<rect x="148" y="330" width="216" height="52" rx="14" fill="url(#btn)"/>
+		<path fill="#ffffff" d="m238 355 34-11c2-1 4 1 3 3l-11 34c-1 2-3 2-4 0l-6-12a3 3 0 0 0-1-1l-14-9c-2-1-2-3 0-4z" transform="translate(6 -1)"/>
+	</g>
 </svg>

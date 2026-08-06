@@ -1,8 +1,16 @@
 {# Plugin settings: captcha provider, spam pipeline, storage/retention. Keys support $ENV_VAR syntax. #}
 {% import '_includes/forms' as forms %}
 
-<h2>Captcha</h2>
+{# Sections are grouped in tabs (same pattern as the form builder cards);
+   plain buttons + hidden panes, no dependencies. All inputs stay in the DOM,
+   so every tab posts with the single settings form. #}
+<nav class="rfs-tabs" aria-label="Settings sections">
+	<button type="button" class="rfs-tab sel" data-rfs-tab="captcha">Captcha</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="spam">Spam checks</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="storage">Storage</button>
+</nav>
 
+<div class="rfs-pane" data-rfs-pane="captcha">
 {{
 	forms.selectField({
 		label: 'Provider',
@@ -148,11 +156,9 @@
 		errors: settings.getErrors('captchaAllowedHostnames')
 	})
 }}
+</div>
 
-<hr />
-
-<h2>Spam checks</h2>
-
+<div class="rfs-pane" data-rfs-pane="spam" hidden>
 {{
 	forms.lightswitchField({
 		label: 'Honeypot',
@@ -192,11 +198,9 @@
 		errors: settings.getErrors('blocklist')
 	})
 }}
+</div>
 
-<hr />
-
-<h2>Storage</h2>
-
+<div class="rfs-pane" data-rfs-pane="storage" hidden>
 {{
 	forms.lightswitchField({
 		label: 'Save submissions',
@@ -225,3 +229,24 @@
 		errors: settings.getErrors('retentionDays')
 	})
 }}
+</div>
+
+{% css %}
+	.rfs-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--hairline-color); }
+	.rfs-tab { border: 0; background: none; padding: 8px 14px; font-size: 14px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
+	.rfs-tab.sel { color: var(--text-color); background: var(--gray-100); font-weight: 600; }
+{% endcss %}
+
+{% js %}
+	(function () {
+		var tabs = document.querySelectorAll('.rfs-tab');
+		tabs.forEach(function (tab) {
+			tab.addEventListener('click', function () {
+				tabs.forEach(function (t) { t.classList.toggle('sel', t === tab); });
+				document.querySelectorAll('.rfs-pane').forEach(function (pane) {
+					pane.hidden = pane.dataset.rfsPane !== tab.dataset.rfsTab;
+				});
+			});
+		});
+	})();
+{% endjs %}
