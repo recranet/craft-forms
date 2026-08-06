@@ -10,8 +10,8 @@ use craft\helpers\App;
  * so per-project config stays in .env, matching the boilerplate convention.
  *
  * Spam pipeline order (see services/SpamService): blocklist → honeypot →
- * submit timing → captcha (with token binding). Cheap local checks run first
- * so a bot never costs a captcha verification.
+ * throttle → submit timing → captcha (with token binding). Cheap local checks
+ * run first so a bot never costs a captcha verification.
  */
 class Settings extends Model
 {
@@ -75,6 +75,20 @@ class Settings extends Model
 	 * rendered are rejected as bots. 0 disables the check.
 	 */
 	public int|string $minSubmitSeconds = 3;
+
+	/**
+	 * Maximum number of submissions a single IP may make to a single form
+	 * within the throttle window. Exceeding submits are rejected outright —
+	 * a real visitor doesn't submit the same form 6 times a minute, but a
+	 * bot hammering the endpoint does. 0 disables the check.
+	 */
+	public int|string $throttleCount = 5;
+
+	/**
+	 * Rolling window (in seconds) for the submission throttle. 0 disables
+	 * the check.
+	 */
+	public int|string $throttleWindow = 60;
 
 	/**
 	 * Verify that v3/Enterprise tokens were minted on one of our hostnames,
@@ -177,6 +191,16 @@ class Settings extends Model
 		return (int)$this->retentionDays;
 	}
 
+	public function getThrottleCount(): int
+	{
+		return (int)$this->throttleCount;
+	}
+
+	public function getThrottleWindow(): int
+	{
+		return (int)$this->throttleWindow;
+	}
+
 	public function getUploadVolume(): string
 	{
 		return trim((string)App::parseEnv($this->uploadVolume));
@@ -249,7 +273,7 @@ class Settings extends Model
 				self::CAPTCHA_TURNSTILE,
 			]],
 			[['recaptchaThreshold', 'recaptchaRejectThreshold'], 'number', 'min' => 0, 'max' => 1],
-			[['minSubmitSeconds', 'retentionDays'], 'integer', 'min' => 0],
+			[['minSubmitSeconds', 'retentionDays', 'throttleCount', 'throttleWindow'], 'integer', 'min' => 0],
 			[['maxUploadSize'], 'integer', 'min' => 1],
 			[['honeypotName'], 'required'],
 		];

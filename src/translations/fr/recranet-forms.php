@@ -221,4 +221,12 @@ return [
 	'Moved to position {position}' => 'Déplacé à la position {position}',
 	'Form settings' => 'Paramètres du formulaire',
 	'Form sections' => 'Sections du formulaire',
+
+	// Submission throttle + retention override / anonymize mode
+	'Submission throttle (count)' => 'Limite d’envois (nombre)',
+	'Maximum number of submissions per visitor (IP address) per form within the throttle window. Exceeding submits are rejected outright. 0 disables the check.' => 'Nombre maximal d’envois par visiteur (adresse IP) par formulaire dans la fenêtre de temps. Les envois au-delà sont rejetés d’emblée. 0 désactive le contrôle.',
+	'Throttle window (seconds)' => 'Fenêtre de temps (secondes)',
+	'The rolling window for the submission throttle. 0 disables the check.' => 'La fenêtre glissante pour la limite d’envois. 0 désactive le contrôle.',
+	'Individual forms can override this retention period and can anonymize instead of delete (see the form’s settings).' => 'Chaque formulaire peut remplacer cette durée de conservation et anonymiser au lieu de supprimer (voir les réglages du formulaire).',
+	'Anonymized on {date} — the personal data of this submission has been removed by the retention policy.' => 'Anonymisé le {date} — les données personnelles de cet envoi ont été supprimées par la politique de conservation.',
 ];

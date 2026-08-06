@@ -39,7 +39,7 @@ use yii\base\Event;
  */
 class Plugin extends BasePlugin
 {
-	public string $schemaVersion = '2.0.0';
+	public string $schemaVersion = '2.1.0';
 	public bool $hasCpSettings = true;
 	public bool $hasCpSection = true;
 

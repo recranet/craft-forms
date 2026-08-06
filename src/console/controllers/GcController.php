@@ -14,6 +14,8 @@ use yii\helpers\Console;
  *
  * The same pruning also runs automatically with Craft's garbage collection;
  * this command exists for cron jobs and for verifying a retention setting.
+ * Retention resolves per form (form override, else the plugin default) and
+ * per mode (delete or anonymize) — see services/Retention.
  */
 class GcController extends Controller
 {
@@ -21,16 +23,18 @@ class GcController extends Controller
 
 	public function actionPrune(): int
 	{
-		$days = Plugin::getInstance()->getSettings()->getRetentionDays();
+		// No early-out on the plugin-wide setting: individual forms can carry
+		// their own retention override, so the service always gets to decide
+		$result = Plugin::getInstance()->retention->pruneSubmissions();
 
-		if ($days <= 0) {
-			$this->stdout('Retention disabled (retentionDays = 0) — nothing to prune.' . PHP_EOL, Console::FG_YELLOW);
+		$this->stdout(
+			"Deleted {$result['deleted']} submission(s), anonymized {$result['anonymized']} submission(s)." . PHP_EOL,
+			Console::FG_GREEN,
+		);
 
-			return ExitCode::OK;
+		if ($result['deleted'] === 0 && $result['anonymized'] === 0 && Plugin::getInstance()->getSettings()->getRetentionDays() <= 0) {
+			$this->stdout('Note: plugin-wide retention is disabled (retentionDays = 0); only forms with their own override are pruned.' . PHP_EOL, Console::FG_YELLOW);
 		}
-
-		$deleted = Plugin::getInstance()->retention->pruneSubmissions();
-		$this->stdout("Deleted {$deleted} submission(s) older than {$days} days." . PHP_EOL, Console::FG_GREEN);
 
 		return ExitCode::OK;
 	}

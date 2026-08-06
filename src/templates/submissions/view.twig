@@ -8,6 +8,13 @@
 {% set crumbs = [{ label: 'Submissions'|t('recranet-forms'), url: url('recranet-forms/submissions') }] %}
 
 {% block content %}
+	{% if submission.anonymizedAt %}
+		{# Retention pruning blanked the personal data; the empty values below are by design #}
+		<div class="warning-alert warning with-icon" style="margin-bottom: 24px;">
+			{{ 'Anonymized on {date} — the personal data of this submission has been removed by the retention policy.'|t('recranet-forms', { date: submission.anonymizedAt|datetime('short') }) }}
+		</div>
+	{% endif %}
+
 	{% if submission.isSpam %}
 		<div class="warning-alert warning with-icon" style="margin-bottom: 24px;">
 			<strong>{{ 'Flagged as spam:'|t('recranet-forms') }}</strong> {{ submission.spamReason }}
