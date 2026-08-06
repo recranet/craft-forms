@@ -296,4 +296,9 @@ return [
 	'The site the visitor submitted on' => 'Le site utilisé par le visiteur',
 	'Always the primary site’s language' => 'Toujours la langue du site principal',
 	'settings.language.hint' => 'La confirmation au visiteur part toujours dans la langue qu’il a utilisée. Seule la notification qui vous est destinée est un choix : suivre le visiteur, ou toujours utiliser la langue du site principal.',
+
+	// AI translation
+	'AI translation is not available. Install and configure the AI Translator plugin.' => 'La traduction par IA n’est pas disponible. Installez et configurez le plugin AI Translator.',
+	'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.' => 'Le service de traduction a renvoyé {got} traductions pour {expected} textes, elles n’ont donc pas pu être associées. Rien n’a été enregistré.',
+	'Translating form “{form}” into {site}' => 'Traduction du formulaire « {form} » vers {site}',
 ];

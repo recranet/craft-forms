@@ -291,4 +291,9 @@ return [
 	'The site the visitor submitted on' => 'The site the visitor submitted on',
 	'Always the primary site’s language' => 'Always the primary site’s language',
 	'settings.language.hint' => 'The visitor’s confirmation is always sent in the language they submitted in. Only the owner notification is a choice: follow the visitor, or always use the primary site’s language when you don’t read every locale your site serves.',
+
+	// AI translation
+	'AI translation is not available. Install and configure the AI Translator plugin.' => 'AI translation is not available. Install and configure the AI Translator plugin.',
+	'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.' => 'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.',
+	'Translating form “{form}” into {site}' => 'Translating form “{form}” into {site}',
 ];

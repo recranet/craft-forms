@@ -296,4 +296,9 @@ return [
 	'The site the visitor submitted on' => 'De site waarop de bezoeker verstuurde',
 	'Always the primary site’s language' => 'Altijd de taal van de primaire site',
 	'settings.language.hint' => 'De bevestiging aan de bezoeker gaat altijd in de taal waarin die verstuurde. Alleen de notificatie aan jezelf is een keuze: meebewegen met de bezoeker, of altijd de taal van de primaire site als je niet elke taal van je site leest.',
+
+	// AI translation
+	'AI translation is not available. Install and configure the AI Translator plugin.' => 'AI-vertaling is niet beschikbaar. Installeer en configureer de AI Translator-plugin.',
+	'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.' => 'De vertaaldienst gaf {got} vertalingen terug voor {expected} teksten, waardoor ze niet aan elkaar te koppelen zijn. Er is niets opgeslagen.',
+	'Translating form “{form}” into {site}' => 'Formulier “{form}” vertalen naar {site}',
 ];
