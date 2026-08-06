@@ -48,8 +48,16 @@
 			{% set fieldErrors = errors[field.handle] ?? [] %}
 			{% set value = values[field.handle] ?? null %}
 			{% set autocomplete = autocompleteMap[field.type] ?? null %}
+			{# Conditional visibility rules, if any — consumed by the inline JS below.
+			   Twig's html auto-escaping turns the JSON's double quotes into &quot;,
+			   so the encoded blob is safe inside a double-quoted attribute. #}
+			{% set conditions = field.conditions ?? null %}
 			{# Half-width fields sit side by side from md up #}
-			<div class="col-12 {{ (field.width ?? 'full') == 'half' ? 'col-md-6' }}">
+			<div
+				class="col-12 {{ (field.width ?? 'full') == 'half' ? 'col-md-6' }}"
+				data-rf-uid="{{ field.uid }}"
+				{% if conditions and (conditions.rules ?? [])|length %}data-rf-conditions="{{ conditions|json_encode }}"{% endif %}
+			>
 				{% if field.type == 'checkbox' %}
 					<div class="form-check">
 						<input
@@ -118,3 +126,157 @@
 
 	{{ craft.recranetForms.captchaTag(form.handle) }}
 </form>
+
+{# Conditional fields: front-end half of the evaluator. This is a strict
+   mirror of src/rules/RuleEvaluator.php — any semantics change there must
+   land here too (normalization, fail-open on malformed rules, cascade with
+   hidden fields counting as empty). Hidden fields get the `hidden`
+   attribute, their inputs are disabled (so they never post) and `required`
+   is lifted (so the browser can't block submit on an invisible field).
+   Without JS nothing is ever hidden — the server discards hidden-field
+   values on submit either way. #}
+{% js %}
+(function () {
+	var form = document.getElementById({{ formId|json_encode|raw }});
+	if (!form) {
+		return;
+	}
+
+	// Only fields that actually carry conditions ever change visibility
+	var conditioned = Array.prototype.slice.call(form.querySelectorAll('[data-rf-conditions]'));
+	if (!conditioned.length) {
+		return;
+	}
+
+	// Mirrors RuleEvaluator::normalize(): trim + lowercase; checkbox state
+	// is read as '1'/'' in fieldValue(), null becomes ''
+	function normalize(value) {
+		return String(value == null ? '' : value).trim().toLowerCase();
+	}
+
+	// Current raw value of the field with the given uid. Fields hidden
+	// earlier in the cascade count as empty — same as the server, where
+	// their values are discarded. Returns null when the uid doesn't exist
+	// in the form (broken reference), which makes the rule fail open.
+	function fieldValue(uid, hiddenSet) {
+		var wrap = form.querySelector('[data-rf-uid="' + uid + '"]');
+		if (!wrap) {
+			return null;
+		}
+		if (hiddenSet.has(uid)) {
+			return '';
+		}
+		var checkbox = wrap.querySelector('input[type="checkbox"]');
+		if (checkbox) {
+			return checkbox.checked ? '1' : '';
+		}
+		var input = wrap.querySelector('input, select, textarea');
+		return input ? input.value : '';
+	}
+
+	// Mirrors RuleEvaluator::rulePasses(): malformed rules, unknown
+	// operators and broken field references all pass — never hide
+	function rulePasses(rule, hiddenSet) {
+		if (!rule || !rule.field || !rule.operator) {
+			return true;
+		}
+		var raw = fieldValue(rule.field, hiddenSet);
+		if (raw === null) {
+			return true;
+		}
+		var actual = normalize(raw);
+		var expected = normalize(rule.value);
+		switch (rule.operator) {
+			case 'is':
+				return actual === expected;
+			case 'isNot':
+				return actual !== expected;
+			case 'contains':
+				return actual.indexOf(expected) !== -1;
+			case 'isEmpty':
+				return actual === '';
+			case 'isNotEmpty':
+				return actual !== '';
+			default:
+				return true;
+		}
+	}
+
+	// Mirrors RuleEvaluator::isVisible(): 'any' = first pass wins,
+	// anything but 'any' behaves as 'all' = first failure hides
+	function isVisible(conditions, hiddenSet) {
+		if (!conditions || !Array.isArray(conditions.rules) || !conditions.rules.length) {
+			return true;
+		}
+		var any = conditions.mode === 'any';
+		for (var i = 0; i < conditions.rules.length; i++) {
+			var passes = rulePasses(conditions.rules[i], hiddenSet);
+			if (any && passes) {
+				return true;
+			}
+			if (!any && !passes) {
+				return false;
+			}
+		}
+		return !any;
+	}
+
+	// Apply a field's visibility: hidden fields don't post (disabled) and
+	// are never required; the original required flag is stashed so showing
+	// the field restores it
+	function apply(wrap, visible) {
+		wrap.toggleAttribute('hidden', !visible);
+		wrap.querySelectorAll('input, select, textarea').forEach(function (input) {
+			input.disabled = !visible;
+			if (!visible) {
+				if (input.required) {
+					input.dataset.rfRequired = '1';
+				}
+				input.required = false;
+			} else if (input.dataset.rfRequired) {
+				input.required = true;
+			}
+		});
+	}
+
+	// Re-evaluate everything until the hidden set is stable, so chained
+	// conditions (B depends on A, C depends on B) settle in one call —
+	// same fixpoint as RuleEvaluator::hiddenFieldUids(). The set only
+	// grows within a run, so this terminates in at most N passes.
+	function evaluate() {
+		var hiddenSet = new Set();
+		var passes = conditioned.length;
+		var changed = true;
+		while (changed && passes-- > 0) {
+			changed = false;
+			conditioned.forEach(function (wrap) {
+				var uid = wrap.getAttribute('data-rf-uid');
+				if (hiddenSet.has(uid)) {
+					return;
+				}
+				var conditions = null;
+				try {
+					conditions = JSON.parse(wrap.getAttribute('data-rf-conditions'));
+				} catch (e) {
+					// Unparseable conditions: fail open, keep the field visible
+					return;
+				}
+				if (!isVisible(conditions, hiddenSet)) {
+					hiddenSet.add(uid);
+					changed = true;
+				}
+			});
+		}
+		conditioned.forEach(function (wrap) {
+			apply(wrap, !hiddenSet.has(wrap.getAttribute('data-rf-uid')));
+		});
+	}
+
+	// 'input' covers typing, 'change' covers selects/checkboxes and autofill
+	form.addEventListener('input', evaluate);
+	form.addEventListener('change', evaluate);
+
+	// Initial state on load (also correct after a server-side error re-render)
+	evaluate();
+})();
+{% endjs %}

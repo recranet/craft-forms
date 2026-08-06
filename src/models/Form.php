@@ -2,8 +2,10 @@
 
 namespace recranet\forms\models;
 
+use Craft;
 use craft\base\Model;
 use craft\validators\HandleValidator;
+use recranet\forms\rules\RuleEvaluator;
 
 /**
  * A form definition managed in the CP.
@@ -85,6 +87,55 @@ class Form extends Model
 			}
 
 			$handles[] = $field['handle'];
+		}
+
+		$this->checkConditionShapes();
+	}
+
+	/**
+	 * Sanity-check the optional `conditions` on each field row. Deliberately
+	 * lenient: broken shapes are logged as warnings, never validation errors —
+	 * the RuleEvaluator fails open on anything malformed (a broken rule shows
+	 * the field instead of hiding it), so a bad rule must not block saving
+	 * the form.
+	 */
+	private function checkConditionShapes(): void
+	{
+		// Known uids a rule may reference (rows without one get a uid in saveForm, but can't be referenced yet)
+		$uids = array_filter(array_column($this->fields, 'uid'));
+
+		foreach ($this->fields as $i => $field) {
+			$conditions = $field['conditions'] ?? null;
+
+			if (!is_array($conditions)) {
+				continue;
+			}
+
+			$row = $i + 1;
+			$mode = $conditions['mode'] ?? null;
+
+			if ($mode !== null && !in_array($mode, ['all', 'any'], true)) {
+				Craft::warning("Form \"{$this->handle}\", field row {$row}: unknown conditions mode \"{$mode}\" (treated as \"all\").", __METHOD__);
+			}
+
+			foreach ((array)($conditions['rules'] ?? []) as $rule) {
+				if (!is_array($rule)) {
+					continue;
+				}
+
+				if (!empty($rule['operator']) && !in_array($rule['operator'], RuleEvaluator::OPERATORS, true)) {
+					Craft::warning("Form \"{$this->handle}\", field row {$row}: unknown condition operator \"{$rule['operator']}\" (rule ignored).", __METHOD__);
+				}
+
+				if (!empty($rule['field']) && !in_array($rule['field'], $uids, true)) {
+					Craft::warning("Form \"{$this->handle}\", field row {$row}: condition references unknown field uid \"{$rule['field']}\" (rule ignored).", __METHOD__);
+				}
+
+				// A field must not depend on itself — the evaluator would treat its own (possibly hidden) value as input
+				if (($rule['field'] ?? null) === ($field['uid'] ?? '')) {
+					Craft::warning("Form \"{$this->handle}\", field row {$row}: condition references the field itself.", __METHOD__);
+				}
+			}
 		}
 	}
 
