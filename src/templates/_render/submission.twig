@@ -29,10 +29,17 @@
 				</tr>
 				{% for row in submission.values %}
 					<tr>
-						<th>{{ row.label }}</th>
+						<th>{{ row.label|t }}</th>
 						<td>
-							{% if row.type == 'checkbox' %}
+							{% if row.type == 'checkbox' or row.type == 'consent' %}
 								{{ row.value ? 'submission.yes'|t('recranet-forms') : 'submission.no'|t('recranet-forms') }}
+							{% elseif row.type == 'file' %}
+								{# The submitter only gets the filename — never a CP link #}
+								{% set asset = row.value ? craft.assets.id(row.value).one() : null %}
+								{{ asset ? asset.filename : '' }}
+							{% elseif row.value is iterable %}
+								{# Multi-value fields (checkboxes) read as a comma-joined list #}
+								{{ row.value|join(', ') }}
 							{% else %}
 								{{ row.value|nl2br }}
 							{% endif %}

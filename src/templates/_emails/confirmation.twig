@@ -13,7 +13,7 @@
 	   already excludes layout-only rows (heading, paragraph) #}
 	{% for row in submission.values %}
 		<tr>
-			<td style="vertical-align: top;"><strong>{{ row.label }}</strong></td>
+			<td style="vertical-align: top;"><strong>{{ row.label|t }}</strong></td>
 			<td>
 				{% if row.type == 'checkbox' or row.type == 'consent' %}
 					{{ (row.value ? 'Yes' : 'No')|t('recranet-forms') }}

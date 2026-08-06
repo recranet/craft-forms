@@ -2,24 +2,23 @@
 {% import '_includes/forms.twig' as forms %}
 
 <p>
-	Tests the SMTP connection and sends a test email using the current mail settings, showing the full transport
-	error when something fails.
+	{{ 'Tests the SMTP connection and sends a test email using the current mail settings, showing the full transport error when something fails.'|t('recranet-forms') }}
 </p>
 
 <table class="data">
 	<tbody>
 		<tr>
-			<th class="light">Transport</th>
+			<th class="light">{{ 'Transport'|t('recranet-forms') }}</th>
 			<td><code>{{ transportType }}</code></td>
 		</tr>
 		{% if transportSettings.host is defined %}
 			<tr>
-				<th class="light">Host</th>
+				<th class="light">{{ 'Host'|t('recranet-forms') }}</th>
 				<td><code>{{ parseEnv(transportSettings.host) }}{{ transportSettings.port is defined ? ':' ~ parseEnv(transportSettings.port) }}</code></td>
 			</tr>
 		{% endif %}
 		<tr>
-			<th class="light">From email</th>
+			<th class="light">{{ 'From email'|t('recranet-forms') }}</th>
 			<td><code>{{ fromEmail }}</code></td>
 		</tr>
 	</tbody>
@@ -28,7 +27,7 @@
 <form id="rf-email-test" class="utility" style="margin-top: 24px;">
 	{{
 		forms.textField({
-			label: 'Send test email to',
+			label: 'Send test email to'|t('recranet-forms'),
 			id: 'rf-test-recipient',
 			name: 'recipient',
 			value: currentUserEmail,
@@ -36,7 +35,7 @@
 		})
 	}}
 
-	<button type="submit" class="btn submit">Run test</button>
+	<button type="submit" class="btn submit">{{ 'Run test'|t('recranet-forms') }}</button>
 	<span class="spinner hidden" id="rf-test-spinner"></span>
 </form>
 

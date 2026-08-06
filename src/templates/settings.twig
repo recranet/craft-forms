@@ -4,25 +4,25 @@
 {# Sections are grouped in tabs (same pattern as the form builder cards);
    plain buttons + hidden panes, no dependencies. All inputs stay in the DOM,
    so every tab posts with the single settings form. #}
-<nav class="rfs-tabs" aria-label="Settings sections">
-	<button type="button" class="rfs-tab sel" data-rfs-tab="captcha">Captcha</button>
-	<button type="button" class="rfs-tab" data-rfs-tab="spam">Spam checks</button>
-	<button type="button" class="rfs-tab" data-rfs-tab="storage">Storage</button>
+<nav class="rfs-tabs" aria-label="{{ 'Settings sections'|t('recranet-forms') }}">
+	<button type="button" class="rfs-tab sel" data-rfs-tab="captcha">{{ 'Captcha'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="spam">{{ 'Spam checks'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="storage">{{ 'Storage'|t('recranet-forms') }}</button>
 </nav>
 
 <div class="rfs-pane" data-rfs-pane="captcha">
 {{
 	forms.selectField({
-		label: 'Provider',
-		instructions: 'Which captcha verifies submissions. "None" disables captcha verification (honeypot and timing checks still run).',
+		label: 'Provider'|t('recranet-forms'),
+		instructions: 'Which captcha verifies submissions. "None" disables captcha verification (honeypot and timing checks still run).'|t('recranet-forms'),
 		name: 'captchaProvider',
 		value: settings.captchaProvider,
 		options: [
-			{ value: 'none', label: 'None' },
-			{ value: 'recaptcha-v2', label: 'Google reCAPTCHA v2 (checkbox)' },
-			{ value: 'recaptcha-v3', label: 'Google reCAPTCHA v3 (invisible, scored)' },
-			{ value: 'recaptcha-enterprise', label: 'Google reCAPTCHA Enterprise' },
-			{ value: 'turnstile', label: 'Cloudflare Turnstile (experimental)' }
+			{ value: 'none', label: 'None'|t('recranet-forms') },
+			{ value: 'recaptcha-v2', label: 'Google reCAPTCHA v2 (checkbox)'|t('recranet-forms') },
+			{ value: 'recaptcha-v3', label: 'Google reCAPTCHA v3 (invisible, scored)'|t('recranet-forms') },
+			{ value: 'recaptcha-enterprise', label: 'Google reCAPTCHA Enterprise'|t('recranet-forms') },
+			{ value: 'turnstile', label: 'Cloudflare Turnstile (experimental)'|t('recranet-forms') }
 		],
 		errors: settings.getErrors('captchaProvider')
 	})
@@ -31,7 +31,7 @@
 <div>
 	{{
 		forms.autosuggestField({
-			label: 'reCAPTCHA site key',
+			label: 'reCAPTCHA site key'|t('recranet-forms'),
 			name: 'recaptchaSiteKey',
 			suggestEnvVars: true,
 			value: settings.recaptchaSiteKey,
@@ -41,8 +41,8 @@
 
 	{{
 		forms.autosuggestField({
-			label: 'reCAPTCHA secret key',
-			instructions: 'Used by v2 and v3 (Enterprise uses the API key below).',
+			label: 'reCAPTCHA secret key'|t('recranet-forms'),
+			instructions: 'Used by v2 and v3 (Enterprise uses the API key below).'|t('recranet-forms'),
 			name: 'recaptchaSecretKey',
 			suggestEnvVars: true,
 			value: settings.recaptchaSecretKey,
@@ -54,8 +54,8 @@
 <div>
 	{{
 		forms.textField({
-			label: 'Score threshold',
-			instructions: 'Submissions scoring below this (0–1) are flagged as spam. Default 0.5.',
+			label: 'Score threshold'|t('recranet-forms'),
+			instructions: 'Submissions scoring below this (0–1) are flagged as spam. Default 0.5.'|t('recranet-forms'),
 			name: 'recaptchaThreshold',
 			size: 5,
 			value: settings.recaptchaThreshold,
@@ -65,8 +65,8 @@
 
 	{{
 		forms.textField({
-			label: 'Reject threshold',
-			instructions: 'Below this score a submission is definite spam: rejected outright and not stored. Between the two thresholds it is stored as reviewable spam. Default 0.3.',
+			label: 'Reject threshold'|t('recranet-forms'),
+			instructions: 'Below this score a submission is definite spam: rejected outright and not stored. Between the two thresholds it is stored as reviewable spam. Default 0.3.'|t('recranet-forms'),
 			name: 'recaptchaRejectThreshold',
 			size: 5,
 			value: settings.recaptchaRejectThreshold,
@@ -76,8 +76,8 @@
 
 	{{
 		forms.lightswitchField({
-			label: 'Hide the reCAPTCHA badge',
-			instructions: 'Allowed by Google as long as the form shows the reCAPTCHA attribution text.',
+			label: 'Hide the reCAPTCHA badge'|t('recranet-forms'),
+			instructions: 'Allowed by Google as long as the form shows the reCAPTCHA attribution text.'|t('recranet-forms'),
 			name: 'recaptchaHideBadge',
 			on: settings.recaptchaHideBadge
 		})
@@ -87,7 +87,7 @@
 <div>
 	{{
 		forms.autosuggestField({
-			label: 'Google Cloud project ID',
+			label: 'Google Cloud project ID'|t('recranet-forms'),
 			name: 'recaptchaProjectId',
 			suggestEnvVars: true,
 			value: settings.recaptchaProjectId,
@@ -97,7 +97,7 @@
 
 	{{
 		forms.autosuggestField({
-			label: 'Google Cloud API key',
+			label: 'Google Cloud API key'|t('recranet-forms'),
 			name: 'recaptchaApiKey',
 			suggestEnvVars: true,
 			value: settings.recaptchaApiKey,
@@ -109,7 +109,7 @@
 <div>
 	{{
 		forms.autosuggestField({
-			label: 'Turnstile site key',
+			label: 'Turnstile site key'|t('recranet-forms'),
 			name: 'turnstileSiteKey',
 			suggestEnvVars: true,
 			value: settings.turnstileSiteKey,
@@ -119,7 +119,7 @@
 
 	{{
 		forms.autosuggestField({
-			label: 'Turnstile secret key',
+			label: 'Turnstile secret key'|t('recranet-forms'),
 			name: 'turnstileSecretKey',
 			suggestEnvVars: true,
 			value: settings.turnstileSecretKey,
@@ -130,8 +130,8 @@
 
 {{
 	forms.lightswitchField({
-		label: 'Fail open on verification errors',
-		instructions: 'When the captcha itself breaks (bad keys, provider unreachable): **on** accepts and flags submissions with a logged warning; **off** shows visitors an error. A broken captcha is never treated as spam. Tip: run `php craft recranet-forms/captcha/check` on deploy.',
+		label: 'Fail open on verification errors'|t('recranet-forms'),
+		instructions: 'When the captcha itself breaks (bad keys, provider unreachable): **on** accepts and flags submissions with a logged warning; **off** shows visitors an error. A broken captcha is never treated as spam. Tip: run `php craft recranet-forms/captcha/check` on deploy.'|t('recranet-forms'),
 		name: 'recaptchaFailOpen',
 		on: settings.recaptchaFailOpen
 	})
@@ -139,8 +139,8 @@
 
 {{
 	forms.lightswitchField({
-		label: 'Verify token hostname',
-		instructions: 'Reject v3/Enterprise tokens minted on another hostname, so tokens farmed elsewhere cannot be replayed here.',
+		label: 'Verify token hostname'|t('recranet-forms'),
+		instructions: 'Reject v3/Enterprise tokens minted on another hostname, so tokens farmed elsewhere cannot be replayed here.'|t('recranet-forms'),
 		name: 'verifyCaptchaHostname',
 		on: settings.verifyCaptchaHostname
 	})
@@ -148,8 +148,8 @@
 
 {{
 	forms.autosuggestField({
-		label: 'Allowed token hostnames',
-		instructions: 'Comma-separated. Empty = the hostname of the request.',
+		label: 'Allowed token hostnames'|t('recranet-forms'),
+		instructions: 'Comma-separated. Empty = the hostname of the request.'|t('recranet-forms'),
 		name: 'captchaAllowedHostnames',
 		suggestEnvVars: true,
 		value: settings.captchaAllowedHostnames,
@@ -161,8 +161,8 @@
 <div class="rfs-pane" data-rfs-pane="spam" hidden>
 {{
 	forms.lightswitchField({
-		label: 'Honeypot',
-		instructions: 'Render a hidden field; bots that fill it are rejected outright.',
+		label: 'Honeypot'|t('recranet-forms'),
+		instructions: 'Render a hidden field; bots that fill it are rejected outright.'|t('recranet-forms'),
 		name: 'honeypotEnabled',
 		on: settings.honeypotEnabled
 	})
@@ -170,7 +170,7 @@
 
 {{
 	forms.textField({
-		label: 'Honeypot field name',
+		label: 'Honeypot field name'|t('recranet-forms'),
 		name: 'honeypotName',
 		value: settings.honeypotName,
 		errors: settings.getErrors('honeypotName')
@@ -179,8 +179,8 @@
 
 {{
 	forms.textField({
-		label: 'Minimum submit time (seconds)',
-		instructions: 'Submissions arriving faster than this after the form was rendered are rejected as bots. 0 disables the check.',
+		label: 'Minimum submit time (seconds)'|t('recranet-forms'),
+		instructions: 'Submissions arriving faster than this after the form was rendered are rejected as bots. 0 disables the check.'|t('recranet-forms'),
 		name: 'minSubmitSeconds',
 		size: 5,
 		value: settings.minSubmitSeconds,
@@ -190,8 +190,8 @@
 
 {{
 	forms.textareaField({
-		label: 'Sender blocklist',
-		instructions: 'Comma-separated, for human-driven spam a captcha score cannot catch. Entry shapes: full address (`someone@example.com`), domain suffix (`@spamdomain.ru`), local-part prefix (`someone`), IP prefix (`198.51.100.`). Matches are stored as reviewable spam.',
+		label: 'Sender blocklist'|t('recranet-forms'),
+		instructions: 'Comma-separated, for human-driven spam a captcha score cannot catch. Entry shapes: full address (`someone@example.com`), domain suffix (`@spamdomain.ru`), local-part prefix (`someone`), IP prefix (`198.51.100.`). Matches are stored as reviewable spam.'|t('recranet-forms'),
 		name: 'blocklist',
 		rows: 3,
 		value: settings.blocklist,
@@ -203,8 +203,8 @@
 <div class="rfs-pane" data-rfs-pane="storage" hidden>
 {{
 	forms.lightswitchField({
-		label: 'Save submissions',
-		instructions: 'Off = notification emails still go out, but nothing is stored in the database (mail-only mode).',
+		label: 'Save submissions'|t('recranet-forms'),
+		instructions: 'Off = notification emails still go out, but nothing is stored in the database (mail-only mode).'|t('recranet-forms'),
 		name: 'saveSubmissions',
 		on: settings.saveSubmissions
 	})
@@ -212,8 +212,8 @@
 
 {{
 	forms.lightswitchField({
-		label: 'Save spam submissions',
-		instructions: 'Keep spam-flagged submissions for review in the control panel. Off = flagged spam is dropped.',
+		label: 'Save spam submissions'|t('recranet-forms'),
+		instructions: 'Keep spam-flagged submissions for review in the control panel. Off = flagged spam is dropped.'|t('recranet-forms'),
 		name: 'saveSpamSubmissions',
 		on: settings.saveSpamSubmissions
 	})
@@ -221,8 +221,8 @@
 
 {{
 	forms.textField({
-		label: 'Retention (days)',
-		instructions: 'Delete stored submissions older than this many days (runs with Craft’s garbage collection, or via `php craft recranet-forms/gc/prune`). 0 keeps them forever. Match this to the site’s privacy statement.',
+		label: 'Retention (days)'|t('recranet-forms'),
+		instructions: 'Delete stored submissions older than this many days (runs with Craft’s garbage collection, or via `php craft recranet-forms/gc/prune`). 0 keeps them forever. Match this to the site’s privacy statement.'|t('recranet-forms'),
 		name: 'retentionDays',
 		size: 5,
 		value: settings.retentionDays,
@@ -231,14 +231,14 @@
 }}
 
 {# File-field uploads: which volume, how big, which extensions #}
-{% set volumeOptions = [{ value: '', label: 'None (file fields disabled)' }] %}
+{% set volumeOptions = [{ value: '', label: 'None (file fields disabled)'|t('recranet-forms') }] %}
 {% for volume in craft.app.volumes.allVolumes %}
 	{% set volumeOptions = volumeOptions|merge([{ value: volume.handle, label: volume.name }]) %}
 {% endfor %}
 {{
 	forms.selectField({
-		label: 'Upload volume',
-		instructions: 'Asset volume for file-field uploads, stored in a subfolder named after the form handle. Without a volume, forms with a file field reject uploads with a validation error.',
+		label: 'Upload volume'|t('recranet-forms'),
+		instructions: 'Asset volume for file-field uploads, stored in a subfolder named after the form handle. Without a volume, forms with a file field reject uploads with a validation error.'|t('recranet-forms'),
 		name: 'uploadVolume',
 		value: settings.uploadVolume,
 		options: volumeOptions,
@@ -248,8 +248,8 @@
 
 {{
 	forms.textField({
-		label: 'Maximum upload size (MB)',
-		instructions: 'Per file. PHP’s `upload_max_filesize`/`post_max_size` still apply on top of this.',
+		label: 'Maximum upload size (MB)'|t('recranet-forms'),
+		instructions: 'Per file. PHP’s `upload_max_filesize`/`post_max_size` still apply on top of this.'|t('recranet-forms'),
 		name: 'maxUploadSize',
 		size: 5,
 		value: settings.maxUploadSize,
@@ -259,8 +259,8 @@
 
 {{
 	forms.textField({
-		label: 'Allowed file extensions',
-		instructions: 'Comma-separated allowlist for file fields. Keep executable/scriptable types (svg, html, php) out unless a project truly needs them.',
+		label: 'Allowed file extensions'|t('recranet-forms'),
+		instructions: 'Comma-separated allowlist for file fields. Keep executable/scriptable types (svg, html, php) out unless a project truly needs them.'|t('recranet-forms'),
 		name: 'allowedFileExtensions',
 		value: settings.allowedFileExtensions,
 		errors: settings.getErrors('allowedFileExtensions')

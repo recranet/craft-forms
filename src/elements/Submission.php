@@ -76,12 +76,12 @@ class Submission extends Element
 
 	public static function displayName(): string
 	{
-		return 'Submission';
+		return Craft::t('recranet-forms', 'Submission');
 	}
 
 	public static function pluralDisplayName(): string
 	{
-		return 'Submissions';
+		return Craft::t('recranet-forms', 'Submissions');
 	}
 
 	public static function refHandle(): ?string
@@ -109,9 +109,9 @@ class Submission extends Element
 	public static function statuses(): array
 	{
 		return [
-			self::STATUS_SENT => ['label' => 'Sent', 'color' => 'green'],
-			self::STATUS_SPAM => ['label' => 'Spam', 'color' => 'red'],
-			self::STATUS_FAILED => ['label' => 'Failed', 'color' => 'orange'],
+			self::STATUS_SENT => ['label' => Craft::t('recranet-forms', 'Sent'), 'color' => 'green'],
+			self::STATUS_SPAM => ['label' => Craft::t('recranet-forms', 'Spam'), 'color' => 'red'],
+			self::STATUS_FAILED => ['label' => Craft::t('recranet-forms', 'Failed'), 'color' => 'orange'],
 		];
 	}
 
@@ -280,14 +280,14 @@ class Submission extends Element
 				// Editors can override the default message per field (Advanced tab).
 				// This is also the consent check: an unchecked consent box is false = empty.
 				$message = !empty($field['errorMessage'])
-					? $field['errorMessage']
-					: Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]);
+					? Craft::t('site', $field['errorMessage'])
+					: Craft::t('recranet-forms', '{label} is required.', ['label' => Craft::t('site', $field['label'])]);
 				$this->addError("field.{$handle}", $message);
 				continue;
 			}
 
 			if ($field['type'] === 'email' && $value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => $field['label']]));
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => Craft::t('site', $field['label'])]));
 			}
 
 			// Reject values that aren't one of the configured choice options
@@ -295,7 +295,7 @@ class Submission extends Element
 				$options = array_map('trim', explode(',', $field['options'] ?? ''));
 
 				if (!in_array($value, $options, true)) {
-					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => $field['label']]));
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => Craft::t('site', $field['label'])]));
 				}
 			}
 
@@ -304,12 +304,12 @@ class Submission extends Element
 				$options = array_map('trim', explode(',', $field['options'] ?? ''));
 
 				if (array_diff($value, $options) !== []) {
-					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => $field['label']]));
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => Craft::t('site', $field['label'])]));
 				}
 			}
 
 			if ($field['type'] === 'number' && $value !== null && $value !== '' && !is_numeric($value)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a number.', ['label' => $field['label']]));
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a number.', ['label' => Craft::t('site', $field['label'])]));
 			}
 
 			// Dates must be exactly what <input type="date"> posts: Y-m-d
@@ -317,12 +317,12 @@ class Submission extends Element
 				$parsed = is_string($value) ? \DateTimeImmutable::createFromFormat('Y-m-d', $value) : false;
 
 				if (!$parsed || $parsed->format('Y-m-d') !== $value) {
-					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid date.', ['label' => $field['label']]));
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid date.', ['label' => Craft::t('site', $field['label'])]));
 				}
 			}
 
 			if ($field['type'] === 'url' && $value && !filter_var($value, FILTER_VALIDATE_URL)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid URL.', ['label' => $field['label']]));
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid URL.', ['label' => Craft::t('site', $field['label'])]));
 			}
 
 			if ($field['type'] === 'file') {
@@ -350,7 +350,7 @@ class Submission extends Element
 		$settings = Plugin::getInstance()->getSettings();
 
 		if ($upload->hasError) {
-			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} could not be uploaded. Please try again.', ['label' => $field['label']]));
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} could not be uploaded. Please try again.', ['label' => Craft::t('site', $field['label'])]));
 
 			return;
 		}
@@ -453,7 +453,7 @@ class Submission extends Element
 		$sources = [
 			[
 				'key' => '*',
-				'label' => 'All submissions',
+				'label' => Craft::t('recranet-forms', 'All submissions'),
 				'criteria' => [],
 				'defaultSort' => ['dateCreated', 'desc'],
 			],
@@ -475,11 +475,11 @@ class Submission extends Element
 	{
 		return [
 			'incrementalId' => ['label' => '#'],
-			'form' => ['label' => 'Form'],
-			'preview' => ['label' => 'Preview'],
-			'spamReason' => ['label' => 'Spam reason'],
-			'sourceUrl' => ['label' => 'Source'],
-			'dateCreated' => ['label' => 'Date submitted'],
+			'form' => ['label' => Craft::t('recranet-forms', 'Form')],
+			'preview' => ['label' => Craft::t('recranet-forms', 'Preview')],
+			'spamReason' => ['label' => Craft::t('recranet-forms', 'Spam reason')],
+			'sourceUrl' => ['label' => Craft::t('recranet-forms', 'Source')],
+			'dateCreated' => ['label' => Craft::t('recranet-forms', 'Date submitted')],
 		];
 	}
 
@@ -491,7 +491,7 @@ class Submission extends Element
 	protected static function defineSortOptions(): array
 	{
 		return [
-			'dateCreated' => 'Date submitted',
+			'dateCreated' => Craft::t('recranet-forms', 'Date submitted'),
 		];
 	}
 

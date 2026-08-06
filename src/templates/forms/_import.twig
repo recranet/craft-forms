@@ -1,17 +1,17 @@
 {# Import a form from a JSON export (file upload or pasted JSON). #}
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
-{% set title = 'Import form' %}
+{% set title = 'Import form'|t('recranet-forms') %}
 {% set selectedSubnavItem = 'forms' %}
 {% set fullPageForm = true %}
 {# File uploads need a multipart form #}
 {% set formAttributes = { enctype: 'multipart/form-data' } %}
 
-{% set crumbs = [{ label: 'Forms', url: url('recranet-forms/forms') }] %}
+{% set crumbs = [{ label: 'Forms'|t('recranet-forms'), url: url('recranet-forms/forms') }] %}
 
 {% block actionButton %}
 	<div class="btngroup">
-		<button type="submit" class="btn submit">Import</button>
+		<button type="submit" class="btn submit">{{ 'Import'|t('recranet-forms') }}</button>
 	</div>
 {% endblock %}
 
@@ -19,20 +19,20 @@
 	{{ actionInput('recranet-forms/forms/import') }}
 
 	<p>
-		Upload a <code>form-*.json</code> export, or paste its contents. The handle is suffixed automatically when it
-		already exists — an import never overwrites an existing form.
+		{# The <code> markup travels inside the translation so translators keep the filename pattern intact #}
+		{{ 'Upload a <code>form-*.json</code> export, or paste its contents. The handle is suffixed automatically when it already exists — an import never overwrites an existing form.'|t('recranet-forms')|raw }}
 	</p>
 
 	{{
 		forms.fileField({
-			label: 'JSON file',
+			label: 'JSON file'|t('recranet-forms'),
 			name: 'file'
 		})
 	}}
 
 	{{
 		forms.textareaField({
-			label: 'Or paste JSON',
+			label: 'Or paste JSON'|t('recranet-forms'),
 			name: 'json',
 			rows: 14,
 			class: 'code'

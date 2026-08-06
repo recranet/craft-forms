@@ -83,3 +83,16 @@ Plugin settings (CP → Settings → Recranet Forms, stored in project config):
 | Save submissions | on | off = mail-only mode |
 | Save spam submissions | on | off = flagged spam is dropped |
 | Retention (days) | 0 (keep forever) | prunes with Craft GC |
+
+## Multi-site / translations
+
+Field labels, placeholders, descriptions, option labels and custom validation messages entered in the builder run through Craft's static translations (`site` category) when rendered. To localize a form per site, add the editor-entered strings as keys to `translations/{locale}/site.php`:
+
+```php
+'Naam' => 'Name',
+'Bericht' => 'Message',
+'Vraag, Klacht, Anders' => null, // option VALUES stay in the source language
+'Vraag' => 'Question',
+```
+
+Option **values** stored with submissions stay in the source language (option labels translate in the UI); validation always checks against the source values. The plugin's own strings (validation messages, buttons) ship translated for nl/en/de/fr/es/it in `src/translations/`.

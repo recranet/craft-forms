@@ -100,12 +100,12 @@ class Plugin extends BasePlugin
 				'heading' => 'Recranet Forms',
 				'permissions' => [
 					'recranetForms-manageForms' => [
-						'label' => 'Manage forms (create, edit, delete form definitions)',
+						'label' => Craft::t('recranet-forms', 'Manage forms (create, edit, delete form definitions)'),
 					],
 					'recranetForms-viewSubmissions' => [
-						'label' => 'View submissions',
+						'label' => Craft::t('recranet-forms', 'View submissions'),
 						'nested' => [
-							'recranetForms-deleteSubmissions' => ['label' => 'Delete submissions'],
+							'recranetForms-deleteSubmissions' => ['label' => Craft::t('recranet-forms', 'Delete submissions')],
 						],
 					],
 				],
@@ -152,10 +152,10 @@ class Plugin extends BasePlugin
 	public function getCpNavItem(): ?array
 	{
 		$item = parent::getCpNavItem();
-		$item['label'] = 'Forms';
+		$item['label'] = Craft::t('recranet-forms', 'Forms');
 		$item['subnav'] = [
-			'forms' => ['label' => 'Forms', 'url' => 'recranet-forms/forms'],
-			'submissions' => ['label' => 'Submissions', 'url' => 'recranet-forms/submissions'],
+			'forms' => ['label' => Craft::t('recranet-forms', 'Forms'), 'url' => 'recranet-forms/forms'],
+			'submissions' => ['label' => Craft::t('recranet-forms', 'Submissions'), 'url' => 'recranet-forms/submissions'],
 		];
 
 		return $item;

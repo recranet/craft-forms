@@ -2,21 +2,21 @@
    Values come from submission.values (submit-time snapshot), so this view
    stays correct even after the form's fields are renamed or removed. #}
 {% extends '_layouts/cp' %}
-{% set title = 'Submission' ~ (submission.incrementalId ? ' #' ~ submission.incrementalId) %}
+{% set title = 'Submission'|t('recranet-forms') ~ (submission.incrementalId ? ' #' ~ submission.incrementalId) %}
 {% set selectedSubnavItem = 'submissions' %}
 
-{% set crumbs = [{ label: 'Submissions', url: url('recranet-forms/submissions') }] %}
+{% set crumbs = [{ label: 'Submissions'|t('recranet-forms'), url: url('recranet-forms/submissions') }] %}
 
 {% block content %}
 	{% if submission.isSpam %}
 		<div class="warning-alert warning with-icon" style="margin-bottom: 24px;">
-			<strong>Flagged as spam:</strong> {{ submission.spamReason }}
-			{% if submission.spamScore is not null %}(score: {{ submission.spamScore }}){% endif %}
+			<strong>{{ 'Flagged as spam:'|t('recranet-forms') }}</strong> {{ submission.spamReason }}
+			{% if submission.spamScore is not null %}{{ '(score: {score})'|t('recranet-forms', { score: submission.spamScore }) }}{% endif %}
 		</div>
 	{% elseif submission.sendError %}
 		{# Saved but the notification never went out — the data is safe, resend manually #}
 		<div class="error-alert error with-icon" style="margin-bottom: 24px;">
-			<strong>Notification failed:</strong> {{ submission.sendError }}
+			<strong>{{ 'Notification failed:'|t('recranet-forms') }}</strong> {{ submission.sendError }}
 		</div>
 	{% elseif submission.spamReason %}
 		{# Accepted despite a reCAPTCHA config error — surface it for diagnosis #}
@@ -28,16 +28,16 @@
 	<table class="data fullwidth">
 		<tbody>
 			<tr>
-				<th class="light">Form</th>
+				<th class="light">{{ 'Form'|t('recranet-forms') }}</th>
 				<td>{{ form ? form.name : '—' }}</td>
 			</tr>
 			<tr>
-				<th class="light">Submitted</th>
+				<th class="light">{{ 'Submitted'|t('recranet-forms') }}</th>
 				<td>{{ submission.dateCreated|datetime('short') }}</td>
 			</tr>
 			{% if submission.sourceUrl %}
 				<tr>
-					<th class="light">Source</th>
+					<th class="light">{{ 'Source'|t('recranet-forms') }}</th>
 					<td>{{ submission.sourceUrl }}</td>
 				</tr>
 			{% endif %}
@@ -47,7 +47,7 @@
 					<th class="light">{{ row.label }}</th>
 					<td>
 						{% if row.type == 'checkbox' or row.type == 'consent' %}
-							{{ row.value ? 'Yes' : 'No' }}
+							{{ row.value ? 'Yes'|t('recranet-forms') : 'No'|t('recranet-forms') }}
 						{% elseif row.type == 'file' %}
 							{# File value = asset id; link to the asset's edit page #}
 							{% set asset = row.value ? craft.assets.id(row.value).one() : null %}

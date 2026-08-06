@@ -17,7 +17,9 @@
 <form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8" enctype="multipart/form-data">
 	{{ csrfInput() }}
 	{{ actionInput('recranet-forms/submissions/submit') }}
-	{{ redirectInput(options.redirect ?? craft.app.request.pathInfo ~ '?submitted=true') }}
+	{# Parenthesized: Twig's ?? binds tighter than ~, so without them the
+	   suffix would be appended to a caller-provided redirect too #}
+	{{ redirectInput(options.redirect ?? (craft.app.request.pathInfo ~ '?submitted=true')) }}
 	{{ hiddenInput('formHandle', form.handle|hash) }}
 
 	{% if settings.honeypotEnabled %}
@@ -88,16 +90,16 @@
 			>
 				{% if field.type == 'heading' %}
 					{# Layout-only: renders a heading, never stores a value #}
-					<h3 class="mb-0">{{ field.label }}</h3>
+					<h3 class="mb-0">{{ field.label|t }}</h3>
 				{% elseif field.type == 'paragraph' %}
 					{# Layout-only: the description is the content, the label an optional small heading #}
-					{% if field.label %}<h4 class="h6">{{ field.label }}</h4>{% endif %}
-					<p class="mb-0">{{ description|nl2br }}</p>
+					{% if field.label %}<h4 class="h6">{{ field.label|t }}</h4>{% endif %}
+					<p class="mb-0">{{ description|t|nl2br }}</p>
 				{% elseif field.type == 'radio' %}
 					{# Radio group: fieldset + legend gives the group an accessible name #}
 					<fieldset {% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}>
 						<legend class="form-label fs-6">
-							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+							{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
 						</legend>
 						{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
 							<div class="form-check">
@@ -111,7 +113,7 @@
 									{{ field.required ? 'required' }}
 									{% if fieldErrors %}aria-invalid="true"{% endif %}
 								/>
-								<label class="form-check-label" for="{{ inputId }}-{{ loop.index }}">{{ option }}</label>
+								<label class="form-check-label" for="{{ inputId }}-{{ loop.index }}">{{ option|t }}</label>
 							</div>
 						{% endfor %}
 					</fieldset>
@@ -122,7 +124,7 @@
 					{% set checkedValues = value is iterable ? value : (value ? value|split(',')|map(o => o|trim) : []) %}
 					<fieldset {% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}>
 						<legend class="form-label fs-6">
-							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+							{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
 						</legend>
 						{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
 							<div class="form-check">
@@ -135,7 +137,7 @@
 									{{ option in checkedValues ? 'checked' }}
 									{% if fieldErrors %}aria-invalid="true"{% endif %}
 								/>
-								<label class="form-check-label" for="{{ inputId }}-{{ loop.index }}">{{ option }}</label>
+								<label class="form-check-label" for="{{ inputId }}-{{ loop.index }}">{{ option|t }}</label>
 							</div>
 						{% endfor %}
 					</fieldset>
@@ -157,7 +159,7 @@
 						   snapshotted on every submission, so exactly what the visitor agreed
 						   to stays on record even after the text changes. #}
 						<label class="form-check-label" for="{{ inputId }}">
-							{{ field.type == 'consent' ? (description ?: field.label) : field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+							{{ (field.type == 'consent' ? (description ?: field.label) : field.label)|t }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
 						</label>
 					</div>
 				{% elseif field.type == 'file' %}
@@ -165,7 +167,7 @@
 					   extensions (server validates the allowlist + size regardless).
 					   No value repopulation — browsers don't allow prefilled file inputs. #}
 					<label class="form-label" for="{{ inputId }}">
-						{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+						{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
 					</label>
 					{% set accept = settings.getAllowedFileExtensions()|map(e => '.' ~ e)|join(',') %}
 					<input
@@ -180,7 +182,7 @@
 					/>
 				{% else %}
 					<label class="form-label" for="{{ inputId }}">
-						{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+						{{ field.label|t }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
 					</label>
 					{% if field.type == 'textarea' %}
 						<textarea
@@ -188,7 +190,7 @@
 							name="fields[{{ field.handle }}]"
 							id="{{ inputId }}"
 							rows="6"
-							{% if field.placeholder ?? false %}placeholder="{{ field.placeholder }}"{% endif %}
+							{% if field.placeholder ?? false %}placeholder="{{ field.placeholder|t }}"{% endif %}
 							{{ field.required ? 'required' }}
 							{% if fieldErrors %}aria-invalid="true"{% endif %}
 							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
@@ -204,7 +206,7 @@
 						>
 							<option value=""></option>
 							{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
-								<option value="{{ option }}" {{ value == option ? 'selected' }}>{{ option }}</option>
+								<option value="{{ option }}" {{ value == option ? 'selected' }}>{{ option|t }}</option>
 							{% endfor %}
 						</select>
 					{% else %}
@@ -214,7 +216,7 @@
 							name="fields[{{ field.handle }}]"
 							id="{{ inputId }}"
 							value="{{ value }}"
-							{% if field.placeholder ?? false %}placeholder="{{ field.placeholder }}"{% endif %}
+							{% if field.placeholder ?? false %}placeholder="{{ field.placeholder|t }}"{% endif %}
 							{{ field.required ? 'required' }}
 							{% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
 							{% if inputmode %}inputmode="{{ inputmode }}"{% endif %}
@@ -224,7 +226,7 @@
 					{% endif %}
 				{% endif %}
 				{% if showDescription %}
-					<div class="form-text" id="{{ descriptionId }}">{{ description }}</div>
+					<div class="form-text" id="{{ descriptionId }}">{{ description|t }}</div>
 				{% endif %}
 				{% if fieldErrors %}
 					<div class="invalid-feedback d-block" id="{{ errorId }}">{{ fieldErrors|join(' ') }}</div>

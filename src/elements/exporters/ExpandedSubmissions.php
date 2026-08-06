@@ -17,7 +17,7 @@ class ExpandedSubmissions extends ElementExporter
 {
 	public static function displayName(): string
 	{
-		return 'Submissions (expanded fields)';
+		return Craft::t('recranet-forms', 'Submissions (expanded fields)');
 	}
 
 	public function export(ElementQueryInterface $query): array

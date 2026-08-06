@@ -7,15 +7,15 @@
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
 
-{% set title = form.id ? form.name : 'New form' %}
+{% set title = form.id ? form.name : 'New form'|t('recranet-forms') %}
 {% set selectedSubnavItem = 'forms' %}
 {% set fullPageForm = true %}
 
-{% set crumbs = [{ label: 'Forms', url: url('recranet-forms/forms') }] %}
+{% set crumbs = [{ label: 'Forms'|t('recranet-forms'), url: url('recranet-forms/forms') }] %}
 
 {% block actionButton %}
 	<div class="btngroup">
-		<button type="submit" class="btn submit">Save</button>
+		<button type="submit" class="btn submit">{{ 'Save'|t('recranet-forms') }}</button>
 	</div>
 {% endblock %}
 
@@ -28,24 +28,24 @@
 		   the Forms service assigns one. #}
 		<input type="hidden" name="fields[{{ index }}][uid]" value="{{ field.uid ?? '' }}" />
 		<div class="rf-field__bar">
-			<a class="move icon rf-field__move" title="Drag to reorder" role="button" aria-label="Drag to reorder"></a>
-			<strong class="rf-field__title">{{ field.label ?: 'New field' }}</strong>
+			<a class="move icon rf-field__move" title="{{ 'Drag to reorder'|t('recranet-forms') }}" role="button" aria-label="{{ 'Drag to reorder'|t('recranet-forms') }}"></a>
+			<strong class="rf-field__title">{{ field.label ?: 'New field'|t('recranet-forms') }}</strong>
 			<span class="rf-field__badge">{{ field.type }}</span>
-			<button type="button" class="btn small rf-field__duplicate" title="Duplicate field">Duplicate</button>
-			<button type="button" class="delete icon rf-field__delete" title="Delete field" aria-label="Delete field"></button>
+			<button type="button" class="btn small rf-field__duplicate" title="{{ 'Duplicate field'|t('recranet-forms') }}">{{ 'Duplicate'|t('recranet-forms') }}</button>
+			<button type="button" class="delete icon rf-field__delete" title="{{ 'Delete field'|t('recranet-forms') }}" aria-label="{{ 'Delete field'|t('recranet-forms') }}"></button>
 		</div>
 
 		{# Per-card tab nav; panes are toggled by JS #}
-		<nav class="rf-tabs" aria-label="Field settings">
-			<button type="button" class="rf-tab sel" data-rf-tab="general">General</button>
-			<button type="button" class="rf-tab" data-rf-tab="appearance">Appearance</button>
-			<button type="button" class="rf-tab" data-rf-tab="advanced">Advanced</button>
+		<nav class="rf-tabs" aria-label="{{ 'Field settings'|t('recranet-forms') }}">
+			<button type="button" class="rf-tab sel" data-rf-tab="general">{{ 'General'|t('recranet-forms') }}</button>
+			<button type="button" class="rf-tab" data-rf-tab="appearance">{{ 'Appearance'|t('recranet-forms') }}</button>
+			<button type="button" class="rf-tab" data-rf-tab="advanced">{{ 'Advanced'|t('recranet-forms') }}</button>
 		</nav>
 
 		<div class="rf-pane" data-rf-pane="general">
 			<div class="rf-field__grid">
 				<div class="rf-cell--wide">
-					<label class="rf-label">Label</label>
+					<label class="rf-label">{{ 'Label'|t('recranet-forms') }}</label>
 					<input
 						type="text"
 						class="text fullwidth rf-input-label"
@@ -55,7 +55,7 @@
 					/>
 				</div>
 				<div>
-					<label class="rf-label">Handle</label>
+					<label class="rf-label">{{ 'Handle'|t('recranet-forms') }}</label>
 					<input
 						type="text"
 						class="text fullwidth code rf-input-handle"
@@ -66,7 +66,7 @@
 					/>
 				</div>
 				<div>
-					<label class="rf-label">Type</label>
+					<label class="rf-label">{{ 'Type'|t('recranet-forms') }}</label>
 					<div class="select fullwidth">
 						<select name="fields[{{ index }}][type]" class="rf-input-type">
 							{% for type in fieldTypes %}
@@ -75,8 +75,8 @@
 						</select>
 					</div>
 				</div>
-				<div class="rf-cell--wide rf-field__options" {{ field.type == 'select' ? '' : 'hidden' }}>
-					<label class="rf-label">Options (comma-separated)</label>
+				<div class="rf-cell--wide rf-field__options" {{ field.type in ['select', 'radio', 'checkboxes'] ? '' : 'hidden' }}>
+					<label class="rf-label">{{ 'Options (comma-separated)'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][options]" value="{{ field.options ?? '' }}" />
 				</div>
 				<div class="rf-field__required">
@@ -88,7 +88,7 @@
 						value="1"
 						{{ field.required ? 'checked' }}
 					/>
-					<label for="rf-required-{{ index }}">Required</label>
+					<label for="rf-required-{{ index }}">{{ 'Required'|t('recranet-forms') }}</label>
 				</div>
 			</div>
 		</div>
@@ -96,22 +96,22 @@
 		<div class="rf-pane" data-rf-pane="appearance" hidden>
 			<div class="rf-field__grid">
 				<div>
-					<label class="rf-label">Width</label>
+					<label class="rf-label">{{ 'Width'|t('recranet-forms') }}</label>
 					<div class="select fullwidth">
 						<select name="fields[{{ index }}][width]">
-							<option value="full" {{ (field.width ?? 'full') == 'full' ? 'selected' }}>Full</option>
-							<option value="half" {{ (field.width ?? 'full') == 'half' ? 'selected' }}>Half</option>
+							<option value="full" {{ (field.width ?? 'full') == 'full' ? 'selected' }}>{{ 'Full'|t('recranet-forms') }}</option>
+							<option value="half" {{ (field.width ?? 'full') == 'half' ? 'selected' }}>{{ 'Half'|t('recranet-forms') }}</option>
 						</select>
 					</div>
 				</div>
 				<div class="rf-cell--wide">
-					<label class="rf-label">Placeholder</label>
+					<label class="rf-label">{{ 'Placeholder'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][placeholder]" value="{{ field.placeholder ?? '' }}" />
 				</div>
 				<div class="rf-cell--wide rf-cell--full">
-					<label class="rf-label">Description</label>
+					<label class="rf-label">{{ 'Description'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][description]" value="{{ field.description ?? '' }}" />
-					<p class="rf-hint">Help text shown under the input.</p>
+					<p class="rf-hint">{{ 'Help text shown under the input. For a consent field this IS the consent text (stored with each submission); for a paragraph it is the content.'|t('recranet-forms') }}</p>
 				</div>
 			</div>
 		</div>
@@ -119,22 +119,22 @@
 		<div class="rf-pane" data-rf-pane="advanced" hidden>
 			<div class="rf-field__grid">
 				<div class="rf-cell--wide">
-					<label class="rf-label">Admin label</label>
+					<label class="rf-label">{{ 'Admin label'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][adminLabel]" value="{{ field.adminLabel ?? '' }}" />
-					<p class="rf-hint">Short label for the CP and exports; the front end keeps the normal label.</p>
+					<p class="rf-hint">{{ 'Short label for the CP and exports; the front end keeps the normal label.'|t('recranet-forms') }}</p>
 				</div>
 				<div class="rf-cell--wide">
-					<label class="rf-label">Default value</label>
+					<label class="rf-label">{{ 'Default value'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][defaultValue]" value="{{ field.defaultValue ?? '' }}" />
 				</div>
 				<div class="rf-cell--wide rf-cell--full">
-					<label class="rf-label">Custom validation message</label>
+					<label class="rf-label">{{ 'Custom validation message'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][errorMessage]" value="{{ field.errorMessage ?? '' }}" />
-					<p class="rf-hint">Shown instead of the default "… is required." message.</p>
+					<p class="rf-hint">{{ 'Shown instead of the default "… is required." message.'|t('recranet-forms') }}</p>
 				</div>
 				<div class="rf-cell--wide rf-cell--full rf-conditions" data-rf-conditions-editor>
-					<label class="rf-label">Conditional visibility</label>
-					<p class="rf-hint">Show this field only when rules match. Fields added in this session can be referenced after saving.</p>
+					<label class="rf-label">{{ 'Conditional visibility'|t('recranet-forms') }}</label>
+					<p class="rf-hint">{{ 'Show this field only when rules match. Fields added in this session can be referenced after saving.'|t('recranet-forms') }}</p>
 					{# Serialized to JSON by JS on every change; PHP decodes it in normalizeFieldRows() #}
 					<input type="hidden" name="fields[{{ index }}][conditions]" value="{{ field.conditions is defined and field.conditions ? field.conditions|json_encode }}" class="rf-conditions-json" />
 					<div class="rf-conditions-ui"></div>
@@ -154,7 +154,7 @@
 	{{
 		forms.textField({
 			first: true,
-			label: 'Name',
+			label: 'Name'|t('recranet-forms'),
 			name: 'name',
 			value: form.name,
 			required: true,
@@ -164,8 +164,8 @@
 
 	{{
 		forms.textField({
-			label: 'Handle',
-			instructions: 'Used in templates: `craft.recranetForms.render(\'handle\')`.',
+			label: 'Handle'|t('recranet-forms'),
+			instructions: 'Used in templates: `craft.recranetForms.render(\'handle\')`.'|t('recranet-forms'),
 			name: 'handle',
 			class: 'code',
 			value: form.handle,
@@ -177,15 +177,15 @@
 	{% if form.id %}
 		{# Copy-paste embed snippet, so nobody has to remember the Twig call #}
 		<div class="field">
-			<div class="heading"><label>Embed</label></div>
+			<div class="heading"><label>{{ 'Embed'|t('recranet-forms') }}</label></div>
 			<div class="rf-embed">
 				<code id="rf-embed-snippet">{{ "{{ craft.recranetForms.render('#{form.handle}') }}" }}</code>
 				<button
 					type="button"
 					class="btn small"
-					onclick="navigator.clipboard.writeText(document.getElementById('rf-embed-snippet').textContent).then(() => Craft.cp.displayNotice('Copied.'));"
+					onclick="navigator.clipboard.writeText(document.getElementById('rf-embed-snippet').textContent).then(() => Craft.cp.displayNotice({{ 'Copied.'|t('recranet-forms')|json_encode }}));"
 				>
-					Copy
+					{{ 'Copy'|t('recranet-forms') }}
 				</button>
 			</div>
 		</div>
@@ -194,8 +194,8 @@
 	<hr />
 
 	<div class="field">
-		<div class="heading"><label>Fields</label></div>
-		<div class="instructions"><p>Drag the cards to reorder. Half-width fields sit side by side on the site.</p></div>
+		<div class="heading"><label>{{ 'Fields'|t('recranet-forms') }}</label></div>
+		<div class="instructions"><p>{{ 'Drag the cards to reorder. Half-width fields sit side by side on the site.'|t('recranet-forms') }}</p></div>
 		{% if form.getErrors('fields') %}
 			<ul class="errors">
 				{% for error in form.getErrors('fields') %}<li>{{ error }}</li>{% endfor %}
@@ -210,7 +210,7 @@
 			</div>
 
 			<div class="rf-builder__add">
-				<div class="btn add icon menubtn" role="button" tabindex="0">Add a field</div>
+				<div class="btn add icon menubtn" role="button" tabindex="0">{{ 'Add a field'|t('recranet-forms') }}</div>
 				<div class="menu">
 					<ul>
 						{% for type in fieldTypes %}
@@ -236,18 +236,18 @@
 
 	{# Mail settings grouped in tabs; all inputs stay in the DOM so both
 	   panes post with the single form save #}
-	{% set templateOptions = [{ value: '', label: 'Default template' }]|merge(emailTemplates|map(t => { value: t, label: t })) %}
+	{% set templateOptions = [{ value: '', label: 'Default template'|t('recranet-forms') }]|merge(emailTemplates|map(t => { value: t, label: t })) %}
 
-	<nav class="rfs-tabs" aria-label="Mail settings">
-		<button type="button" class="rfs-tab sel" data-rfs-tab="notification">Notification</button>
-		<button type="button" class="rfs-tab" data-rfs-tab="confirmation">Confirmation</button>
+	<nav class="rfs-tabs" aria-label="{{ 'Mail settings'|t('recranet-forms') }}">
+		<button type="button" class="rfs-tab sel" data-rfs-tab="notification">{{ 'Notification'|t('recranet-forms') }}</button>
+		<button type="button" class="rfs-tab" data-rfs-tab="confirmation">{{ 'Confirmation'|t('recranet-forms') }}</button>
 	</nav>
 
 	<div class="rfs-pane" data-rfs-pane="notification">
 		{{
 			forms.textField({
-				label: 'Recipients',
-				instructions: 'Comma-separated email addresses. Falls back to the system email address when empty. Supports merge tags: `{afdeling}@example.com`.',
+				label: 'Recipients'|t('recranet-forms'),
+				instructions: 'Comma-separated email addresses. Falls back to the system email address when empty. Supports merge tags: `{afdeling}@example.com`.'|t('recranet-forms'),
 				name: 'recipients',
 				value: form.recipients,
 				errors: form.getErrors('recipients')
@@ -256,8 +256,8 @@
 
 		{{
 			forms.textField({
-				label: 'Subject',
-				instructions: 'Supports merge tags with field handles: `Aanvraag {onderwerp} — #{ref}`.',
+				label: 'Subject'|t('recranet-forms'),
+				instructions: 'Supports merge tags with field handles: `Aanvraag {onderwerp} — #{ref}`.'|t('recranet-forms'),
 				name: 'subject',
 				value: form.subject
 			})
@@ -265,8 +265,8 @@
 
 		{{
 			forms.textareaField({
-				label: 'Intro text',
-				instructions: 'Shown above the submitted values in the notification email. Supports merge tags. Editable here on production — no deploy needed.',
+				label: 'Intro text'|t('recranet-forms'),
+				instructions: 'Shown above the submitted values in the notification email. Supports merge tags. Editable here on production — no deploy needed.'|t('recranet-forms'),
 				name: 'notificationIntro',
 				rows: 3,
 				value: form.notificationIntro
@@ -275,8 +275,8 @@
 
 		{{
 			forms.selectField({
-				label: 'Template',
-				instructions: 'Site template used for the notification email of this form. "Default template" resolves to `templates/recranet-forms/_emails/notification.twig` when it exists, else the plugin’s built-in one.',
+				label: 'Template'|t('recranet-forms'),
+				instructions: 'Site template used for the notification email of this form. "Default template" resolves to `templates/recranet-forms/_emails/notification.twig` when it exists, else the plugin’s built-in one.'|t('recranet-forms'),
 				name: 'notificationTemplate',
 				value: form.notificationTemplate,
 				options: templateOptions
@@ -287,8 +287,8 @@
 	<div class="rfs-pane" data-rfs-pane="confirmation" hidden>
 		{{
 			forms.lightswitchField({
-				label: 'Send confirmation email to submitter',
-				instructions: 'Requires an email field in the form.',
+				label: 'Send confirmation email to submitter'|t('recranet-forms'),
+				instructions: 'Requires an email field in the form.'|t('recranet-forms'),
 				name: 'sendConfirmation',
 				on: form.sendConfirmation
 			})
@@ -296,8 +296,8 @@
 
 		{{
 			forms.textField({
-				label: 'Subject',
-				instructions: 'Supports merge tags with field handles.',
+				label: 'Subject'|t('recranet-forms'),
+				instructions: 'Supports merge tags with field handles.'|t('recranet-forms'),
 				name: 'confirmationSubject',
 				value: form.confirmationSubject
 			})
@@ -305,8 +305,8 @@
 
 		{{
 			forms.textareaField({
-				label: 'Body text',
-				instructions: 'The thank-you text of the confirmation email. Supports merge tags. Empty = the template’s default line.',
+				label: 'Body text'|t('recranet-forms'),
+				instructions: 'The thank-you text of the confirmation email. Supports merge tags. Empty = the template’s default line.'|t('recranet-forms'),
 				name: 'confirmationBody',
 				rows: 4,
 				value: form.confirmationBody
@@ -315,8 +315,8 @@
 
 		{{
 			forms.selectField({
-				label: 'Template',
-				instructions: 'Site template used for the confirmation email of this form.',
+				label: 'Template'|t('recranet-forms'),
+				instructions: 'Site template used for the confirmation email of this form.'|t('recranet-forms'),
 				name: 'confirmationTemplate',
 				value: form.confirmationTemplate,
 				options: templateOptions
@@ -332,9 +332,9 @@
 			class="btn"
 			style="color: var(--error-color);"
 			data-icon="trash"
-			onclick="if (confirm('Delete this form and all its submissions?')) { Craft.postActionRequest('recranet-forms/forms/delete', { formId: {{ form.id }} }, () => (window.location.href = '{{ url('recranet-forms/forms') }}')); }"
+			onclick="if (confirm({{ 'Delete this form and all its submissions?'|t('recranet-forms')|json_encode }})) { Craft.postActionRequest('recranet-forms/forms/delete', { formId: {{ form.id }} }, () => (window.location.href = '{{ url('recranet-forms/forms') }}')); }"
 		>
-			Delete form
+			{{ 'Delete form'|t('recranet-forms') }}
 		</button>
 	{% endif %}
 {% css %}
@@ -367,6 +367,22 @@
 
 {% js %}
 	(function () {
+		// CP UI strings rendered from Twig so the builder JS stays translatable
+		var i18n = {{
+			{
+				newField: 'New field'|t('recranet-forms'),
+				addRule: 'Add rule'|t('recranet-forms'),
+				removeRule: 'Remove rule'|t('recranet-forms'),
+				matchAllRules: 'Match all rules'|t('recranet-forms'),
+				matchAnyRule: 'Match any rule'|t('recranet-forms'),
+				opIs: 'is'|t('recranet-forms'),
+				opIsNot: 'is not'|t('recranet-forms'),
+				opContains: 'contains'|t('recranet-forms'),
+				opIsEmpty: 'is empty'|t('recranet-forms'),
+				opIsNotEmpty: 'is not empty'|t('recranet-forms'),
+			}|json_encode|raw
+		}};
+
 		// Mail settings tabs (independent of the per-card tabs above)
 		document.querySelectorAll('.rfs-tab').forEach(function (tab) {
 			tab.addEventListener('click', function () {
@@ -383,11 +399,11 @@
 		var uid = 1000; // fresh index seed for added cards; renumber() makes them sequential
 
 		var OPERATORS = [
-			{ value: 'is', label: 'is' },
-			{ value: 'isNot', label: 'is not' },
-			{ value: 'contains', label: 'contains' },
-			{ value: 'isEmpty', label: 'is empty' },
-			{ value: 'isNotEmpty', label: 'is not empty' },
+			{ value: 'is', label: i18n.opIs },
+			{ value: 'isNot', label: i18n.opIsNot },
+			{ value: 'contains', label: i18n.opContains },
+			{ value: 'isEmpty', label: i18n.opIsEmpty },
+			{ value: 'isNotEmpty', label: i18n.opIsNotEmpty },
 		];
 
 		// Rewrite fields[N][...] names (and checkbox id/for pairs) to match visual order
@@ -442,19 +458,19 @@
 						}).join('') +
 						'</select></div>' +
 						(needsValue ? '<input type="text" class="text" data-k="value" value="' + Craft.escapeHtml(rule.value || '') + '" />' : '') +
-						'<button type="button" class="delete icon" data-rf-rule-delete title="Remove rule"></button>' +
+						'<button type="button" class="delete icon" data-rf-rule-delete title="' + Craft.escapeHtml(i18n.removeRule) + '"></button>' +
 						'</div>';
 				});
 
 				if (state.rules.length > 1) {
 					html += '<div class="select rf-conditions-mode"><select data-rf-mode>' +
-						'<option value="all"' + (state.mode === 'all' ? ' selected' : '') + '>Match all rules</option>' +
-						'<option value="any"' + (state.mode === 'any' ? ' selected' : '') + '>Match any rule</option>' +
+						'<option value="all"' + (state.mode === 'all' ? ' selected' : '') + '>' + Craft.escapeHtml(i18n.matchAllRules) + '</option>' +
+						'<option value="any"' + (state.mode === 'any' ? ' selected' : '') + '>' + Craft.escapeHtml(i18n.matchAnyRule) + '</option>' +
 						'</select></div>';
 				}
 
 				html += '<div style="margin-top: 8px;"><button type="button" class="btn small add icon" data-rf-rule-add' +
-					(knownFields.length ? '' : ' disabled') + '>Add rule</button></div>';
+					(knownFields.length ? '' : ' disabled') + '>' + Craft.escapeHtml(i18n.addRule) + '</button></div>';
 				ui.innerHTML = html;
 			}
 
@@ -532,7 +548,7 @@
 			var card = event.target.closest('.rf-field');
 			if (!card) return;
 			if (event.target.classList.contains('rf-input-label')) {
-				card.querySelector('.rf-field__title').textContent = event.target.value || 'New field';
+				card.querySelector('.rf-field__title').textContent = event.target.value || i18n.newField;
 				var handle = card.querySelector('.rf-input-handle');
 				if (handle.dataset.auto) handle.value = toHandle(event.target.value);
 			}
@@ -545,7 +561,7 @@
 			var card = event.target.closest('.rf-field');
 			card.dataset.type = event.target.value;
 			card.querySelector('.rf-field__badge').textContent = event.target.value;
-			card.querySelector('.rf-field__options').hidden = event.target.value !== 'select';
+			card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(event.target.value);
 		});
 
 		list.addEventListener('click', function (event) {
@@ -585,7 +601,7 @@
 				card.dataset.type = type;
 				card.querySelector('.rf-field__badge').textContent = type;
 				card.querySelector('.rf-input-type').value = type;
-				card.querySelector('.rf-field__options').hidden = type !== 'select';
+				card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(type);
 				initCard(card);
 				dragSort.addItems($(card));
 				renumber();
