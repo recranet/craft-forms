@@ -155,7 +155,9 @@
 
 {% block content %}
 	{{ actionInput('recranet-forms/forms/save') }}
-	{{ redirectInput('recranet-forms/forms') }}
+	{# Stay on the form after saving — editors usually keep working on it.
+	   A new form has no id yet, so {id} is filled in from the saved model. #}
+	{{ redirectInput('recranet-forms/forms/{id}') }}
 	{% if form.id %}
 		{{ hiddenInput('formId', form.id) }}
 	{% endif %}
@@ -213,6 +215,34 @@
 					</button>
 				</div>
 			</div>
+
+			<hr />
+
+			{# Per-form retention overrides the plugin-wide setting #}
+			{{
+				forms.textField({
+					label: 'Retention (days)'|t('recranet-forms'),
+					instructions: 'Overrides the plugin-wide retention for this form. Empty = inherit, 0 = keep forever.'|t('recranet-forms'),
+					name: 'retentionDays',
+					size: 5,
+					value: form.retentionDays,
+					errors: form.getErrors('retentionDays')
+				})
+			}}
+
+			{{
+				forms.selectField({
+					label: 'Retention mode'|t('recranet-forms'),
+					instructions: 'What happens when a submission passes its retention window: delete it entirely, or keep the row for statistics with all personal data blanked.'|t('recranet-forms'),
+					name: 'retentionMode',
+					value: form.retentionMode,
+					options: [
+						{ value: 'delete', label: 'Delete submission'|t('recranet-forms') },
+						{ value: 'anonymize', label: 'Anonymize (keep row, blank personal data)'|t('recranet-forms') }
+					],
+					errors: form.getErrors('retentionMode')
+				})
+			}}
 
 			<hr />
 			{# Delete via a separate POST to avoid nesting forms #}

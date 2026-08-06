@@ -99,6 +99,9 @@ class FormsController extends Controller
 		$form->sendConfirmation = (bool)$request->getBodyParam('sendConfirmation', false);
 		$form->confirmationSubject = (string)$request->getBodyParam('confirmationSubject', '');
 		$form->confirmationTemplate = (string)$request->getBodyParam('confirmationTemplate', '');
+		// Empty string = inherit the plugin-wide retention setting
+		$form->retentionDays = (string)$request->getBodyParam('retentionDays', '');
+		$form->retentionMode = (string)$request->getBodyParam('retentionMode', Form::RETENTION_MODE_DELETE);
 		$form->confirmationBody = (string)$request->getBodyParam('confirmationBody', '');
 		$form->fields = $this->normalizeFieldRows((array)$request->getBodyParam('fields', []));
 

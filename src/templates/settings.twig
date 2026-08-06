@@ -1,16 +1,25 @@
-{# Plugin settings: captcha provider, spam pipeline, storage/retention. Keys support $ENV_VAR syntax. #}
+{# Plugin settings: captcha provider, spam pipeline, storage/retention/uploads. Keys support $ENV_VAR syntax. #}
 {% import '_includes/forms' as forms %}
 
 {# Sections are grouped in tabs (same pattern as the form builder cards);
    plain buttons + hidden panes, no dependencies. All inputs stay in the DOM,
-   so every tab posts with the single settings form. #}
+   so every tab posts with the single settings form. Each pane opens with a short
+   intro and is split into <h3> sub-sections, so ~25 fields stay scannable. #}
 <nav class="rfs-tabs" aria-label="{{ 'Settings sections'|t('recranet-forms') }}">
 	<button type="button" class="rfs-tab sel" data-rfs-tab="captcha">{{ 'Captcha'|t('recranet-forms') }}</button>
 	<button type="button" class="rfs-tab" data-rfs-tab="spam">{{ 'Spam checks'|t('recranet-forms') }}</button>
 	<button type="button" class="rfs-tab" data-rfs-tab="storage">{{ 'Storage'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="retention">{{ 'Retention'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="uploads">{{ 'Uploads'|t('recranet-forms') }}</button>
 </nav>
 
+{# ---------------------------------------------------------------- Captcha #}
 <div class="rfs-pane" data-rfs-pane="captcha">
+<p class="rf-settings-intro">{{ 'settings.captcha.intro'|t('recranet-forms') }}</p>
+
+<h3>{{ 'Provider'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.captcha.provider.hint'|t('recranet-forms') }}</p>
+
 {{
 	forms.selectField({
 		label: 'Provider'|t('recranet-forms'),
@@ -27,6 +36,10 @@
 		errors: settings.getErrors('captchaProvider')
 	})
 }}
+
+<h3>{{ 'Keys'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.captcha.keys.hint'|t('recranet-forms') }}</p>
+<p class="rf-settings-hint">{{ 'settings.captcha.keys.scope'|t('recranet-forms') }}</p>
 
 <div>
 	{{
@@ -47,39 +60,6 @@
 			suggestEnvVars: true,
 			value: settings.recaptchaSecretKey,
 			errors: settings.getErrors('recaptchaSecretKey')
-		})
-	}}
-</div>
-
-<div>
-	{{
-		forms.textField({
-			label: 'Score threshold'|t('recranet-forms'),
-			instructions: 'Submissions scoring below this (0–1) are flagged as spam. Default 0.5.'|t('recranet-forms'),
-			name: 'recaptchaThreshold',
-			size: 5,
-			value: settings.recaptchaThreshold,
-			errors: settings.getErrors('recaptchaThreshold')
-		})
-	}}
-
-	{{
-		forms.textField({
-			label: 'Reject threshold'|t('recranet-forms'),
-			instructions: 'Below this score a submission is definite spam: rejected outright and not stored. Between the two thresholds it is stored as reviewable spam. Default 0.3.'|t('recranet-forms'),
-			name: 'recaptchaRejectThreshold',
-			size: 5,
-			value: settings.recaptchaRejectThreshold,
-			errors: settings.getErrors('recaptchaRejectThreshold')
-		})
-	}}
-
-	{{
-		forms.lightswitchField({
-			label: 'Hide the reCAPTCHA badge'|t('recranet-forms'),
-			instructions: 'Allowed by Google as long as the form shows the reCAPTCHA attribution text.'|t('recranet-forms'),
-			name: 'recaptchaHideBadge',
-			on: settings.recaptchaHideBadge
 		})
 	}}
 </div>
@@ -128,6 +108,45 @@
 	}}
 </div>
 
+<h3>{{ 'Scoring'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.captcha.scoring.hint'|t('recranet-forms') }}</p>
+
+<div>
+	{{
+		forms.textField({
+			label: 'Score threshold'|t('recranet-forms'),
+			instructions: 'Submissions scoring below this (0–1) are flagged as spam. Default 0.5.'|t('recranet-forms'),
+			name: 'recaptchaThreshold',
+			size: 5,
+			value: settings.recaptchaThreshold,
+			errors: settings.getErrors('recaptchaThreshold')
+		})
+	}}
+
+	{{
+		forms.textField({
+			label: 'Reject threshold'|t('recranet-forms'),
+			instructions: 'Below this score a submission is definite spam: rejected outright and not stored. Between the two thresholds it is stored as reviewable spam. Default 0.3.'|t('recranet-forms'),
+			name: 'recaptchaRejectThreshold',
+			size: 5,
+			value: settings.recaptchaRejectThreshold,
+			errors: settings.getErrors('recaptchaRejectThreshold')
+		})
+	}}
+
+	{{
+		forms.lightswitchField({
+			label: 'Hide the reCAPTCHA badge'|t('recranet-forms'),
+			instructions: 'Allowed by Google as long as the form shows the reCAPTCHA attribution text.'|t('recranet-forms'),
+			name: 'recaptchaHideBadge',
+			on: settings.recaptchaHideBadge
+		})
+	}}
+</div>
+
+<h3>{{ 'Failure handling'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.captcha.failure.hint'|t('recranet-forms') }}</p>
+
 {{
 	forms.lightswitchField({
 		label: 'Fail open on verification errors'|t('recranet-forms'),
@@ -158,7 +177,13 @@
 }}
 </div>
 
+{# ------------------------------------------------------------ Spam checks #}
 <div class="rfs-pane" data-rfs-pane="spam" hidden>
+<p class="rf-settings-intro">{{ 'settings.spam.intro'|t('recranet-forms') }}</p>
+
+<h3>{{ 'Honeypot'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.spam.honeypot.hint'|t('recranet-forms') }}</p>
+
 {{
 	forms.lightswitchField({
 		label: 'Honeypot'|t('recranet-forms'),
@@ -177,6 +202,9 @@
 	})
 }}
 
+<h3>{{ 'Timing'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.spam.timing.hint'|t('recranet-forms') }}</p>
+
 {{
 	forms.textField({
 		label: 'Minimum submit time (seconds)'|t('recranet-forms'),
@@ -187,6 +215,9 @@
 		errors: settings.getErrors('minSubmitSeconds')
 	})
 }}
+
+<h3>{{ 'Throttle'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.spam.throttle.hint'|t('recranet-forms') }}</p>
 
 {# Throttle: max submits per IP + form within a rolling window (cache-backed) #}
 {{
@@ -211,6 +242,9 @@
 	})
 }}
 
+<h3>{{ 'Blocklist'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.spam.blocklist.hint'|t('recranet-forms') }}</p>
+
 {{
 	forms.textareaField({
 		label: 'Sender blocklist'|t('recranet-forms'),
@@ -223,7 +257,10 @@
 }}
 </div>
 
+{# ---------------------------------------------------------------- Storage #}
 <div class="rfs-pane" data-rfs-pane="storage" hidden>
+<p class="rf-settings-intro">{{ 'settings.storage.intro'|t('recranet-forms') }}</p>
+
 {{
 	forms.lightswitchField({
 		label: 'Save submissions'|t('recranet-forms'),
@@ -241,6 +278,11 @@
 		on: settings.saveSpamSubmissions
 	})
 }}
+</div>
+
+{# -------------------------------------------------------------- Retention #}
+<div class="rfs-pane" data-rfs-pane="retention" hidden>
+<p class="rf-settings-intro">{{ 'settings.retention.intro'|t('recranet-forms') }}</p>
 
 {{
 	forms.textField({
@@ -253,6 +295,11 @@
 		errors: settings.getErrors('retentionDays')
 	})
 }}
+</div>
+
+{# ---------------------------------------------------------------- Uploads #}
+<div class="rfs-pane" data-rfs-pane="uploads" hidden>
+<p class="rf-settings-intro">{{ 'settings.uploads.intro'|t('recranet-forms') }}</p>
 
 {# File-field uploads: which volume, how big, which extensions #}
 {% set volumeOptions = [{ value: '', label: 'None (file fields disabled)'|t('recranet-forms') }] %}
@@ -296,6 +343,15 @@
 	.rfs-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--hairline-color); }
 	.rfs-tab { border: 0; background: none; padding: 8px 14px; font-size: 14px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
 	.rfs-tab.sel { color: var(--text-color); background: var(--gray-100); font-weight: 600; }
+
+	/* Pane intro: one short paragraph explaining what the tab is for */
+	.rf-settings-intro { max-width: 65ch; margin: 0 0 24px; color: var(--medium-text-color); }
+	/* Sub-section heading inside a pane, with its own small hint line(s) */
+	.rfs-pane h3 { margin: 32px 0 4px; font-size: 14px; font-weight: 700; color: var(--text-color); }
+	.rfs-pane > h3:first-of-type { margin-top: 0; }
+	.rf-settings-hint { max-width: 65ch; margin: 0 0 16px; font-size: 12px; line-height: 1.4; color: var(--medium-text-color); }
+	/* Two stacked hints (e.g. the keys scope note) read as one block */
+	.rf-settings-hint + .rf-settings-hint { margin-top: -12px; }
 {% endcss %}
 
 {% js %}
