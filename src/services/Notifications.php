@@ -6,6 +6,7 @@ use Craft;
 use craft\web\View;
 use recranet\forms\elements\Submission;
 use recranet\forms\models\Form;
+use recranet\forms\Plugin;
 use yii\base\Component;
 
 /**
@@ -13,6 +14,11 @@ use yii\base\Component;
  * confirmation email (to the submitter). Send failures are logged and
  * reported — the submission itself is already saved at this point, so a
  * mail problem never loses data.
+ *
+ * Subjects and recipients support merge tags via Craft's object template
+ * syntax: submitted values by field handle ({onderwerp}) plus {formName},
+ * {ref}, {sourceUrl} and {date}. A broken tag never breaks the mail — the
+ * raw string is used instead and a warning is logged.
  */
 class Notifications extends Component
 {
@@ -21,7 +27,7 @@ class Notifications extends Component
 	 */
 	public function sendNotification(Form $form, Submission $submission): bool
 	{
-		$recipients = $form->getRecipientList();
+		$recipients = $this->resolveRecipients($form, $submission);
 
 		if (!$recipients) {
 			Craft::warning("Form \"{$form->handle}\": no notification recipients configured and no system email set.", __METHOD__);
@@ -31,9 +37,12 @@ class Notifications extends Component
 
 		$html = $this->renderEmail('recranet-forms/_emails/notification', $form, $submission);
 
+		// Subject supports merge tags, e.g. "Aanvraag {onderwerp} — #{ref}"
+		$subject = $this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission);
+
 		$message = Craft::$app->getMailer()->compose()
 			->setTo($recipients)
-			->setSubject($form->subject ?: "New submission: {$form->name}")
+			->setSubject($subject)
 			->setHtmlBody($html);
 
 		// Reply-to the submitter when the form has an email field
@@ -72,9 +81,12 @@ class Notifications extends Component
 
 		$html = $this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission);
 
+		// Confirmation subject supports the same merge tags as the notification
+		$subject = $this->renderTemplateString($form->confirmationSubject ?: $form->name, $form, $submission);
+
 		$sent = Craft::$app->getMailer()->compose()
 			->setTo($submitterEmail)
-			->setSubject($form->confirmationSubject ?: $form->name)
+			->setSubject($subject)
 			->setHtmlBody($html)
 			->send();
 
@@ -104,5 +116,81 @@ class Notifications extends Component
 		}
 
 		return $view->renderTemplate($template, $variables, View::TEMPLATE_MODE_CP);
+	}
+
+	/**
+	 * Render a template string (subject, recipients) against a submission
+	 * using Craft's object template syntax — the same {tag} rendering entry
+	 * URI formats use, so no invented syntax to maintain.
+	 *
+	 * Available tags: the submitted values keyed by field handle (resolved
+	 * via the snapshot — formData itself is uid-keyed), plus {formName},
+	 * {ref} (per-form number), {sourceUrl} and {date} (submission date).
+	 *
+	 * On a Twig error in the editor's string the raw string is returned
+	 * and a warning is logged — a bad merge tag must never break the mail.
+	 */
+	private function renderTemplateString(string $template, Form $form, Submission $submission): string
+	{
+		// Fast path: no braces means no merge tags to render
+		if (!str_contains($template, '{')) {
+			return $template;
+		}
+
+		$variables = [];
+
+		// Submitted values keyed by handle; array values (e.g. checkbox
+		// fields) are joined so they read naturally inline, and empty
+		// fields become '' so their tags render blank instead of erroring
+		foreach ($submission->getValues() as $row) {
+			$value = $row['value'];
+			$variables[$row['handle']] = is_array($value) ? implode(', ', $value) : ($value ?? '');
+		}
+
+		// Metadata tags, set last so they win over a clashing field handle
+		$variables['formName'] = $form->name;
+		$variables['ref'] = $submission->incrementalId;
+		$variables['sourceUrl'] = $submission->sourceUrl;
+		$variables['date'] = $submission->dateCreated
+			? Craft::$app->getFormatter()->asDatetime($submission->dateCreated, 'short')
+			: '';
+
+		try {
+			return Craft::$app->getView()->renderObjectTemplate($template, $submission, $variables);
+		} catch (\Throwable $e) {
+			Plugin::error("Form \"{$form->handle}\": could not render merge tags in \"{$template}\": {$e->getMessage()}");
+
+			return $template;
+		}
+	}
+
+	/**
+	 * Resolve the notification recipients for a submission. Merge tags in
+	 * the recipients setting ("{afdeling}@example.com") enable lightweight
+	 * routing, so the string is rendered BEFORE it is split — a single tag
+	 * may even expand to several comma-separated addresses.
+	 */
+	private function resolveRecipients(Form $form, Submission $submission): array
+	{
+		$rendered = $this->renderTemplateString($form->recipients, $form, $submission);
+		$recipients = array_filter(array_map('trim', explode(',', $rendered)));
+
+		// Nothing configured (or everything rendered away): fall back to
+		// the model's list, which resolves the system email
+		if (!$recipients) {
+			$recipients = $form->getRecipientList();
+		}
+
+		// Drop anything that didn't render into a valid address — one bad
+		// merge tag must not make the whole mail fail at transport level
+		return array_values(array_filter($recipients, function (string $recipient) use ($form): bool {
+			if (filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+				return true;
+			}
+
+			Plugin::error("Form \"{$form->handle}\": dropping invalid notification recipient \"{$recipient}\".");
+
+			return false;
+		}));
 	}
 }
