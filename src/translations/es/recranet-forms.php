@@ -221,4 +221,20 @@ return [
 	'Moved to position {position}' => 'Movido a la posición {position}',
 	'Form settings' => 'Ajustes del formulario',
 	'Form sections' => 'Secciones del formulario',
+
+	// False-positive recovery + resend (element actions & detail view buttons)
+	'Not spam' => 'No es spam',
+	'Resend notification' => 'Reenviar notificación',
+	'Mark the selected submissions as not spam and send the emails that were skipped?' => '¿Marcar los envíos seleccionados como no spam y enviar los correos omitidos?',
+	'Resend the notification email for the selected submissions?' => '¿Reenviar el correo de notificación de los envíos seleccionados?',
+	'Submissions marked as not spam.' => 'Envíos marcados como no spam.',
+	'Some submissions could not be processed — check their status and the logs.' => 'Algunos envíos no se pudieron procesar — revisa su estado y los registros.',
+	'Notification emails sent.' => 'Correos de notificación enviados.',
+	'Some notification emails failed to send — check the submission status and the logs.' => 'Algunos correos de notificación no se pudieron enviar — revisa el estado del envío y los registros.',
+	'Submission marked as not spam and emails sent.' => 'Envío marcado como no spam y correos enviados.',
+	'Marked as not spam, but the notification email could not be sent.' => 'Marcado como no spam, pero el correo de notificación no se pudo enviar.',
+	'The form this submission belongs to no longer exists.' => 'El formulario al que pertenece este envío ya no existe.',
+	'Notification email sent.' => 'Correo de notificación enviado.',
+	'The notification email failed to send — see the log for details.' => 'El correo de notificación no se pudo enviar — consulta el registro para más detalles.',
+	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Los envíos marcados como spam no se pueden reenviar — usa «No es spam».',
 ];

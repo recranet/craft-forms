@@ -216,4 +216,20 @@ return [
 	'Moved to position {position}' => 'Moved to position {position}',
 	'Form settings' => 'Form settings',
 	'Form sections' => 'Form sections',
+
+	// False-positive recovery + resend (element actions & detail view buttons)
+	'Not spam' => 'Not spam',
+	'Resend notification' => 'Resend notification',
+	'Mark the selected submissions as not spam and send the emails that were skipped?' => 'Mark the selected submissions as not spam and send the emails that were skipped?',
+	'Resend the notification email for the selected submissions?' => 'Resend the notification email for the selected submissions?',
+	'Submissions marked as not spam.' => 'Submissions marked as not spam.',
+	'Some submissions could not be processed — check their status and the logs.' => 'Some submissions could not be processed — check their status and the logs.',
+	'Notification emails sent.' => 'Notification emails sent.',
+	'Some notification emails failed to send — check the submission status and the logs.' => 'Some notification emails failed to send — check the submission status and the logs.',
+	'Submission marked as not spam and emails sent.' => 'Submission marked as not spam and emails sent.',
+	'Marked as not spam, but the notification email could not be sent.' => 'Marked as not spam, but the notification email could not be sent.',
+	'The form this submission belongs to no longer exists.' => 'The form this submission belongs to no longer exists.',
+	'Notification email sent.' => 'Notification email sent.',
+	'The notification email failed to send — see the log for details.' => 'The notification email failed to send — see the log for details.',
+	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Spam-flagged submissions cannot be resent — use “Not spam” instead.',
 ];

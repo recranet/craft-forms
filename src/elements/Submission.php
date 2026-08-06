@@ -12,6 +12,8 @@ use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\web\UploadedFile;
+use recranet\forms\elements\actions\MarkAsHam;
+use recranet\forms\elements\actions\ResendNotification;
 use recranet\forms\elements\db\SubmissionQuery;
 use recranet\forms\models\Form;
 use recranet\forms\Plugin;
@@ -37,6 +39,13 @@ class Submission extends Element
 	public const STATUS_SENT = 'sent';
 	public const STATUS_SPAM = 'spam';
 	public const STATUS_FAILED = 'failed';
+
+	/**
+	 * Stored (English) sendError text for a failed notification send — one
+	 * constant so the submit flow, the element actions and the CP resend
+	 * buttons all record the exact same diagnostic.
+	 */
+	public const SEND_ERROR_NOTIFICATION = 'Notification email failed to send — see the log for the transport error.';
 
 	public ?int $formId = null;
 
@@ -495,6 +504,39 @@ class Submission extends Element
 		];
 	}
 
+	/**
+	 * Index bulk actions: false-positive recovery ("Not spam") and resending
+	 * the owner notification. Both are gated on the view-submissions
+	 * permission — the same one the index screen itself requires.
+	 */
+	protected static function defineActions(string $source): array
+	{
+		$actions = parent::defineActions($source);
+
+		if (Craft::$app->getUser()->checkPermission('recranetForms-viewSubmissions')) {
+			$actions[] = MarkAsHam::class;
+			$actions[] = ResendNotification::class;
+		}
+
+		return $actions;
+	}
+
+	/**
+	 * Row attributes on the index — the element actions' triggers read
+	 * `data-spam` to enable "Not spam" only on spam rows and "Resend
+	 * notification" only on non-spam rows.
+	 */
+	protected function htmlAttributes(string $context): array
+	{
+		$attributes = parent::htmlAttributes($context);
+
+		if ($this->isSpam) {
+			$attributes['data-spam'] = true;
+		}
+
+		return $attributes;
+	}
+
 	/** Adds the expanded-fields CSV export next to Craft's default exporters */
 	protected static function defineExporters(string $source): array
 	{
@@ -536,6 +578,72 @@ class Submission extends Element
 	public function getForm(): ?Form
 	{
 		return $this->formId ? Plugin::getInstance()->forms->getFormById($this->formId) : null;
+	}
+
+	/**
+	 * False-positive recovery: clear the spam flag and send the notification
+	 * + confirmation emails that were skipped when the submission was
+	 * flagged. The original spam reason is kept, prefixed with "Overridden: ",
+	 * as an audit trail of why it was flagged and that a human reversed it.
+	 *
+	 * Returns false when the form no longer exists (nothing changes then) or
+	 * when the notification email failed to send — in the latter case the
+	 * flag IS cleared and the failure is recorded in sendError (status
+	 * "failed"), exactly like the submit flow.
+	 */
+	public function markAsHam(): bool
+	{
+		$form = $this->getForm();
+
+		// Without the form there is no recipient/template config — bail
+		// before touching the flag, so the submission stays reviewable
+		if (!$form) {
+			Plugin::error("Submission #{$this->id}: cannot mark as not spam — form #{$this->formId} no longer exists.");
+
+			return false;
+		}
+
+		$this->isSpam = false;
+		$this->spamReason = 'Overridden: ' . ($this->spamReason ?: 'flagged as spam');
+
+		// resendNotification() sends the owner mail, records/clears sendError
+		// and saves the element — persisting the flag flip above too
+		$sent = $this->resendNotification();
+
+		// Confirmation guards itself (sendConfirmation setting + email field)
+		Plugin::getInstance()->notifications->sendConfirmation($form, $this);
+
+		return $sent;
+	}
+
+	/**
+	 * (Re)send the owner notification email. Clears sendError on success,
+	 * records it on failure (status "failed"), and saves the element either
+	 * way. Returns false when the form no longer exists or the send failed.
+	 */
+	public function resendNotification(): bool
+	{
+		$form = $this->getForm();
+
+		if (!$form) {
+			Plugin::error("Submission #{$this->id}: cannot send notification — form #{$this->formId} no longer exists.");
+
+			return false;
+		}
+
+		if (Plugin::getInstance()->notifications->sendNotification($form, $this)) {
+			$this->sendError = null;
+		} else {
+			$this->sendError = self::SEND_ERROR_NOTIFICATION;
+		}
+
+		if (!Craft::$app->getElements()->saveElement($this)) {
+			Plugin::error("Submission #{$this->id}: could not be saved after sending the notification: " . implode('; ', $this->getFirstErrors()));
+
+			return false;
+		}
+
+		return $this->sendError === null;
 	}
 
 	/**

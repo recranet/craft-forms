@@ -221,4 +221,20 @@ return [
 	'Moved to position {position}' => 'Spostato alla posizione {position}',
 	'Form settings' => 'Impostazioni del modulo',
 	'Form sections' => 'Sezioni del modulo',
+
+	// False-positive recovery + resend (element actions & detail view buttons)
+	'Not spam' => 'Non spam',
+	'Resend notification' => 'Invia di nuovo la notifica',
+	'Mark the selected submissions as not spam and send the emails that were skipped?' => 'Contrassegnare gli invii selezionati come non spam e inviare le e-mail saltate?',
+	'Resend the notification email for the selected submissions?' => 'Inviare di nuovo l’e-mail di notifica per gli invii selezionati?',
+	'Submissions marked as not spam.' => 'Invii contrassegnati come non spam.',
+	'Some submissions could not be processed — check their status and the logs.' => 'Alcuni invii non sono stati elaborati — controlla il loro stato e i log.',
+	'Notification emails sent.' => 'E-mail di notifica inviate.',
+	'Some notification emails failed to send — check the submission status and the logs.' => 'Alcune e-mail di notifica non sono state inviate — controlla lo stato dell’invio e i log.',
+	'Submission marked as not spam and emails sent.' => 'Invio contrassegnato come non spam ed e-mail inviate.',
+	'Marked as not spam, but the notification email could not be sent.' => 'Contrassegnato come non spam, ma l’e-mail di notifica non è stata inviata.',
+	'The form this submission belongs to no longer exists.' => 'Il modulo a cui appartiene questo invio non esiste più.',
+	'Notification email sent.' => 'E-mail di notifica inviata.',
+	'The notification email failed to send — see the log for details.' => 'L’e-mail di notifica non è stata inviata — consulta il log per i dettagli.',
+	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Gli invii contrassegnati come spam non possono essere reinviati — usa “Non spam”.',
 ];
