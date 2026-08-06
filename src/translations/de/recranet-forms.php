@@ -221,4 +221,20 @@ return [
 	'Moved to position {position}' => 'Verschoben an Position {position}',
 	'Form settings' => 'Formulareinstellungen',
 	'Form sections' => 'Formularbereiche',
+
+	// False-positive recovery + resend (element actions & detail view buttons)
+	'Not spam' => 'Kein Spam',
+	'Resend notification' => 'Benachrichtigung erneut senden',
+	'Mark the selected submissions as not spam and send the emails that were skipped?' => 'Die ausgewählten Einsendungen als kein Spam markieren und die übersprungenen E-Mails senden?',
+	'Resend the notification email for the selected submissions?' => 'Die Benachrichtigungs-E-Mail für die ausgewählten Einsendungen erneut senden?',
+	'Submissions marked as not spam.' => 'Einsendungen als kein Spam markiert.',
+	'Some submissions could not be processed — check their status and the logs.' => 'Einige Einsendungen konnten nicht verarbeitet werden — prüfen Sie ihren Status und die Logs.',
+	'Notification emails sent.' => 'Benachrichtigungs-E-Mails gesendet.',
+	'Some notification emails failed to send — check the submission status and the logs.' => 'Einige Benachrichtigungs-E-Mails konnten nicht gesendet werden — prüfen Sie den Status der Einsendung und die Logs.',
+	'Submission marked as not spam and emails sent.' => 'Einsendung als kein Spam markiert und E-Mails gesendet.',
+	'Marked as not spam, but the notification email could not be sent.' => 'Als kein Spam markiert, aber die Benachrichtigungs-E-Mail konnte nicht gesendet werden.',
+	'The form this submission belongs to no longer exists.' => 'Das Formular, zu dem diese Einsendung gehört, existiert nicht mehr.',
+	'Notification email sent.' => 'Benachrichtigungs-E-Mail gesendet.',
+	'The notification email failed to send — see the log for details.' => 'Die Benachrichtigungs-E-Mail konnte nicht gesendet werden — Details stehen im Log.',
+	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Als Spam markierte Einsendungen können nicht erneut gesendet werden — verwenden Sie stattdessen „Kein Spam“.',
 ];

@@ -124,7 +124,7 @@ class SubmissionsController extends Controller
 		// (status "failed") — the data is already saved, nothing is lost.
 		if (!$submission->isSpam) {
 			if (!Plugin::getInstance()->notifications->sendNotification($form, $submission) && $shouldSave) {
-				$submission->sendError = 'Notification email failed to send — see the log for the transport error.';
+				$submission->sendError = Submission::SEND_ERROR_NOTIFICATION;
 				Craft::$app->getElements()->saveElement($submission);
 			}
 
@@ -243,5 +243,93 @@ class SubmissionsController extends Controller
 			'submission' => $submission,
 			'form' => $submission->getForm(),
 		]);
+	}
+
+	/**
+	 * CP: false-positive recovery from the detail view. Clears the spam flag
+	 * (keeping the reason as "Overridden: …") and sends the notification +
+	 * confirmation emails that were skipped. Same effect as the "Not spam"
+	 * element action on the index.
+	 */
+	public function actionMarkHam(): Response
+	{
+		$this->requireCpRequest();
+		$this->requirePostRequest();
+		$this->requirePermission('recranetForms-viewSubmissions');
+
+		$submission = $this->requireCpSubmission();
+		$session = Craft::$app->getSession();
+
+		// Nothing to override (e.g. a stale tab double-posting) — just go back
+		if (!$submission->isSpam) {
+			return $this->redirect($submission->getCpEditUrl());
+		}
+
+		// Without the form there is no mail config to send with — bail with
+		// a flash instead of half-processing
+		if (!$submission->getForm()) {
+			$session->setError(Craft::t('recranet-forms', 'The form this submission belongs to no longer exists.'));
+
+			return $this->redirect($submission->getCpEditUrl());
+		}
+
+		if ($submission->markAsHam()) {
+			$session->setSuccess(Craft::t('recranet-forms', 'Submission marked as not spam and emails sent.'));
+		} else {
+			// The flag is cleared; the send failure is recorded in sendError
+			$session->setError(Craft::t('recranet-forms', 'Marked as not spam, but the notification email could not be sent.'));
+		}
+
+		return $this->redirect($submission->getCpEditUrl());
+	}
+
+	/**
+	 * CP: resend the owner notification from the detail view. Same effect as
+	 * the "Resend notification" element action on the index.
+	 */
+	public function actionResend(): Response
+	{
+		$this->requireCpRequest();
+		$this->requirePostRequest();
+		$this->requirePermission('recranetForms-viewSubmissions');
+
+		$submission = $this->requireCpSubmission();
+		$session = Craft::$app->getSession();
+
+		// Spam stays unmailed until a human overrides the flag first
+		if ($submission->isSpam) {
+			$session->setError(Craft::t('recranet-forms', 'Spam-flagged submissions cannot be resent — use “Not spam” instead.'));
+
+			return $this->redirect($submission->getCpEditUrl());
+		}
+
+		if (!$submission->getForm()) {
+			$session->setError(Craft::t('recranet-forms', 'The form this submission belongs to no longer exists.'));
+
+			return $this->redirect($submission->getCpEditUrl());
+		}
+
+		if ($submission->resendNotification()) {
+			$session->setSuccess(Craft::t('recranet-forms', 'Notification email sent.'));
+		} else {
+			$session->setError(Craft::t('recranet-forms', 'The notification email failed to send — see the log for details.'));
+		}
+
+		return $this->redirect($submission->getCpEditUrl());
+	}
+
+	/**
+	 * Resolve the posted submissionId to a submission (any status) or 404.
+	 */
+	private function requireCpSubmission(): Submission
+	{
+		$submissionId = (int)Craft::$app->getRequest()->getRequiredBodyParam('submissionId');
+		$submission = Submission::find()->id($submissionId)->status(null)->one();
+
+		if (!$submission) {
+			throw new NotFoundHttpException('Submission not found.');
+		}
+
+		return $submission;
 	}
 }

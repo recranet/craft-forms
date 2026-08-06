@@ -25,6 +25,28 @@
 		</div>
 	{% endif %}
 
+	{# Recovery / resend actions. Spam → "Not spam" clears the flag (reason is
+	   kept as "Overridden: …") and sends the skipped emails; sent/failed →
+	   "Resend notification" re-delivers the owner notification. Both POST to
+	   the CP controller, which flashes the result and redirects back here. #}
+	<div class="flex" style="margin-bottom: 24px;">
+		{% if submission.isSpam %}
+			<form method="post" accept-charset="UTF-8">
+				{{ csrfInput() }}
+				{{ actionInput('recranet-forms/submissions/mark-ham') }}
+				{{ hiddenInput('submissionId', submission.id) }}
+				<button type="submit" class="btn submit">{{ 'Not spam'|t('recranet-forms') }}</button>
+			</form>
+		{% else %}
+			<form method="post" accept-charset="UTF-8">
+				{{ csrfInput() }}
+				{{ actionInput('recranet-forms/submissions/resend') }}
+				{{ hiddenInput('submissionId', submission.id) }}
+				<button type="submit" class="btn">{{ 'Resend notification'|t('recranet-forms') }}</button>
+			</form>
+		{% endif %}
+	</div>
+
 	<table class="data fullwidth">
 		<tbody>
 			<tr>

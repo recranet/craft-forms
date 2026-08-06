@@ -221,4 +221,20 @@ return [
 	'Moved to position {position}' => 'Déplacé à la position {position}',
 	'Form settings' => 'Paramètres du formulaire',
 	'Form sections' => 'Sections du formulaire',
+
+	// False-positive recovery + resend (element actions & detail view buttons)
+	'Not spam' => 'Non spam',
+	'Resend notification' => 'Renvoyer la notification',
+	'Mark the selected submissions as not spam and send the emails that were skipped?' => 'Marquer les envois sélectionnés comme non spam et envoyer les e-mails ignorés ?',
+	'Resend the notification email for the selected submissions?' => 'Renvoyer l’e-mail de notification pour les envois sélectionnés ?',
+	'Submissions marked as not spam.' => 'Envois marqués comme non spam.',
+	'Some submissions could not be processed — check their status and the logs.' => 'Certains envois n’ont pas pu être traités — vérifiez leur statut et les journaux.',
+	'Notification emails sent.' => 'E-mails de notification envoyés.',
+	'Some notification emails failed to send — check the submission status and the logs.' => 'Certains e-mails de notification n’ont pas pu être envoyés — vérifiez le statut de l’envoi et les journaux.',
+	'Submission marked as not spam and emails sent.' => 'Envoi marqué comme non spam et e-mails envoyés.',
+	'Marked as not spam, but the notification email could not be sent.' => 'Marqué comme non spam, mais l’e-mail de notification n’a pas pu être envoyé.',
+	'The form this submission belongs to no longer exists.' => 'Le formulaire auquel appartient cet envoi n’existe plus.',
+	'Notification email sent.' => 'E-mail de notification envoyé.',
+	'The notification email failed to send — see the log for details.' => 'L’e-mail de notification n’a pas pu être envoyé — consultez le journal pour plus de détails.',
+	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Les envois marqués comme spam ne peuvent pas être renvoyés — utilisez « Non spam ».',
 ];

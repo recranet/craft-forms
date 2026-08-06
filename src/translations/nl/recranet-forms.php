@@ -221,4 +221,20 @@ return [
 	'Moved to position {position}' => 'Verplaatst naar positie {position}',
 	'Form settings' => 'Formulierinstellingen',
 	'Form sections' => 'Formulieronderdelen',
+
+	// False-positive recovery + resend (element actions & detail view buttons)
+	'Not spam' => 'Geen spam',
+	'Resend notification' => 'Notificatie opnieuw versturen',
+	'Mark the selected submissions as not spam and send the emails that were skipped?' => 'De geselecteerde inzendingen als geen spam markeren en de overgeslagen e-mails versturen?',
+	'Resend the notification email for the selected submissions?' => 'De notificatie-e-mail voor de geselecteerde inzendingen opnieuw versturen?',
+	'Submissions marked as not spam.' => 'Inzendingen gemarkeerd als geen spam.',
+	'Some submissions could not be processed — check their status and the logs.' => 'Sommige inzendingen konden niet worden verwerkt — controleer hun status en de logs.',
+	'Notification emails sent.' => 'Notificatie-e-mails verstuurd.',
+	'Some notification emails failed to send — check the submission status and the logs.' => 'Sommige notificatie-e-mails konden niet worden verstuurd — controleer de status van de inzending en de logs.',
+	'Submission marked as not spam and emails sent.' => 'Inzending gemarkeerd als geen spam en e-mails verstuurd.',
+	'Marked as not spam, but the notification email could not be sent.' => 'Gemarkeerd als geen spam, maar de notificatie-e-mail kon niet worden verstuurd.',
+	'The form this submission belongs to no longer exists.' => 'Het formulier waar deze inzending bij hoort bestaat niet meer.',
+	'Notification email sent.' => 'Notificatie-e-mail verstuurd.',
+	'The notification email failed to send — see the log for details.' => 'De notificatie-e-mail kon niet worden verstuurd — zie de log voor details.',
+	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Als spam gemarkeerde inzendingen kunnen niet opnieuw worden verstuurd — gebruik “Geen spam”.',
 ];
