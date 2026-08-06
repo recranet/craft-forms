@@ -19,6 +19,21 @@
 	</div>
 {% endblock %}
 
+{# Collapsible preview panel: the iframe only loads when opened, and
+   reloads on every open so it reflects the last saved state. #}
+{% macro previewPanel(formId, type, label) %}
+	<div class="rf-preview" data-rf-preview>
+		<button type="button" class="btn" data-rf-preview-toggle aria-expanded="false">{{ label }}</button>
+		<p class="rf-hint">{{ 'Shows the last saved state — save first to preview unsaved changes.'|t('recranet-forms') }}</p>
+		<iframe
+			class="rf-preview__frame"
+			title="{{ label }}"
+			data-src="{{ url('recranet-forms/forms/' ~ formId ~ '/preview/' ~ type) }}"
+			hidden
+		></iframe>
+	</div>
+{% endmacro %}
+
 {# A single field card. Used for saved fields; the JS <template> clone uses the
    same markup with a fresh index. #}
 {% macro fieldCard(field, index, fieldTypes, allFields) %}
@@ -310,6 +325,10 @@
 			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields) }}
 		</template>
 	</div>
+
+		{% if form.id %}
+			{{ _self.previewPanel(form.id, 'form', 'Preview form'|t('recranet-forms')) }}
+		{% endif %}
 	</div>
 	{# /rfs-pane fields #}
 
@@ -354,6 +373,10 @@
 				options: templateOptions
 			})
 		}}
+
+		{% if form.id %}
+			{{ _self.previewPanel(form.id, 'notification', 'Preview notification email'|t('recranet-forms')) }}
+		{% endif %}
 	</div>
 
 	<div class="rfs-pane" data-rfs-pane="confirmation" hidden>
@@ -394,8 +417,15 @@
 				options: templateOptions
 			})
 		}}
+
+		{% if form.id %}
+			{{ _self.previewPanel(form.id, 'confirmation', 'Preview confirmation email'|t('recranet-forms')) }}
+		{% endif %}
 	</div>
 {% css %}
+	.rf-preview { margin-top: 20px; }
+	.rf-preview .rf-hint { margin: 6px 0 0; }
+	.rf-preview__frame { width: 100%; height: 520px; margin-top: 12px; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: #fff; }
 	.rf-embed { display: flex; align-items: center; gap: 10px; }
 	.rf-embed code { background: var(--gray-100); padding: 6px 10px; border-radius: 6px; }
 	.rfs-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--hairline-color); }
@@ -513,6 +543,19 @@
 				movedTo: 'Moved to position {position}'|t('recranet-forms'),
 			}|json_encode|raw
 		}};
+
+		// Preview panels: load the iframe on first open, refresh on re-open
+		document.querySelectorAll('[data-rf-preview]').forEach(function (panel) {
+			var toggle = panel.querySelector('[data-rf-preview-toggle]');
+			var frame = panel.querySelector('.rf-preview__frame');
+			toggle.addEventListener('click', function () {
+				var open = frame.hidden;
+				frame.hidden = !open;
+				toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+				// Re-set src on every open so the preview reflects the last save
+				if (open) frame.src = frame.dataset.src + '?t=' + Date.now();
+			});
+		});
 
 		// Mail settings tabs (independent of the per-card tabs above)
 		document.querySelectorAll('.rfs-tab').forEach(function (tab) {

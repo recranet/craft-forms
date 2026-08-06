@@ -109,6 +109,30 @@ class Notifications extends Component
 	 * `intro` (notification) and `bodyText` (confirmation) — both rendered
 	 * through the merge-tag pipeline, so `{naam}` works inside them too.
 	 */
+	/**
+	 * Render one of this form's emails for the CP preview, using the exact
+	 * same resolution as a real send (per-form override → site override →
+	 * plugin default), so an editor sees what "Default template" produces
+	 * before deciding to override it.
+	 */
+	public function previewEmail(Form $form, Submission $submission, string $which): string
+	{
+		return $which === 'confirmation'
+			? $this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission, $form->confirmationTemplate)
+			: $this->renderEmail('recranet-forms/_emails/notification', $form, $submission, $form->notificationTemplate);
+	}
+
+	/**
+	 * The subject a real send would use, merge tags resolved. Used by the
+	 * CP preview so tags can be checked without sending mail.
+	 */
+	public function previewSubject(Form $form, Submission $submission, string $which): string
+	{
+		return $which === 'confirmation'
+			? $this->renderTemplateString($form->confirmationSubject ?: $form->name, $form, $submission)
+			: $this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission);
+	}
+
 	private function renderEmail(string $template, Form $form, Submission $submission, string $formTemplate = ''): string
 	{
 		$view = Craft::$app->getView();

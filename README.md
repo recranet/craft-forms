@@ -65,6 +65,22 @@ Create `templates/recranet-forms/form.twig` in the project to fully own the mark
 
 Email templates are overridable at `templates/recranet-forms/_emails/notification.twig` and `confirmation.twig`; values come from `submission.values` (submit-time snapshot) or `submission.value('handle')`.
 
+## Placing a form in page content
+
+Besides the Twig call, forms can be dropped into content: create a field of type **Form** (Settings → Fields), add it to an entry type / Matrix block / CKEditor entry, and pick the form. The field stores the form's **uid**, so renaming its handle never breaks the reference.
+
+```twig
+{{ entry.contactForm }}                      {# renders the picked form #}
+{{ entry.contactForm.form.name }}            {# the Form model #}
+{{ entry.contactForm.render({ class: 'x' }) }}
+```
+
+An empty field renders nothing; so does a field pointing at a form that has since been deleted.
+
+## Previewing
+
+The form edit screen has preview panels: **Fields → Preview form** renders the front-end template, and the Notification/Confirmation tabs preview the emails with sample values (subject included, merge tags resolved). Previews go through the same template resolution as a real render or send, so "Default template" is something you can look at before overriding it. Nothing is sent or stored.
+
 ## Settings
 
 Plugin settings (CP → Settings → Recranet Forms, stored in project config):

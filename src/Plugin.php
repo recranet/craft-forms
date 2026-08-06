@@ -9,12 +9,14 @@ use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
 use craft\services\Elements;
+use craft\services\Fields;
 use craft\services\Gc;
 use craft\services\UserPermissions;
 use craft\services\Utilities;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use recranet\forms\elements\Submission;
+use recranet\forms\fields\FormField;
 use recranet\forms\models\Settings;
 use recranet\forms\services\Forms;
 use recranet\forms\services\Notifications;
@@ -83,6 +85,12 @@ class Plugin extends BasePlugin
 			$variable->set('recranetForms', RecranetFormsVariable::class);
 		});
 
+		// Form field type: lets authors drop a form into page content
+		// (entry body, Matrix block, CKEditor entry — anywhere a field lives)
+		Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function (RegisterComponentTypesEvent $event) {
+			$event->types[] = FormField::class;
+		});
+
 		// Email / SMTP test utility (works with allowAdminChanges disabled)
 		Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITIES, function (RegisterComponentTypesEvent $event) {
 			$event->types[] = EmailTestUtility::class;
@@ -144,6 +152,7 @@ class Plugin extends BasePlugin
 			$event->rules['recranet-forms/forms/import'] = 'recranet-forms/forms/import-screen';
 			$event->rules['recranet-forms/forms/<formId:\d+>'] = 'recranet-forms/forms/edit';
 			$event->rules['recranet-forms/forms/<formId:\d+>/export'] = 'recranet-forms/forms/export';
+			$event->rules['recranet-forms/forms/<formId:\d+>/preview/<type:(form|notification|confirmation)>'] = 'recranet-forms/forms/preview';
 			$event->rules['recranet-forms/submissions'] = 'recranet-forms/submissions/index';
 			$event->rules['recranet-forms/submissions/<submissionId:\d+>'] = 'recranet-forms/submissions/view';
 		});

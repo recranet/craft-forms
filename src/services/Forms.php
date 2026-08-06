@@ -100,6 +100,57 @@ class Forms extends Component
 	}
 
 	/**
+	 * Render the front-end form template for the CP preview. Uses the same
+	 * site-override-then-plugin-default resolution as the real render, so
+	 * the preview shows the markup visitors get.
+	 */
+	public function renderFormPreview(Form $form): string
+	{
+		$view = \Craft::$app->getView();
+		$variables = ['form' => $form, 'options' => [], 'formErrors' => [], 'formContent' => [], 'erroredFormHandle' => null];
+
+		if ($view->doesTemplateExist('recranet-forms/form', \craft\web\View::TEMPLATE_MODE_SITE)) {
+			return $view->renderTemplate('recranet-forms/form', $variables, \craft\web\View::TEMPLATE_MODE_SITE);
+		}
+
+		return $view->renderTemplate('recranet-forms/_render/form', $variables, \craft\web\View::TEMPLATE_MODE_CP);
+	}
+
+	/**
+	 * An unsaved submission filled with plausible sample values, for the CP
+	 * email previews. Never saved — it exists only to render a template.
+	 */
+	public function sampleSubmission(Form $form): \recranet\forms\elements\Submission
+	{
+		$submission = new \recranet\forms\elements\Submission();
+		$submission->formId = $form->id;
+		$submission->snapshot = $form->fields;
+		$submission->incrementalId = 1;
+		$submission->sourceUrl = '/' . ($form->handle ?? '');
+		$submission->dateCreated = new \DateTime();
+
+		foreach ($form->fields as $field) {
+			$options = array_values(array_filter(array_map('trim', explode(',', (string)($field['options'] ?? '')))));
+
+			$submission->formData[$field['uid']] = match ($field['type']) {
+				'email' => 'naam@voorbeeld.nl',
+				'tel' => '06 12 34 56 78',
+				'url' => 'https://voorbeeld.nl',
+				'number' => '3',
+				'date' => (new \DateTime())->format('Y-m-d'),
+				'textarea' => "Voorbeeldtekst.\nTweede regel.",
+				'checkbox', 'consent' => true,
+				'select', 'radio' => $options[0] ?? '',
+				'checkboxes' => array_slice($options, 0, 2),
+				'file' => null,
+				default => $field['label'] ?? 'Voorbeeld',
+			};
+		}
+
+		return $submission;
+	}
+
+	/**
 	 * Portable array representation of a form (for JSON export). Field uids
 	 * are included — conditions reference them, and they're globally unique
 	 * so importing them elsewhere is safe.

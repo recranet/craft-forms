@@ -118,6 +118,54 @@ class FormsController extends Controller
 	}
 
 	/**
+	 * Preview what this form produces, without sending or storing anything:
+	 * the rendered front-end form, or either email with sample values.
+	 * Loaded in an iframe from the form edit screen.
+	 *
+	 * The email previews go through the exact same template resolution as a
+	 * real send (per-form override → site override → plugin default), so
+	 * "Default template" is something an editor can look at before deciding
+	 * to override it.
+	 */
+	public function actionPreview(int $formId, string $type = 'form'): Response
+	{
+		$form = Plugin::getInstance()->forms->getFormById($formId);
+
+		if (!$form) {
+			throw new NotFoundHttpException('Form not found.');
+		}
+
+		$view = Craft::$app->getView();
+
+		if ($type === 'form') {
+			// Render the front-end template exactly as the site would
+			$body = (string)Plugin::getInstance()->forms->renderFormPreview($form);
+			$title = Craft::t('recranet-forms', 'Form preview');
+			// Bootstrap from the CDN: the plugin's default markup is Bootstrap 5,
+			// and the project's own compiled CSS isn't reachable from the CP
+			$head = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">';
+			$note = Craft::t('recranet-forms', 'Styled with stock Bootstrap 5 — your site’s own CSS may look different.');
+		} else {
+			$submission = Plugin::getInstance()->forms->sampleSubmission($form);
+			$body = Plugin::getInstance()->notifications->previewEmail($form, $submission, $type);
+			$subject = Plugin::getInstance()->notifications->previewSubject($form, $submission, $type);
+			$title = Craft::t('recranet-forms', 'Email preview');
+			$head = '';
+			$note = Craft::t('recranet-forms', 'Subject: {subject}', ['subject' => $subject])
+				. ' — ' . Craft::t('recranet-forms', 'Sample values, nothing was sent or stored.');
+		}
+
+		$html = $view->renderTemplate('recranet-forms/_preview', [
+			'title' => $title,
+			'note' => $note,
+			'head' => $head,
+			'body' => $body,
+		]);
+
+		return $this->asRaw($html);
+	}
+
+	/**
 	 * Download a form definition as JSON (fields incl. uids + mail settings).
 	 */
 	public function actionExport(int $formId): Response

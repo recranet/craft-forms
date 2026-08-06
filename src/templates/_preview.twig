@@ -1,0 +1,22 @@
+{# Standalone page loaded in the preview iframe on the form edit screen.
+   Deliberately minimal: it must not inherit CP styling, because the point is
+   to show what the form/email template itself produces. #}
+<!doctype html>
+<html lang="{{ craft.app.language }}">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow" />
+		<title>{{ title }}</title>
+		{{ head|raw }}
+		<style>
+			body { margin: 0; font-family: system-ui, sans-serif; background: #fff; color: #1e2a44; }
+			.rf-preview-note { padding: 8px 16px; background: #eef2f8; border-bottom: 1px solid #dbe3ee; font-size: 12px; color: #5b6a88; }
+			.rf-preview-body { padding: 20px; max-width: 720px; }
+		</style>
+	</head>
+	<body>
+		<p class="rf-preview-note">{{ note }}</p>
+		<div class="rf-preview-body">{{ body|raw }}</div>
+	</body>
+</html>
