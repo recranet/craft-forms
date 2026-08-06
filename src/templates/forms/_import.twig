@@ -1,0 +1,41 @@
+{# Import a form from a JSON export (file upload or pasted JSON). #}
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+{% set title = 'Import form' %}
+{% set selectedSubnavItem = 'forms' %}
+{% set fullPageForm = true %}
+{# File uploads need a multipart form #}
+{% set formAttributes = { enctype: 'multipart/form-data' } %}
+
+{% set crumbs = [{ label: 'Forms', url: url('recranet-forms/forms') }] %}
+
+{% block actionButton %}
+	<div class="btngroup">
+		<button type="submit" class="btn submit">Import</button>
+	</div>
+{% endblock %}
+
+{% block content %}
+	{{ actionInput('recranet-forms/forms/import') }}
+
+	<p>
+		Upload a <code>form-*.json</code> export, or paste its contents. The handle is suffixed automatically when it
+		already exists — an import never overwrites an existing form.
+	</p>
+
+	{{
+		forms.fileField({
+			label: 'JSON file',
+			name: 'file'
+		})
+	}}
+
+	{{
+		forms.textareaField({
+			label: 'Or paste JSON',
+			name: 'json',
+			rows: 14,
+			class: 'code'
+		})
+	}}
+{% endblock %}

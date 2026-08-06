@@ -1,10 +1,13 @@
-{# Forms overview: list of all forms with a "new form" action. #}
+{# Forms overview: list of all forms with new/import/duplicate/export actions. #}
 {% extends '_layouts/cp' %}
 {% set title = 'Forms' %}
 {% set selectedSubnavItem = 'forms' %}
 
 {% block actionButton %}
-	<a href="{{ url('recranet-forms/forms/new') }}" class="btn submit add icon">New form</a>
+	<div class="btngroup">
+		<a href="{{ url('recranet-forms/forms/import') }}" class="btn">Import</a>
+		<a href="{{ url('recranet-forms/forms/new') }}" class="btn submit add icon">New form</a>
+	</div>
 {% endblock %}
 
 {% block content %}
@@ -15,6 +18,7 @@
 					<th>Name</th>
 					<th>Handle</th>
 					<th>Fields</th>
+					<th></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -23,6 +27,17 @@
 						<td><a href="{{ url('recranet-forms/forms/' ~ form.id) }}"><strong>{{ form.name }}</strong></a></td>
 						<td><code>{{ form.handle }}</code></td>
 						<td>{{ form.fields|length }}</td>
+						<td class="rightalign">
+							<a class="btn small" href="{{ url('recranet-forms/forms/' ~ form.id ~ '/export') }}">Export</a>
+							{# Duplicate clones the form with fresh field uids and remapped conditions #}
+							<button
+								type="button"
+								class="btn small"
+								onclick="Craft.postActionRequest('recranet-forms/forms/duplicate', { formId: {{ form.id }} }, () => window.location.reload());"
+							>
+								Duplicate
+							</button>
+						</td>
 					</tr>
 				{% endfor %}
 			</tbody>

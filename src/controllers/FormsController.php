@@ -114,6 +114,96 @@ class FormsController extends Controller
 		return $this->redirectToPostedUrl($form);
 	}
 
+	/**
+	 * Download a form definition as JSON (fields incl. uids + mail settings).
+	 */
+	public function actionExport(int $formId): Response
+	{
+		$form = Plugin::getInstance()->forms->getFormById($formId);
+
+		if (!$form) {
+			throw new NotFoundHttpException('Form not found.');
+		}
+
+		$json = \craft\helpers\Json::encode(
+			Plugin::getInstance()->forms->exportForm($form),
+			JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+		);
+
+		return $this->response->sendContentAsFile($json, "form-{$form->handle}.json", [
+			'mimeType' => 'application/json',
+		]);
+	}
+
+	/**
+	 * Import screen (paste or upload a form JSON export).
+	 */
+	public function actionImportScreen(): Response
+	{
+		return $this->renderTemplate('recranet-forms/forms/_import');
+	}
+
+	public function actionImport(): ?Response
+	{
+		$this->requirePostRequest();
+
+		$json = trim((string)Craft::$app->getRequest()->getBodyParam('json', ''));
+
+		// An uploaded file wins over the textarea
+		$upload = \craft\web\UploadedFile::getInstanceByName('file');
+
+		if ($upload && !$upload->getHasError()) {
+			$json = (string)file_get_contents($upload->tempName);
+		}
+
+		$data = \craft\helpers\Json::decodeIfJson($json);
+
+		if (!is_array($data) || empty($data['fields'])) {
+			Craft::$app->getSession()->setError('Not a valid form export (missing fields).');
+
+			return null;
+		}
+
+		$form = Plugin::getInstance()->forms->createFromExport($data);
+
+		if (!Plugin::getInstance()->forms->saveForm($form)) {
+			Craft::$app->getSession()->setError('Couldn’t import form: ' . implode('; ', $form->getFirstErrors()));
+
+			return null;
+		}
+
+		Craft::$app->getSession()->setNotice("Form \"{$form->name}\" imported.");
+
+		return $this->redirect('recranet-forms/forms/' . $form->id);
+	}
+
+	/**
+	 * Duplicate a form (new field uids, conditions remapped).
+	 */
+	public function actionDuplicate(): Response
+	{
+		$this->requirePostRequest();
+
+		$formId = (int)Craft::$app->getRequest()->getRequiredBodyParam('formId');
+		$source = Plugin::getInstance()->forms->getFormById($formId);
+
+		if (!$source) {
+			throw new NotFoundHttpException('Form not found.');
+		}
+
+		$copy = Plugin::getInstance()->forms->duplicateForm($source);
+
+		if (!$copy) {
+			Craft::$app->getSession()->setError('Couldn’t duplicate form.');
+
+			return $this->redirect('recranet-forms/forms');
+		}
+
+		Craft::$app->getSession()->setNotice("Form duplicated as \"{$copy->name}\".");
+
+		return $this->redirect('recranet-forms/forms/' . $copy->id);
+	}
+
 	public function actionDelete(): Response
 	{
 		$this->requirePostRequest();

@@ -114,7 +114,22 @@ class Plugin extends BasePlugin
 
 		if (Craft::$app->getRequest()->getIsCpRequest()) {
 			$this->registerCpRoutes();
+		} else {
+			$this->registerSiteRoutes();
 		}
+	}
+
+	/**
+	 * Front-end route for the tokenized self-service view (AVG/GDPR): the
+	 * confirmation email can link the submitter to their own submission,
+	 * where they can also delete it — no login, the unguessable token is
+	 * the credential.
+	 */
+	private function registerSiteRoutes(): void
+	{
+		Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function (RegisterUrlRulesEvent $event) {
+			$event->rules['recranet-forms/submission/<token:[A-Za-z0-9]{32}>'] = 'recranet-forms/submissions/view-by-token';
+		});
 	}
 
 	/**
@@ -126,7 +141,9 @@ class Plugin extends BasePlugin
 			$event->rules['recranet-forms'] = 'recranet-forms/forms/index';
 			$event->rules['recranet-forms/forms'] = 'recranet-forms/forms/index';
 			$event->rules['recranet-forms/forms/new'] = 'recranet-forms/forms/edit';
+			$event->rules['recranet-forms/forms/import'] = 'recranet-forms/forms/import-screen';
 			$event->rules['recranet-forms/forms/<formId:\d+>'] = 'recranet-forms/forms/edit';
+			$event->rules['recranet-forms/forms/<formId:\d+>/export'] = 'recranet-forms/forms/export';
 			$event->rules['recranet-forms/submissions'] = 'recranet-forms/submissions/index';
 			$event->rules['recranet-forms/submissions/<submissionId:\d+>'] = 'recranet-forms/submissions/view';
 		});

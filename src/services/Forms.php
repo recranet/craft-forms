@@ -97,6 +97,107 @@ class Forms extends Component
 		return true;
 	}
 
+	/**
+	 * Portable array representation of a form (for JSON export). Field uids
+	 * are included — conditions reference them, and they're globally unique
+	 * so importing them elsewhere is safe.
+	 */
+	public function exportForm(Form $form): array
+	{
+		return [
+			'name' => $form->name,
+			'handle' => $form->handle,
+			'fields' => $form->fields,
+			'settings' => [
+				'recipients' => $form->recipients,
+				'subject' => $form->subject,
+				'notificationTemplate' => $form->notificationTemplate,
+				'notificationIntro' => $form->notificationIntro,
+				'sendConfirmation' => $form->sendConfirmation,
+				'confirmationSubject' => $form->confirmationSubject,
+				'confirmationTemplate' => $form->confirmationTemplate,
+				'confirmationBody' => $form->confirmationBody,
+			],
+		];
+	}
+
+	/**
+	 * Build an unsaved Form from an exported array. The handle is suffixed
+	 * until unique, so importing over an existing form never overwrites it.
+	 */
+	public function createFromExport(array $data): Form
+	{
+		$settings = (array)($data['settings'] ?? []);
+
+		$form = new Form([
+			'name' => (string)($data['name'] ?? 'Imported form'),
+			'handle' => $this->uniqueHandle((string)($data['handle'] ?? 'imported')),
+			'fields' => (array)($data['fields'] ?? []),
+			'recipients' => (string)($settings['recipients'] ?? ''),
+			'subject' => (string)($settings['subject'] ?? ''),
+			'notificationTemplate' => (string)($settings['notificationTemplate'] ?? ''),
+			'notificationIntro' => (string)($settings['notificationIntro'] ?? ''),
+			'sendConfirmation' => (bool)($settings['sendConfirmation'] ?? false),
+			'confirmationSubject' => (string)($settings['confirmationSubject'] ?? ''),
+			'confirmationTemplate' => (string)($settings['confirmationTemplate'] ?? ''),
+			'confirmationBody' => (string)($settings['confirmationBody'] ?? ''),
+		]);
+
+		return $form;
+	}
+
+	/**
+	 * Duplicate a form. Every field gets a NEW uid (two fields must never
+	 * share one — submissions key values by uid), and conditions rules are
+	 * remapped from old to new uids so the copied logic keeps working.
+	 */
+	public function duplicateForm(Form $source): ?Form
+	{
+		$uidMap = [];
+		$fields = $source->fields;
+
+		foreach ($fields as &$field) {
+			$new = StringHelper::UUID();
+			$uidMap[$field['uid'] ?? ''] = $new;
+			$field['uid'] = $new;
+		}
+		unset($field);
+
+		// Remap condition rule references to the duplicated fields
+		foreach ($fields as &$field) {
+			foreach ((array)($field['conditions']['rules'] ?? []) as $i => $rule) {
+				if (isset($uidMap[$rule['field'] ?? ''])) {
+					$field['conditions']['rules'][$i]['field'] = $uidMap[$rule['field']];
+				}
+			}
+		}
+		unset($field);
+
+		$copy = clone $source;
+		$copy->id = null;
+		$copy->uid = null;
+		$copy->name = $source->name . ' copy';
+		$copy->handle = $this->uniqueHandle($source->handle . 'Copy');
+		$copy->fields = $fields;
+
+		return $this->saveForm($copy) ? $copy : null;
+	}
+
+	/**
+	 * Suffix a handle with a counter until no form claims it.
+	 */
+	private function uniqueHandle(string $handle): string
+	{
+		$candidate = $handle;
+		$i = 1;
+
+		while (FormRecord::findOne(['handle' => $candidate])) {
+			$candidate = $handle . ++$i;
+		}
+
+		return $candidate;
+	}
+
 	public function deleteFormById(int $id): bool
 	{
 		$record = FormRecord::findOne($id);

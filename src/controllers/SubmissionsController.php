@@ -34,7 +34,7 @@ class SubmissionsController extends Controller
 	/** Window in which an identical re-submit counts as a duplicate */
 	private const IDEMPOTENCY_WINDOW_SECONDS = 300;
 
-	protected array|bool|int $allowAnonymous = ['submit'];
+	protected array|bool|int $allowAnonymous = ['submit', 'view-by-token', 'delete-by-token'];
 
 	public function actionSubmit(): ?Response
 	{
@@ -153,6 +153,65 @@ class SubmissionsController extends Controller
 			->where(['s.idempotencyKey' => $submission->idempotencyKey])
 			->andWhere(['>=', 'e.dateCreated', $since])
 			->exists();
+	}
+
+	/**
+	 * Front end: a submitter views their own submission via the unguessable
+	 * token from the confirmation email (AVG/GDPR self-service — no login).
+	 * Site override: templates/recranet-forms/submission.twig.
+	 */
+	public function actionViewByToken(string $token): Response
+	{
+		$submission = $this->submissionByToken($token);
+
+		$view = Craft::$app->getView();
+		$variables = [
+			'submission' => $submission,
+			'form' => $submission->getForm(),
+		];
+
+		if ($view->doesTemplateExist('recranet-forms/submission', \craft\web\View::TEMPLATE_MODE_SITE)) {
+			$html = $view->renderTemplate('recranet-forms/submission', $variables, \craft\web\View::TEMPLATE_MODE_SITE);
+		} else {
+			$html = $view->renderTemplate('recranet-forms/_render/submission', $variables, \craft\web\View::TEMPLATE_MODE_CP);
+		}
+
+		return $this->asRaw($html);
+	}
+
+	/**
+	 * Front end: a submitter deletes their own submission (hard delete —
+	 * this is the AVG erasure path, trash would defeat the purpose).
+	 */
+	public function actionDeleteByToken(): Response
+	{
+		$this->requirePostRequest();
+
+		$token = (string)Craft::$app->getRequest()->getRequiredBodyParam('token');
+		$submission = $this->submissionByToken($token);
+
+		Craft::$app->getElements()->deleteElement($submission, hardDelete: true);
+		Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Your submission has been deleted.'));
+
+		return $this->redirect(Craft::$app->getSites()->getCurrentSite()->getBaseUrl() ?? '/');
+	}
+
+	/**
+	 * Resolve a submission by its self-service token or 404. Spam-flagged
+	 * submissions resolve too — the sender may rightfully erase those.
+	 */
+	private function submissionByToken(string $token): Submission
+	{
+		$submission = Submission::find()
+			->status(null)
+			->andWhere(['recranetforms_submissions.token' => $token])
+			->one();
+
+		if (!$submission) {
+			throw new NotFoundHttpException('Submission not found.');
+		}
+
+		return $submission;
 	}
 
 	/**

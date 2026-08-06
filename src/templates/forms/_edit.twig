@@ -174,6 +174,23 @@
 		})
 	}}
 
+	{% if form.id %}
+		{# Copy-paste embed snippet, so nobody has to remember the Twig call #}
+		<div class="field">
+			<div class="heading"><label>Embed</label></div>
+			<div class="rf-embed">
+				<code id="rf-embed-snippet">{{ "{{ craft.recranetForms.render('#{form.handle}') }}" }}</code>
+				<button
+					type="button"
+					class="btn small"
+					onclick="navigator.clipboard.writeText(document.getElementById('rf-embed-snippet').textContent).then(() => Craft.cp.displayNotice('Copied.'));"
+				>
+					Copy
+				</button>
+			</div>
+		</div>
+	{% endif %}
+
 	<hr />
 
 	<div class="field">
@@ -321,6 +338,8 @@
 		</button>
 	{% endif %}
 {% css %}
+	.rf-embed { display: flex; align-items: center; gap: 10px; }
+	.rf-embed code { background: var(--gray-100); padding: 6px 10px; border-radius: 6px; }
 	.rfs-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--hairline-color); }
 	.rfs-tab { border: 0; background: none; padding: 8px 14px; font-size: 14px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
 	.rfs-tab.sel { color: var(--text-color); background: var(--gray-100); font-weight: 600; }

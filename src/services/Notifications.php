@@ -173,6 +173,11 @@ class Notifications extends Component
 		$variables['date'] = $submission->dateCreated
 			? Craft::$app->getFormatter()->asDatetime($submission->dateCreated, 'short')
 			: '';
+		// AVG self-service link: the submitter can view/erase their own
+		// submission. Empty when nothing was stored (mail-only mode/rejects).
+		$variables['selfServiceUrl'] = $submission->token
+			? \craft\helpers\UrlHelper::siteUrl('recranet-forms/submission/' . $submission->token)
+			: '';
 
 		try {
 			return Craft::$app->getView()->renderObjectTemplate($template, $submission, $variables);

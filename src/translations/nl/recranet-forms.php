@@ -9,4 +9,14 @@ return [
 	'{label} must be a valid email address.' => '{label} moet een geldig e-mailadres zijn.',
 	'{label} has an invalid value.' => '{label} heeft een ongeldige waarde.',
 	'confirmation.body' => 'Bedankt voor je bericht. Hieronder vind je een kopie van je inzending. We nemen zo snel mogelijk contact met je op.',
+
+	// Self-service view (AVG/GDPR): tokenized view/delete page
+	'submission.title' => 'Jouw inzending',
+	'submission.intro' => 'Dit is de inzending die je via ons formulier hebt verstuurd. Je kunt deze hieronder bekijken en desgewenst definitief verwijderen.',
+	'submission.date' => 'Verzonden op',
+	'submission.yes' => 'Ja',
+	'submission.no' => 'Nee',
+	'submission.delete' => 'Verwijder mijn inzending',
+	'submission.deleteConfirm' => 'Weet je zeker dat je deze inzending definitief wilt verwijderen?',
+	'Your submission has been deleted.' => 'Je inzending is verwijderd.',
 ];
