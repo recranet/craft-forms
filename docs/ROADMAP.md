@@ -15,7 +15,9 @@ Distilled from a comparison against Formie 3.1.34 (source), Solspace Freeform v5
 5. **Uninstall cleanup:** `beforeUninstall()` must remove our `elementSources.<Submission FQCN>` entries from project config — Craft writes them the moment an admin reorders index columns, and they drift on `allowAdminChanges: false` environments.
 6. **A11y pass on the default template** (few hours, beats the market leader): `aria-describedby` → error/description ids, `aria-invalid` on errored inputs, `role="alert"` on the error summary, `autocomplete` tokens (`name`, `email`, `tel`) on matching field types.
 
-## Phase 1 — interactive fields (the current goal)
+## Phase 1 — interactive fields
+
+**✅ Shipped in v2.2.0 (2026-08-06).** Rule shape + conditional fields (RuleEvaluator, PHP/JS parity, hidden-is-never-required, fixpoint cascade), three-tab field settings (General/Appearance/Advanced) with placeholder/description/adminLabel/defaultValue/custom validation message, duplicate-field button, visual rule editor, and merge tags via renderObjectTemplate in notification/confirmation subjects and recipients (routing-lite). Original plan below:
 
 The shared foundation is **one rule shape** used everywhere: `{field: <uid>, operator: is|isNot|contains|greaterThan, value}` groups combined with all/any. One UI component, one evaluator (PHP + JS), reused by fields, notifications *and* confirmations. Build the shape first, then the consumers:
 
