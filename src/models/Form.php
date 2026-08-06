@@ -46,6 +46,16 @@ class Form extends Model
 	 */
 	public const LAYOUT_TYPES = ['heading', 'paragraph'];
 
+	/** Retention mode: prune hard-deletes the whole submission (current behavior) */
+	public const RETENTION_MODE_DELETE = 'delete';
+
+	/**
+	 * Retention mode: prune keeps the submission row (counts, dates, per-form
+	 * reference numbers survive) but blanks all personal data — every formData
+	 * value, the self-service token, the source URL and uploaded files.
+	 */
+	public const RETENTION_MODE_ANONYMIZE = 'anonymize';
+
 	public ?int $id = null;
 	public ?string $name = null;
 	public ?string $handle = null;
@@ -88,6 +98,19 @@ class Form extends Model
 	 */
 	public string $confirmationBody = '';
 
+	/**
+	 * Per-form retention override in days. '' = inherit the plugin-wide
+	 * retention setting; 0 = keep this form's submissions forever, whatever
+	 * the plugin default says.
+	 */
+	public int|string $retentionDays = '';
+
+	/**
+	 * What retention pruning does with this form's expired submissions:
+	 * RETENTION_MODE_DELETE (default) or RETENTION_MODE_ANONYMIZE.
+	 */
+	public string $retentionMode = self::RETENTION_MODE_DELETE;
+
 	public ?string $uid = null;
 
 	protected function defineRules(): array
@@ -96,7 +119,23 @@ class Form extends Model
 			[['name', 'handle'], 'required'],
 			[['handle'], HandleValidator::class],
 			[['fields'], 'validateFields'],
+			// skipOnEmpty leaves '' (= inherit) alone
+			[['retentionDays'], 'integer', 'min' => 0],
+			[['retentionMode'], 'in', 'range' => [self::RETENTION_MODE_DELETE, self::RETENTION_MODE_ANONYMIZE]],
 		];
+	}
+
+	/**
+	 * The per-form retention override as an int, or null when the form
+	 * inherits the plugin-wide setting ('').
+	 */
+	public function getRetentionDaysOverride(): ?int
+	{
+		if ($this->retentionDays === '') {
+			return null;
+		}
+
+		return (int)$this->retentionDays;
 	}
 
 	/**

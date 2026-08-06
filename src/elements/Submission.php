@@ -75,6 +75,13 @@ class Submission extends Element
 	public ?string $idempotencyKey = null;
 
 	/**
+	 * Set when retention pruning anonymized this submission (form retention
+	 * mode "anonymize"): the row survives for statistics, but all personal
+	 * data — formData values, token, sourceUrl, uploaded files — is gone.
+	 */
+	public ?\DateTime $anonymizedAt = null;
+
+	/**
 	 * @var array<string, UploadedFile> Pending file-field uploads keyed by
 	 * field uid. Collected in applyPost(), validated (extension/size) in
 	 * validateFormData(), and only turned into assets in beforeSave() — after
@@ -797,6 +804,7 @@ class Submission extends Element
 			'token' => $this->token,
 			'sourceUrl' => $this->sourceUrl,
 			'idempotencyKey' => $this->idempotencyKey,
+			'anonymizedAt' => Db::prepareDateForDb($this->anonymizedAt),
 		];
 
 		if ($isNew) {
@@ -806,6 +814,52 @@ class Submission extends Element
 		}
 
 		parent::afterSave($isNew);
+	}
+
+	/**
+	 * Blank the personal data while keeping the element row (retention mode
+	 * "anonymize"): every formData value goes to null, uploaded files are
+	 * hard-deleted (a file IS personal data), and the token, source URL and
+	 * dedupe key are cleared — nulling the token also kills the tokenized
+	 * self-service link. The snapshot (field definitions, no values) stays,
+	 * so the CP view still shows WHICH fields the form had.
+	 *
+	 * Saved without validation: required fields are now null by design, and
+	 * that must not block the cleanup.
+	 */
+	public function anonymize(): bool
+	{
+		// Already processed — never re-anonymize (and never bump anonymizedAt)
+		if ($this->anonymizedAt !== null) {
+			return true;
+		}
+
+		// Uploaded files first, while formData still holds the asset ids
+		foreach ($this->snapshot as $field) {
+			if (($field['type'] ?? null) !== 'file') {
+				continue;
+			}
+
+			$assetId = $this->formData[$field['uid'] ?? ''] ?? null;
+
+			if ($assetId && is_numeric($assetId)) {
+				Craft::$app->getElements()->deleteElementById((int)$assetId, Asset::class, hardDelete: true);
+			}
+		}
+
+		// Null every stored value (layout-only types are already absent from
+		// formData, so this covers exactly the fields that carried input)
+		foreach ($this->formData as $uid => $value) {
+			$this->formData[$uid] = null;
+		}
+
+		$this->token = null;
+		$this->sourceUrl = null;
+		$this->idempotencyKey = null;
+		$this->anonymizedAt = new \DateTime();
+
+		// Re-save so the search index drops the old keywords too
+		return Craft::$app->getElements()->saveElement($this, runValidation: false);
 	}
 
 	/**

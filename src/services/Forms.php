@@ -83,6 +83,8 @@ class Forms extends Component
 			'confirmationSubject' => $form->confirmationSubject,
 			'confirmationTemplate' => $form->confirmationTemplate,
 			'confirmationBody' => $form->confirmationBody,
+			'retentionDays' => $form->retentionDays,
+			'retentionMode' => $form->retentionMode,
 		]);
 		$record->uid = $record->uid ?: StringHelper::UUID();
 
@@ -117,6 +119,8 @@ class Forms extends Component
 				'confirmationSubject' => $form->confirmationSubject,
 				'confirmationTemplate' => $form->confirmationTemplate,
 				'confirmationBody' => $form->confirmationBody,
+				'retentionDays' => $form->retentionDays,
+				'retentionMode' => $form->retentionMode,
 			],
 		];
 	}
@@ -141,6 +145,11 @@ class Forms extends Component
 			'confirmationSubject' => (string)($settings['confirmationSubject'] ?? ''),
 			'confirmationTemplate' => (string)($settings['confirmationTemplate'] ?? ''),
 			'confirmationBody' => (string)($settings['confirmationBody'] ?? ''),
+			// Retention: '' = inherit the plugin setting; unknown modes fall back to delete
+			'retentionDays' => $settings['retentionDays'] ?? '',
+			'retentionMode' => in_array($settings['retentionMode'] ?? '', [Form::RETENTION_MODE_DELETE, Form::RETENTION_MODE_ANONYMIZE], true)
+				? $settings['retentionMode']
+				: Form::RETENTION_MODE_DELETE,
 		]);
 
 		return $form;
@@ -228,6 +237,10 @@ class Forms extends Component
 			'confirmationSubject' => $settings['confirmationSubject'] ?? '',
 			'confirmationTemplate' => $settings['confirmationTemplate'] ?? '',
 			'confirmationBody' => $settings['confirmationBody'] ?? '',
+			// Retention: '' = inherit the plugin setting (forms saved before
+			// this feature existed have no key, so they inherit too)
+			'retentionDays' => $settings['retentionDays'] ?? '',
+			'retentionMode' => $settings['retentionMode'] ?? Form::RETENTION_MODE_DELETE,
 			'uid' => $record->uid,
 		]);
 	}

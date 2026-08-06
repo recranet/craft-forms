@@ -21,8 +21,9 @@ use yii\base\Component;
 use yii\web\Request;
 
 /**
- * Runs the spam pipeline: blocklist, honeypot, submit timing, then the
- * configured captcha (including the action/hostname the token was minted with).
+ * Runs the spam pipeline: blocklist, honeypot, throttle, submit timing, then
+ * the configured captcha (including the action/hostname the token was minted
+ * with).
  *
  * The cheap local checks run first so a bot never costs us a captcha
  * verification — which matters on reCAPTCHA Enterprise, where assessments are
@@ -77,6 +78,14 @@ class SpamService extends Component
 		// outright, there is nothing worth reviewing
 		if ($settings->honeypotEnabled && trim((string)$request->getBodyParam($settings->honeypotName)) !== '') {
 			return new SpamVerdict(isSpam: true, reason: 'honeypot', reject: true);
+		}
+
+		// Throttle right after the honeypot: it's a cheap local cache lookup,
+		// and rate-limiting a hammering bot here saves every check below
+		$throttleVerdict = $this->checkThrottle($request, $settings, $form);
+
+		if ($throttleVerdict !== null) {
+			return $throttleVerdict;
 		}
 
 		$timingVerdict = $this->checkTiming($request, $settings);
@@ -198,6 +207,56 @@ class SpamService extends Component
 					reason: sprintf('blocklist (entry "%s")', $entry),
 				);
 			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Rate-limit submissions per IP + form within a rolling window.
+	 *
+	 * A real visitor doesn't submit the same form 6 times a minute — a bot
+	 * hammering the endpoint does — so exceeding the limit is a reject, not
+	 * reviewable spam: storing hundreds of hammered submits would flood the
+	 * review list with exactly the noise the throttle exists to stop.
+	 *
+	 * The counter lives in Craft's cache with the window as TTL, and is
+	 * incremented BEFORE it is checked so parallel submits all count (two
+	 * simultaneous posts each see the other's increment on the next hit).
+	 * Every hit rewrites the TTL, so a bot that keeps hammering stays
+	 * throttled until it backs off for a full window.
+	 */
+	private function checkThrottle(Request $request, Settings $settings, Form $form): ?SpamVerdict
+	{
+		$count = $settings->getThrottleCount();
+		$window = $settings->getThrottleWindow();
+
+		// 0 for either value disables the check
+		if ($count <= 0 || $window <= 0) {
+			return null;
+		}
+
+		$ip = $request->getUserIP();
+
+		// No IP to key on (console request, exotic proxy setup): nothing to
+		// throttle against, so don't punish the visitor for it
+		if (!$ip) {
+			return null;
+		}
+
+		$cache = Craft::$app->getCache();
+		$key = sprintf('recranet-forms:throttle:%s:%s', $form->handle, $ip);
+
+		// Increment first, check second — see the docblock above
+		$submits = (int)$cache->get($key) + 1;
+		$cache->set($key, $submits, $window);
+
+		if ($submits > $count) {
+			return new SpamVerdict(
+				isSpam: true,
+				reason: sprintf('throttled (%d submits in %ds)', $submits, $window),
+				reject: true,
+			);
 		}
 
 		return null;

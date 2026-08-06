@@ -237,4 +237,11 @@ return [
 	'Notification email sent.' => 'Notificatie-e-mail verstuurd.',
 	'The notification email failed to send — see the log for details.' => 'De notificatie-e-mail kon niet worden verstuurd — zie de log voor details.',
 	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Als spam gemarkeerde inzendingen kunnen niet opnieuw worden verstuurd — gebruik “Geen spam”.',
+	// Submission throttle + retention override / anonymize mode
+	'Submission throttle (count)' => 'Inzendingslimiet (aantal)',
+	'Maximum number of submissions per visitor (IP address) per form within the throttle window. Exceeding submits are rejected outright. 0 disables the check.' => 'Maximaal aantal inzendingen per bezoeker (IP-adres) per formulier binnen het tijdvenster. Inzendingen daarboven worden direct geweigerd. 0 schakelt de controle uit.',
+	'Throttle window (seconds)' => 'Tijdvenster (seconden)',
+	'The rolling window for the submission throttle. 0 disables the check.' => 'Het rollende tijdvenster voor de inzendingslimiet. 0 schakelt de controle uit.',
+	'Individual forms can override this retention period and can anonymize instead of delete (see the form’s settings).' => 'Individuele formulieren kunnen deze bewaartermijn overschrijven en kunnen anonimiseren in plaats van verwijderen (zie de instellingen van het formulier).',
+	'Anonymized on {date} — the personal data of this submission has been removed by the retention policy.' => 'Geanonimiseerd op {date} — de persoonsgegevens van deze inzending zijn verwijderd door het bewaarbeleid.',
 ];

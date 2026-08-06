@@ -232,4 +232,11 @@ return [
 	'Notification email sent.' => 'Notification email sent.',
 	'The notification email failed to send — see the log for details.' => 'The notification email failed to send — see the log for details.',
 	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Spam-flagged submissions cannot be resent — use “Not spam” instead.',
+	// Submission throttle + retention override / anonymize mode
+	'Submission throttle (count)' => 'Submission throttle (count)',
+	'Maximum number of submissions per visitor (IP address) per form within the throttle window. Exceeding submits are rejected outright. 0 disables the check.' => 'Maximum number of submissions per visitor (IP address) per form within the throttle window. Exceeding submits are rejected outright. 0 disables the check.',
+	'Throttle window (seconds)' => 'Throttle window (seconds)',
+	'The rolling window for the submission throttle. 0 disables the check.' => 'The rolling window for the submission throttle. 0 disables the check.',
+	'Individual forms can override this retention period and can anonymize instead of delete (see the form’s settings).' => 'Individual forms can override this retention period and can anonymize instead of delete (see the form’s settings).',
+	'Anonymized on {date} — the personal data of this submission has been removed by the retention policy.' => 'Anonymized on {date} — the personal data of this submission has been removed by the retention policy.',
 ];

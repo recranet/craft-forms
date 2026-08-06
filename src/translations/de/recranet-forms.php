@@ -237,4 +237,11 @@ return [
 	'Notification email sent.' => 'Benachrichtigungs-E-Mail gesendet.',
 	'The notification email failed to send — see the log for details.' => 'Die Benachrichtigungs-E-Mail konnte nicht gesendet werden — Details stehen im Log.',
 	'Spam-flagged submissions cannot be resent — use “Not spam” instead.' => 'Als Spam markierte Einsendungen können nicht erneut gesendet werden — verwenden Sie stattdessen „Kein Spam“.',
+	// Submission throttle + retention override / anonymize mode
+	'Submission throttle (count)' => 'Einsendelimit (Anzahl)',
+	'Maximum number of submissions per visitor (IP address) per form within the throttle window. Exceeding submits are rejected outright. 0 disables the check.' => 'Maximale Anzahl Einsendungen pro Besucher (IP-Adresse) pro Formular innerhalb des Zeitfensters. Weitere Einsendungen werden direkt abgelehnt. 0 deaktiviert die Prüfung.',
+	'Throttle window (seconds)' => 'Zeitfenster (Sekunden)',
+	'The rolling window for the submission throttle. 0 disables the check.' => 'Das rollierende Zeitfenster für das Einsendelimit. 0 deaktiviert die Prüfung.',
+	'Individual forms can override this retention period and can anonymize instead of delete (see the form’s settings).' => 'Einzelne Formulare können diese Aufbewahrungsfrist überschreiben und anonymisieren statt löschen (siehe Formulareinstellungen).',
+	'Anonymized on {date} — the personal data of this submission has been removed by the retention policy.' => 'Anonymisiert am {date} — die personenbezogenen Daten dieser Einsendung wurden gemäß Aufbewahrungsrichtlinie entfernt.',
 ];

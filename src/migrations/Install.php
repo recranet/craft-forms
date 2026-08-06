@@ -35,6 +35,9 @@ class Install extends Migration
 			'token' => $this->string(32),
 			'sourceUrl' => $this->string(),
 			'idempotencyKey' => $this->string(64),
+			// Set when retention pruning anonymized this submission (form
+			// retention mode "anonymize"): row kept, personal data blanked
+			'anonymizedAt' => $this->dateTime(),
 			'formData' => $this->text(),
 			'isSpam' => $this->boolean()->notNull()->defaultValue(false),
 			'spamReason' => $this->string(),

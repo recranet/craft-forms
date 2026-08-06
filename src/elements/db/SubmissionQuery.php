@@ -3,6 +3,7 @@
 namespace recranet\forms\elements\db;
 
 use craft\elements\db\ElementQuery;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use recranet\forms\elements\Submission;
@@ -66,6 +67,7 @@ class SubmissionQuery extends ElementQuery
 			'recranetforms_submissions.token',
 			'recranetforms_submissions.sourceUrl',
 			'recranetforms_submissions.idempotencyKey',
+			'recranetforms_submissions.anonymizedAt',
 		]);
 
 		if ($this->formId !== null) {
@@ -89,6 +91,8 @@ class SubmissionQuery extends ElementQuery
 		$row['isSpam'] = (bool)($row['isSpam'] ?? false);
 		$row['spamScore'] = isset($row['spamScore']) ? (float)$row['spamScore'] : null;
 		$row['incrementalId'] = isset($row['incrementalId']) ? (int)$row['incrementalId'] : null;
+		// DB datetime string → DateTime (null when never anonymized)
+		$row['anonymizedAt'] = isset($row['anonymizedAt']) ? (DateTimeHelper::toDateTime($row['anonymizedAt']) ?: null) : null;
 
 		return parent::createElement($row);
 	}
