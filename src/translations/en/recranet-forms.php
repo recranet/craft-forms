@@ -271,7 +271,7 @@ return [
 	'Preview notification email' => 'Preview notification email',
 	'Preview confirmation email' => 'Preview confirmation email',
 	'Shows the last saved state — save first to preview unsaved changes.' => 'Shows the last saved state — save first to preview unsaved changes.',
-	'Styled with stock Bootstrap 5 — your site’s own CSS may look different.' => 'Styled with stock Bootstrap 5 — your site’s own CSS may look different.',
+	'Shown with neutral styling, without your site’s own design — this preview is about the fields, order and wording.' => 'Shown with neutral styling, without your site’s own design — this preview is about the fields, order and wording.',
 	'Subject: {subject}' => 'Subject: {subject}',
 	'Sample values, nothing was sent or stored.' => 'Sample values, nothing was sent or stored.',
 	'Retention mode' => 'Retention mode',
@@ -283,4 +283,5 @@ return [
 	// Form field type (place a form in page content)
 	'CSS class' => 'CSS class',
 	'Added to the rendered <form> element.' => 'Added to the rendered <form> element.',
+	'Refresh' => 'Refresh',
 ];

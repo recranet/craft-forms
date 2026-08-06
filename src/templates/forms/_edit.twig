@@ -21,15 +21,23 @@
 
 {# Collapsible preview panel: the iframe only loads when opened, and
    reloads on every open so it reflects the last saved state. #}
-{% macro previewPanel(formId, type, label) %}
-	<div class="rf-preview" data-rf-preview>
-		<button type="button" class="btn" data-rf-preview-toggle aria-expanded="false">{{ label }}</button>
+{% macro previewPanel(formId, type, label, docked = false) %}
+	{# docked = the split-view panel next to the builder: open on load, with a
+	   refresh button instead of a show/hide toggle. Undocked = a collapsible
+	   panel under the mail settings. #}
+	<div class="rf-preview {{ docked ? 'rf-preview--docked' }}" data-rf-preview {{ docked ? 'data-rf-preview-docked' }}>
+		<div class="rf-preview__bar">
+			<strong>{{ label }}</strong>
+			<button type="button" class="btn small" data-rf-preview-toggle aria-expanded="{{ docked ? 'true' : 'false' }}">
+				{{ docked ? 'Refresh'|t('recranet-forms') : label }}
+			</button>
+		</div>
 		<p class="rf-hint">{{ 'Shows the last saved state — save first to preview unsaved changes.'|t('recranet-forms') }}</p>
 		<iframe
 			class="rf-preview__frame"
 			title="{{ label }}"
 			data-src="{{ url('recranet-forms/forms/' ~ formId ~ '/preview/' ~ type) }}"
-			hidden
+			{{ docked ? '' : 'hidden' }}
 		></iframe>
 	</div>
 {% endmacro %}
@@ -273,8 +281,8 @@
 		{% endif %}
 	</div>
 
-	<div class="rfs-pane" data-rfs-pane="fields" {{ startTab != 'fields' ? 'hidden' }}>
-	<div class="field">
+	<div class="rfs-pane rf-split" data-rfs-pane="fields" {{ startTab != 'fields' ? 'hidden' }}>
+	<div class="field rf-split__builder">
 		<div class="instructions"><p>{{ 'Drag the cards to reorder. Half-width fields sit side by side on the site.'|t('recranet-forms') }}</p></div>
 		{% if form.getErrors('fields') %}
 			<ul class="errors">
@@ -325,9 +333,12 @@
 			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields) }}
 		</template>
 	</div>
+	{# /.field — end of the builder column #}
 
 		{% if form.id %}
-			{{ _self.previewPanel(form.id, 'form', 'Preview form'|t('recranet-forms')) }}
+			<aside class="rf-split__preview">
+				{{ _self.previewPanel(form.id, 'form', 'Preview form'|t('recranet-forms'), true) }}
+			</aside>
 		{% endif %}
 	</div>
 	{# /rfs-pane fields #}
@@ -423,7 +434,20 @@
 		{% endif %}
 	</div>
 {% css %}
+	/* Split view: builder left, live preview right. Stacks below 1200px so
+	   narrow screens keep the full builder width. */
+	@media (min-width: 1200px) {
+		.rf-split { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
+		.rf-split__builder { min-width: 0; }
+		.rf-split__preview { position: sticky; top: 16px; }
+		.rf-preview--docked .rf-preview__frame { height: calc(100vh - 220px); min-height: 420px; }
+	}
+	.rf-preview__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+	.rf-preview--docked .rf-preview__bar strong { font-size: 13px; color: var(--medium-text-color); }
+	/* Only the docked panel shows its own title; the collapsible ones use the button */
+	.rf-preview:not(.rf-preview--docked) .rf-preview__bar strong { display: none; }
 	.rf-preview { margin-top: 20px; }
+	.rf-preview--docked { margin-top: 0; }
 	.rf-preview .rf-hint { margin: 6px 0 0; }
 	.rf-preview__frame { width: 100%; height: 520px; margin-top: 12px; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: #fff; }
 	.rf-embed { display: flex; align-items: center; gap: 10px; }
@@ -435,7 +459,9 @@
 	/* Builder: two-column grid mirroring the site layout — half-width fields
 	   really sit side by side, so dragging feels like rearranging the page */
 	.rf-builder__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; align-items: start; }
-	.rf-field { grid-column: 1 / -1; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+	/* min-width: 0 — grid items default to min-content, so a half-width card
+	   would otherwise refuse to shrink below its bar's natural width */
+	.rf-field { grid-column: 1 / -1; min-width: 0; container-type: inline-size; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); transition: box-shadow 0.15s ease, border-color 0.15s ease; }
 	.rf-field[data-width='half'] { grid-column: span 1; }
 	.rf-field:hover { border-color: var(--medium-hairline-color, #cdd8e4); }
 	.rf-field.rf-open { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); border-color: var(--link-color, #1f5fea); }
@@ -451,7 +477,15 @@
 	.rf-field.rf-just-added { animation: rf-flash 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) 1; }
 
 	/* Collapsed-by-default bar: the whole bar toggles the body */
-	.rf-field__bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; user-select: none; }
+	.rf-field__bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; user-select: none; min-width: 0; }
+	/* In a narrow card (half width, or the split view) the type badge and the
+	   Duplicate label go first — title, drag handle and delete always stay */
+	@container (max-width: 470px) {
+		.rf-field__badge { display: none; }
+		/* .btn.small outranks a single class, so match it in specificity */
+		.btn.rf-field__duplicate { font-size: 0; padding-left: 8px; padding-right: 8px; }
+		.btn.rf-field__duplicate::before { content: '⧉'; font-size: 13px; }
+	}
 	.rf-field__bar:focus-visible { outline: 2px solid var(--link-color, #1f5fea); outline-offset: -2px; border-radius: var(--large-border-radius); }
 	.rf-field.rf-open .rf-field__bar { border-bottom: 1px solid var(--hairline-color); }
 	.rf-field__move { cursor: grab; }
@@ -491,7 +525,7 @@
 	.rf-palette__tile .rf-field__icon, [data-icon-type] { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; background: #4a7de2; flex-shrink: 0; }
 
 	/* Status chips on the collapsed bar */
-	.rf-field__chips { display: inline-flex; gap: 4px; }
+	.rf-field__chips { display: inline-flex; gap: 4px; flex-shrink: 0; }
 	.rf-chip { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--gray-100); color: var(--medium-text-color); white-space: nowrap; }
 	.rf-chip--required { background: rgba(207, 46, 46, 0.12); color: #b02525; }
 	.rf-chip--conditional { background: rgba(138, 99, 210, 0.14); color: #6b46b8; }
@@ -548,12 +582,25 @@
 		document.querySelectorAll('[data-rf-preview]').forEach(function (panel) {
 			var toggle = panel.querySelector('[data-rf-preview-toggle]');
 			var frame = panel.querySelector('.rf-preview__frame');
+			var docked = panel.hasAttribute('data-rf-preview-docked');
+
+			function load() {
+				// Cache-buster so the iframe re-fetches instead of restoring
+				frame.src = frame.dataset.src + '?t=' + Date.now();
+			}
+
+			// The split-view panel is visible from the start
+			if (docked) load();
+
 			toggle.addEventListener('click', function () {
+				if (docked) {
+					load();
+					return;
+				}
 				var open = frame.hidden;
 				frame.hidden = !open;
 				toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-				// Re-set src on every open so the preview reflects the last save
-				if (open) frame.src = frame.dataset.src + '?t=' + Date.now();
+				if (open) load();
 			});
 		});
 

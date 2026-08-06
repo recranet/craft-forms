@@ -1,5 +1,17 @@
 # Release Notes for Recranet Forms
 
+## 2.5.0 - 2026-08-06
+
+- **False-positive recovery**: "Not spam" and "Resend notification" element actions on the submissions index (bulk, only on applicable rows) and as buttons on the detail view. Marking as not spam keeps the original reason as an audit trail and sends the emails that were skipped.
+- **Throttle**: submissions per IP + form are rate-limited (default 5 per 60s); a hammering bot is rejected before any captcha call, while still seeing a success page.
+- **Per-form retention** overrides the plugin-wide setting, with an **anonymize** mode that keeps the row for statistics and blanks all personal data (uploads deleted, self-service token destroyed, `anonymizedAt` stamped).
+- **Preview panels**: the Fields tab shows a live split-view preview next to the builder on wide screens; the Notification and Confirmation tabs preview their emails with sample values, subject included and merge tags resolved. Same template resolution as a real render or send — nothing is sent or stored.
+- **Form field type**: authors can drop a form into page content (entry body, Matrix block, CKEditor entry). Stores the form's uid, so a handle rename never breaks the reference.
+- **Settings page split into five tabs** (Captcha / Spam checks / Storage / Retention / Uploads) with an intro per tab and sub-sections with hints.
+- Accessibility: focus moves to the error summary after a failed submit, and radio/checkbox groups announce "(required)" — the asterisk is aria-hidden and checkbox groups carry no native required attribute.
+- Saving a form keeps you on the form instead of returning to the overview.
+- Added a CHANGELOG and a `test-forms` workflow (lint, four front-end e2e flows, CP smoke test).
+
 ## 2.4.1 - 2026-08-06
 
 - Form edit screen reorganized into page-level tabs: Form settings / Fields / Notification / Confirmation. New forms (and name/handle validation errors) open on Settings; saved forms open on Fields.

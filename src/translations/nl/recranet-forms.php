@@ -276,7 +276,7 @@ return [
 	'Preview notification email' => 'Notificatiemail bekijken',
 	'Preview confirmation email' => 'Bevestigingsmail bekijken',
 	'Shows the last saved state — save first to preview unsaved changes.' => 'Toont de laatst opgeslagen versie — sla eerst op om wijzigingen te zien.',
-	'Styled with stock Bootstrap 5 — your site’s own CSS may look different.' => 'Weergegeven met standaard Bootstrap 5 — de CSS van je eigen site kan afwijken.',
+	'Shown with neutral styling, without your site’s own design — this preview is about the fields, order and wording.' => 'Weergegeven met neutrale opmaak, zonder de eigen vormgeving van je site — het gaat hier om de velden, volgorde en teksten.',
 	'Subject: {subject}' => 'Onderwerp: {subject}',
 	'Sample values, nothing was sent or stored.' => 'Voorbeeldwaarden; er is niets verstuurd of opgeslagen.',
 	'Retention mode' => 'Bewaarmodus',
@@ -288,4 +288,5 @@ return [
 	// Form field type (place a form in page content)
 	'CSS class' => 'CSS-klasse',
 	'Added to the rendered <form> element.' => 'Wordt toegevoegd aan het gerenderde <form>-element.',
+	'Refresh' => 'Vernieuwen',
 ];

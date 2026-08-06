@@ -141,10 +141,11 @@ class FormsController extends Controller
 			// Render the front-end template exactly as the site would
 			$body = (string)Plugin::getInstance()->forms->renderFormPreview($form);
 			$title = Craft::t('recranet-forms', 'Form preview');
-			// Bootstrap from the CDN: the plugin's default markup is Bootstrap 5,
-			// and the project's own compiled CSS isn't reachable from the CP
+			// A neutral stylesheet: the project's own compiled CSS isn't
+			// reachable from the CP, and the point of this preview is the
+			// structure and wording, not the site's visual design
 			$head = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">';
-			$note = Craft::t('recranet-forms', 'Styled with stock Bootstrap 5 — your site’s own CSS may look different.');
+			$note = Craft::t('recranet-forms', 'Shown with neutral styling, without your site’s own design — this preview is about the fields, order and wording.');
 		} else {
 			$submission = Plugin::getInstance()->forms->sampleSubmission($form);
 			$body = Plugin::getInstance()->notifications->previewEmail($form, $submission, $type);
