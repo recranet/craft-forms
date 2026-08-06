@@ -219,4 +219,6 @@ return [
 	'conditional' => 'voorwaardelijk',
 	'half width' => 'halve breedte',
 	'Moved to position {position}' => 'Verplaatst naar positie {position}',
+	'Form settings' => 'Formulierinstellingen',
+	'Form sections' => 'Formulieronderdelen',
 ];

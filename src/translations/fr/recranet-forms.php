@@ -219,4 +219,6 @@ return [
 	'conditional' => 'conditionnel',
 	'half width' => 'demi-largeur',
 	'Moved to position {position}' => 'Déplacé à la position {position}',
+	'Form settings' => 'Paramètres du formulaire',
+	'Form sections' => 'Sections du formulaire',
 ];

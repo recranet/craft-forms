@@ -214,4 +214,6 @@ return [
 	'conditional' => 'conditional',
 	'half width' => 'half width',
 	'Moved to position {position}' => 'Moved to position {position}',
+	'Form settings' => 'Form settings',
+	'Form sections' => 'Form sections',
 ];

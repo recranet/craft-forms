@@ -219,4 +219,6 @@ return [
 	'conditional' => 'condizionale',
 	'half width' => 'metà larghezza',
 	'Moved to position {position}' => 'Spostato alla posizione {position}',
+	'Form settings' => 'Impostazioni del modulo',
+	'Form sections' => 'Sezioni del modulo',
 ];

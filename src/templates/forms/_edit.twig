@@ -160,50 +160,76 @@
 		{{ hiddenInput('formId', form.id) }}
 	{% endif %}
 
-	{{
-		forms.textField({
-			first: true,
-			label: 'Name'|t('recranet-forms'),
-			name: 'name',
-			value: form.name,
-			required: true,
-			errors: form.getErrors('name')
-		})
-	}}
+	{# Page-level tabs: Settings / Fields / Notification / Confirmation.
+	   All inputs stay in the DOM, so hidden panes post with the single save.
+	   New forms open on Settings (name/handle are required first); saved
+	   forms open on Fields, the screen editors actually work in. Validation
+	   errors on name/handle force the Settings tab so they're never unseen. #}
+	{% set startTab = (not form.id) or form.getErrors('name') or form.getErrors('handle') ? 'settings' : 'fields' %}
 
-	{{
-		forms.textField({
-			label: 'Handle'|t('recranet-forms'),
-			instructions: 'Used in templates: `craft.recranetForms.render(\'handle\')`.'|t('recranet-forms'),
-			name: 'handle',
-			class: 'code',
-			value: form.handle,
-			required: true,
-			errors: form.getErrors('handle')
-		})
-	}}
+	<nav class="rfs-tabs" aria-label="{{ 'Form sections'|t('recranet-forms') }}">
+		<button type="button" class="rfs-tab {{ startTab == 'settings' ? 'sel' }}" data-rfs-tab="settings">{{ 'Form settings'|t('recranet-forms') }}</button>
+		<button type="button" class="rfs-tab {{ startTab == 'fields' ? 'sel' }}" data-rfs-tab="fields">{{ 'Fields'|t('recranet-forms') }}</button>
+		<button type="button" class="rfs-tab" data-rfs-tab="notification">{{ 'Notification'|t('recranet-forms') }}</button>
+		<button type="button" class="rfs-tab" data-rfs-tab="confirmation">{{ 'Confirmation'|t('recranet-forms') }}</button>
+	</nav>
 
-	{% if form.id %}
-		{# Copy-paste embed snippet, so nobody has to remember the Twig call #}
-		<div class="field">
-			<div class="heading"><label>{{ 'Embed'|t('recranet-forms') }}</label></div>
-			<div class="rf-embed">
-				<code id="rf-embed-snippet">{{ "{{ craft.recranetForms.render('#{form.handle}') }}" }}</code>
-				<button
-					type="button"
-					class="btn small"
-					onclick="navigator.clipboard.writeText(document.getElementById('rf-embed-snippet').textContent).then(() => Craft.cp.displayNotice({{ 'Copied.'|t('recranet-forms')|json_encode }}));"
-				>
-					{{ 'Copy'|t('recranet-forms') }}
-				</button>
+	<div class="rfs-pane" data-rfs-pane="settings" {{ startTab != 'settings' ? 'hidden' }}>
+		{{
+			forms.textField({
+				first: true,
+				label: 'Name'|t('recranet-forms'),
+				name: 'name',
+				value: form.name,
+				required: true,
+				errors: form.getErrors('name')
+			})
+		}}
+
+		{{
+			forms.textField({
+				label: 'Handle'|t('recranet-forms'),
+				instructions: 'Used in templates: `craft.recranetForms.render(\'handle\')`.'|t('recranet-forms'),
+				name: 'handle',
+				class: 'code',
+				value: form.handle,
+				required: true,
+				errors: form.getErrors('handle')
+			})
+		}}
+
+		{% if form.id %}
+			{# Copy-paste embed snippet, so nobody has to remember the Twig call #}
+			<div class="field">
+				<div class="heading"><label>{{ 'Embed'|t('recranet-forms') }}</label></div>
+				<div class="rf-embed">
+					<code id="rf-embed-snippet">{{ "{{ craft.recranetForms.render('#{form.handle}') }}" }}</code>
+					<button
+						type="button"
+						class="btn small"
+						onclick="navigator.clipboard.writeText(document.getElementById('rf-embed-snippet').textContent).then(() => Craft.cp.displayNotice({{ 'Copied.'|t('recranet-forms')|json_encode }}));"
+					>
+						{{ 'Copy'|t('recranet-forms') }}
+					</button>
+				</div>
 			</div>
-		</div>
-	{% endif %}
 
-	<hr />
+			<hr />
+			{# Delete via a separate POST to avoid nesting forms #}
+			<button
+				type="button"
+				class="btn"
+				style="color: var(--error-color);"
+				data-icon="trash"
+				onclick="if (confirm({{ 'Delete this form and all its submissions?'|t('recranet-forms')|json_encode }})) { Craft.postActionRequest('recranet-forms/forms/delete', { formId: {{ form.id }} }, () => (window.location.href = '{{ url('recranet-forms/forms') }}')); }"
+			>
+				{{ 'Delete form'|t('recranet-forms') }}
+			</button>
+		{% endif %}
+	</div>
 
+	<div class="rfs-pane" data-rfs-pane="fields" {{ startTab != 'fields' ? 'hidden' }}>
 	<div class="field">
-		<div class="heading"><label>{{ 'Fields'|t('recranet-forms') }}</label></div>
 		<div class="instructions"><p>{{ 'Drag the cards to reorder. Half-width fields sit side by side on the site.'|t('recranet-forms') }}</p></div>
 		{% if form.getErrors('fields') %}
 			<ul class="errors">
@@ -254,19 +280,12 @@
 			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields) }}
 		</template>
 	</div>
+	</div>
+	{# /rfs-pane fields #}
 
-	<hr />
-
-	{# Mail settings grouped in tabs; all inputs stay in the DOM so both
-	   panes post with the single form save #}
 	{% set templateOptions = [{ value: '', label: 'Default template'|t('recranet-forms') }]|merge(emailTemplates|map(t => { value: t, label: t })) %}
 
-	<nav class="rfs-tabs" aria-label="{{ 'Mail settings'|t('recranet-forms') }}">
-		<button type="button" class="rfs-tab sel" data-rfs-tab="notification">{{ 'Notification'|t('recranet-forms') }}</button>
-		<button type="button" class="rfs-tab" data-rfs-tab="confirmation">{{ 'Confirmation'|t('recranet-forms') }}</button>
-	</nav>
-
-	<div class="rfs-pane" data-rfs-pane="notification">
+	<div class="rfs-pane" data-rfs-pane="notification" hidden>
 		{{
 			forms.textField({
 				label: 'Recipients'|t('recranet-forms'),
@@ -346,20 +365,6 @@
 			})
 		}}
 	</div>
-
-	{% if form.id %}
-		<hr />
-		{# Delete via a separate POST to avoid nesting forms #}
-		<button
-			type="button"
-			class="btn"
-			style="color: var(--error-color);"
-			data-icon="trash"
-			onclick="if (confirm({{ 'Delete this form and all its submissions?'|t('recranet-forms')|json_encode }})) { Craft.postActionRequest('recranet-forms/forms/delete', { formId: {{ form.id }} }, () => (window.location.href = '{{ url('recranet-forms/forms') }}')); }"
-		>
-			{{ 'Delete form'|t('recranet-forms') }}
-		</button>
-	{% endif %}
 {% css %}
 	.rf-embed { display: flex; align-items: center; gap: 10px; }
 	.rf-embed code { background: var(--gray-100); padding: 6px 10px; border-radius: 6px; }

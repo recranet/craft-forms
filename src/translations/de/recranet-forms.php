@@ -219,4 +219,6 @@ return [
 	'conditional' => 'bedingt',
 	'half width' => 'halbe Breite',
 	'Moved to position {position}' => 'Verschoben an Position {position}',
+	'Form settings' => 'Formulareinstellungen',
+	'Form sections' => 'Formularbereiche',
 ];

@@ -219,4 +219,6 @@ return [
 	'conditional' => 'condicional',
 	'half width' => 'media anchura',
 	'Moved to position {position}' => 'Movido a la posición {position}',
+	'Form settings' => 'Ajustes del formulario',
+	'Form sections' => 'Secciones del formulario',
 ];
