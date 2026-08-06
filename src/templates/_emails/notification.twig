@@ -3,6 +3,10 @@
    so renamed fields keep their historical labels).
    Override per project with templates/recranet-forms/_emails/notification.twig. #}
 <h2>{{ form.name }}{% if submission.incrementalId %} — #{{ submission.incrementalId }}{% endif %}</h2>
+{# Editor-managed intro from the form's mail settings (merge tags rendered) #}
+{% if intro %}
+	<p>{{ intro|nl2br }}</p>
+{% endif %}
 <table cellpadding="6" cellspacing="0" border="0">
 	{% for row in submission.values %}
 		<tr>

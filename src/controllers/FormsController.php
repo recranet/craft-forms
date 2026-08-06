@@ -17,7 +17,7 @@ class FormsController extends Controller
 	public function beforeAction($action): bool
 	{
 		$this->requireCpRequest();
-		$this->requirePermission('accessPlugin-recranet-forms');
+		$this->requirePermission('recranetForms-manageForms');
 
 		return parent::beforeAction($action);
 	}
@@ -43,7 +43,36 @@ class FormsController extends Controller
 		return $this->renderTemplate('recranet-forms/forms/_edit', [
 			'form' => $form,
 			'fieldTypes' => Form::FIELD_TYPES,
+			'emailTemplates' => $this->findEmailTemplates(),
 		]);
+	}
+
+	/**
+	 * Site templates that can serve as a per-form mail template override,
+	 * offered in the form's mail settings as a dropdown so editors never
+	 * have to type template paths. Scans the conventional email locations.
+	 *
+	 * @return string[] template paths relative to templates/, without extension
+	 */
+	private function findEmailTemplates(): array
+	{
+		$base = Craft::$app->getPath()->getSiteTemplatesPath();
+		$templates = [];
+
+		foreach (['recranet-forms/_emails', '_emails'] as $dir) {
+			foreach (glob("{$base}/{$dir}/*.twig") ?: [] as $file) {
+				$name = basename($file, '.twig');
+
+				// Layout partials are extended by mail templates, not used directly
+				if (str_starts_with($name, '_layout')) {
+					continue;
+				}
+
+				$templates[] = "{$dir}/{$name}";
+			}
+		}
+
+		return $templates;
 	}
 
 	public function actionSave(): ?Response
@@ -65,8 +94,12 @@ class FormsController extends Controller
 		$form->handle = $request->getBodyParam('handle');
 		$form->recipients = (string)$request->getBodyParam('recipients', '');
 		$form->subject = (string)$request->getBodyParam('subject', '');
+		$form->notificationTemplate = (string)$request->getBodyParam('notificationTemplate', '');
+		$form->notificationIntro = (string)$request->getBodyParam('notificationIntro', '');
 		$form->sendConfirmation = (bool)$request->getBodyParam('sendConfirmation', false);
 		$form->confirmationSubject = (string)$request->getBodyParam('confirmationSubject', '');
+		$form->confirmationTemplate = (string)$request->getBodyParam('confirmationTemplate', '');
+		$form->confirmationBody = (string)$request->getBodyParam('confirmationBody', '');
 		$form->fields = $this->normalizeFieldRows((array)$request->getBodyParam('fields', []));
 
 		if (!Plugin::getInstance()->forms->saveForm($form)) {

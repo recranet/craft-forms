@@ -217,42 +217,95 @@
 
 	<hr />
 
-	{{
-		forms.textField({
-			label: 'Notification recipients',
-			instructions: 'Comma-separated email addresses. Falls back to the system email address when empty. Supports merge tags: `{afdeling}@example.com`.',
-			name: 'recipients',
-			value: form.recipients,
-			errors: form.getErrors('recipients')
-		})
-	}}
+	{# Mail settings grouped in tabs; all inputs stay in the DOM so both
+	   panes post with the single form save #}
+	{% set templateOptions = [{ value: '', label: 'Default template' }]|merge(emailTemplates|map(t => { value: t, label: t })) %}
 
-	{{
-		forms.textField({
-			label: 'Notification subject',
-			instructions: 'Supports merge tags with field handles: `Aanvraag {onderwerp} — #{ref}`.',
-			name: 'subject',
-			value: form.subject
-		})
-	}}
+	<nav class="rfs-tabs" aria-label="Mail settings">
+		<button type="button" class="rfs-tab sel" data-rfs-tab="notification">Notification</button>
+		<button type="button" class="rfs-tab" data-rfs-tab="confirmation">Confirmation</button>
+	</nav>
 
-	{{
-		forms.lightswitchField({
-			label: 'Send confirmation email to submitter',
-			instructions: 'Requires an email field in the form.',
-			name: 'sendConfirmation',
-			on: form.sendConfirmation
-		})
-	}}
+	<div class="rfs-pane" data-rfs-pane="notification">
+		{{
+			forms.textField({
+				label: 'Recipients',
+				instructions: 'Comma-separated email addresses. Falls back to the system email address when empty. Supports merge tags: `{afdeling}@example.com`.',
+				name: 'recipients',
+				value: form.recipients,
+				errors: form.getErrors('recipients')
+			})
+		}}
 
-	{{
-		forms.textField({
-			label: 'Confirmation subject',
-			instructions: 'Supports merge tags with field handles.',
-			name: 'confirmationSubject',
-			value: form.confirmationSubject
-		})
-	}}
+		{{
+			forms.textField({
+				label: 'Subject',
+				instructions: 'Supports merge tags with field handles: `Aanvraag {onderwerp} — #{ref}`.',
+				name: 'subject',
+				value: form.subject
+			})
+		}}
+
+		{{
+			forms.textareaField({
+				label: 'Intro text',
+				instructions: 'Shown above the submitted values in the notification email. Supports merge tags. Editable here on production — no deploy needed.',
+				name: 'notificationIntro',
+				rows: 3,
+				value: form.notificationIntro
+			})
+		}}
+
+		{{
+			forms.selectField({
+				label: 'Template',
+				instructions: 'Site template used for the notification email of this form. "Default template" resolves to `templates/recranet-forms/_emails/notification.twig` when it exists, else the plugin’s built-in one.',
+				name: 'notificationTemplate',
+				value: form.notificationTemplate,
+				options: templateOptions
+			})
+		}}
+	</div>
+
+	<div class="rfs-pane" data-rfs-pane="confirmation" hidden>
+		{{
+			forms.lightswitchField({
+				label: 'Send confirmation email to submitter',
+				instructions: 'Requires an email field in the form.',
+				name: 'sendConfirmation',
+				on: form.sendConfirmation
+			})
+		}}
+
+		{{
+			forms.textField({
+				label: 'Subject',
+				instructions: 'Supports merge tags with field handles.',
+				name: 'confirmationSubject',
+				value: form.confirmationSubject
+			})
+		}}
+
+		{{
+			forms.textareaField({
+				label: 'Body text',
+				instructions: 'The thank-you text of the confirmation email. Supports merge tags. Empty = the template’s default line.',
+				name: 'confirmationBody',
+				rows: 4,
+				value: form.confirmationBody
+			})
+		}}
+
+		{{
+			forms.selectField({
+				label: 'Template',
+				instructions: 'Site template used for the confirmation email of this form.',
+				name: 'confirmationTemplate',
+				value: form.confirmationTemplate,
+				options: templateOptions
+			})
+		}}
+	</div>
 
 	{% if form.id %}
 		<hr />
@@ -268,6 +321,9 @@
 		</button>
 	{% endif %}
 {% css %}
+	.rfs-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--hairline-color); }
+	.rfs-tab { border: 0; background: none; padding: 8px 14px; font-size: 14px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
+	.rfs-tab.sel { color: var(--text-color); background: var(--gray-100); font-weight: 600; }
 	.rf-builder__fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
 	.rf-field { border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); }
 	.rf-field.draghelper { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); }
@@ -292,6 +348,16 @@
 
 {% js %}
 	(function () {
+		// Mail settings tabs (independent of the per-card tabs above)
+		document.querySelectorAll('.rfs-tab').forEach(function (tab) {
+			tab.addEventListener('click', function () {
+				document.querySelectorAll('.rfs-tab').forEach(function (t) { t.classList.toggle('sel', t === tab); });
+				document.querySelectorAll('.rfs-pane').forEach(function (pane) {
+					pane.hidden = pane.dataset.rfsPane !== tab.dataset.rfsTab;
+				});
+			});
+		});
+
 		var list = document.querySelector('#rf-builder .rf-builder__fields');
 		var template = document.getElementById('rf-field-template');
 		var knownFields = JSON.parse(document.getElementById('rf-known-fields').textContent || '[]');

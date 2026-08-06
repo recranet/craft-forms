@@ -398,17 +398,17 @@ class Submission extends Element
 
 	public function canView(User $user): bool
 	{
-		return $user->can('accessPlugin-recranet-forms');
+		return $user->can('recranetForms-viewSubmissions');
 	}
 
 	public function canSave(User $user): bool
 	{
-		return $user->can('accessPlugin-recranet-forms');
+		return $user->can('recranetForms-viewSubmissions');
 	}
 
 	public function canDelete(User $user): bool
 	{
-		return $user->can('accessPlugin-recranet-forms');
+		return $user->can('recranetForms-deleteSubmissions');
 	}
 
 	/**

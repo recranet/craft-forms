@@ -35,7 +35,7 @@ class Notifications extends Component
 			return false;
 		}
 
-		$html = $this->renderEmail('recranet-forms/_emails/notification', $form, $submission);
+		$html = $this->renderEmail('recranet-forms/_emails/notification', $form, $submission, $form->notificationTemplate);
 
 		// Subject supports merge tags, e.g. "Aanvraag {onderwerp} — #{ref}"
 		$subject = $this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission);
@@ -79,7 +79,7 @@ class Notifications extends Component
 			return true;
 		}
 
-		$html = $this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission);
+		$html = $this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission, $form->confirmationTemplate);
 
 		// Confirmation subject supports the same merge tags as the notification
 		$subject = $this->renderTemplateString($form->confirmationSubject ?: $form->name, $form, $submission);
@@ -98,17 +98,36 @@ class Notifications extends Component
 	}
 
 	/**
-	 * Render an email template. Projects can override these by placing
-	 * templates at templates/recranet-forms/_emails/*.twig (site templates
-	 * take precedence over the plugin's CP-mode fallbacks).
+	 * Render an email template. Resolution order:
+	 *
+	 * 1. the per-form template override (a site template path picked in the
+	 *    form's mail settings), when set and existing
+	 * 2. the site-wide override at templates/recranet-forms/_emails/*.twig
+	 * 3. the plugin's built-in template
+	 *
+	 * Templates receive `form`, `submission`, plus the editor-managed
+	 * `intro` (notification) and `bodyText` (confirmation) — both rendered
+	 * through the merge-tag pipeline, so `{naam}` works inside them too.
 	 */
-	private function renderEmail(string $template, Form $form, Submission $submission): string
+	private function renderEmail(string $template, Form $form, Submission $submission, string $formTemplate = ''): string
 	{
 		$view = Craft::$app->getView();
 		$variables = [
 			'form' => $form,
 			'submission' => $submission,
+			'intro' => $form->notificationIntro ? $this->renderTemplateString($form->notificationIntro, $form, $submission) : '',
+			'bodyText' => $form->confirmationBody ? $this->renderTemplateString($form->confirmationBody, $form, $submission) : '',
 		];
+
+		// Per-form override wins; a broken path logs and falls through so the
+		// mail still goes out with the default template
+		if ($formTemplate !== '') {
+			if ($view->doesTemplateExist($formTemplate, View::TEMPLATE_MODE_SITE)) {
+				return $view->renderTemplate($formTemplate, $variables, View::TEMPLATE_MODE_SITE);
+			}
+
+			Plugin::error("Form \"{$form->handle}\": mail template \"{$formTemplate}\" not found — falling back to the default.");
+		}
 
 		// Prefer a site template override, fall back to the plugin template
 		if ($view->doesTemplateExist($template, View::TEMPLATE_MODE_SITE)) {

@@ -77,8 +77,12 @@ class Forms extends Component
 		$record->settings = Json::encode([
 			'recipients' => $form->recipients,
 			'subject' => $form->subject,
+			'notificationTemplate' => $form->notificationTemplate,
+			'notificationIntro' => $form->notificationIntro,
 			'sendConfirmation' => $form->sendConfirmation,
 			'confirmationSubject' => $form->confirmationSubject,
+			'confirmationTemplate' => $form->confirmationTemplate,
+			'confirmationBody' => $form->confirmationBody,
 		]);
 		$record->uid = $record->uid ?: StringHelper::UUID();
 
@@ -117,8 +121,12 @@ class Forms extends Component
 			'fields' => Json::decodeIfJson($record->fields) ?? [],
 			'recipients' => $settings['recipients'] ?? '',
 			'subject' => $settings['subject'] ?? '',
+			'notificationTemplate' => $settings['notificationTemplate'] ?? '',
+			'notificationIntro' => $settings['notificationIntro'] ?? '',
 			'sendConfirmation' => (bool)($settings['sendConfirmation'] ?? false),
 			'confirmationSubject' => $settings['confirmationSubject'] ?? '',
+			'confirmationTemplate' => $settings['confirmationTemplate'] ?? '',
+			'confirmationBody' => $settings['confirmationBody'] ?? '',
 			'uid' => $record->uid,
 		]);
 	}

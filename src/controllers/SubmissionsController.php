@@ -161,7 +161,7 @@ class SubmissionsController extends Controller
 	public function actionIndex(): Response
 	{
 		$this->requireCpRequest();
-		$this->requirePermission('accessPlugin-recranet-forms');
+		$this->requirePermission('recranetForms-viewSubmissions');
 
 		return $this->renderTemplate('recranet-forms/submissions/index');
 	}
@@ -172,7 +172,7 @@ class SubmissionsController extends Controller
 	public function actionView(int $submissionId): Response
 	{
 		$this->requireCpRequest();
-		$this->requirePermission('accessPlugin-recranet-forms');
+		$this->requirePermission('recranetForms-viewSubmissions');
 
 		$submission = Submission::find()->id($submissionId)->status(null)->one();
 

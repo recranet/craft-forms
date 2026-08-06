@@ -45,11 +45,34 @@ class Form extends Model
 	/** Subject line of the notification email */
 	public string $subject = '';
 
+	/**
+	 * Site template path overriding the notification email for this form
+	 * (e.g. "_emails/quote-notification"). Empty = default resolution:
+	 * templates/recranet-forms/_emails/notification.twig, else the plugin's.
+	 */
+	public string $notificationTemplate = '';
+
+	/**
+	 * Editor-managed intro text rendered above the field table in the
+	 * notification email. Supports merge tags; plain text, newlines kept.
+	 */
+	public string $notificationIntro = '';
+
 	/** Whether to send a confirmation email to the submitter (requires an email field) */
 	public bool $sendConfirmation = false;
 
 	/** Subject line of the confirmation email */
 	public string $confirmationSubject = '';
+
+	/** Site template path overriding the confirmation email for this form */
+	public string $confirmationTemplate = '';
+
+	/**
+	 * Editor-managed body of the confirmation email. Supports merge tags;
+	 * empty = the template's default text. Editable on production (forms are
+	 * DB content), so no deploy is needed to tweak the thank-you mail.
+	 */
+	public string $confirmationBody = '';
 
 	public ?string $uid = null;
 

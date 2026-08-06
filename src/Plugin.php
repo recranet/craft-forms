@@ -7,8 +7,10 @@ use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\RegisterUserPermissionsEvent;
 use craft\services\Elements;
 use craft\services\Gc;
+use craft\services\UserPermissions;
 use craft\services\Utilities;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
@@ -89,6 +91,25 @@ class Plugin extends BasePlugin
 		// Retention: prune old submissions whenever Craft's GC runs
 		Event::on(Gc::class, Gc::EVENT_RUN, function () {
 			$this->retention->pruneSubmissions();
+		});
+
+		// Granular permissions on top of Craft's accessPlugin- gate: a role
+		// can read submissions without being able to change form definitions
+		Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, function (RegisterUserPermissionsEvent $event) {
+			$event->permissions[] = [
+				'heading' => 'Recranet Forms',
+				'permissions' => [
+					'recranetForms-manageForms' => [
+						'label' => 'Manage forms (create, edit, delete form definitions)',
+					],
+					'recranetForms-viewSubmissions' => [
+						'label' => 'View submissions',
+						'nested' => [
+							'recranetForms-deleteSubmissions' => ['label' => 'Delete submissions'],
+						],
+					],
+				],
+			];
 		});
 
 		if (Craft::$app->getRequest()->getIsCpRequest()) {
