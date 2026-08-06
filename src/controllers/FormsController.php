@@ -105,6 +105,18 @@ class FormsController extends Controller
 				continue;
 			}
 
+			// The builder serializes the conditional-visibility rules to JSON
+			// in a hidden input; decode defensively (malformed = no rules)
+			$conditions = null;
+
+			if (!empty($row['conditions'])) {
+				$decoded = \craft\helpers\Json::decodeIfJson((string)$row['conditions']);
+
+				if (is_array($decoded) && !empty($decoded['rules'])) {
+					$conditions = $decoded;
+				}
+			}
+
 			$fields[] = [
 				// Existing uid carries the field's identity across saves;
 				// empty for new cards (assigned in Forms::saveForm)
@@ -115,6 +127,12 @@ class FormsController extends Controller
 				'required' => (bool)($row['required'] ?? false),
 				'options' => trim((string)($row['options'] ?? '')),
 				'width' => in_array($row['width'] ?? '', ['full', 'half'], true) ? $row['width'] : 'full',
+				'placeholder' => trim((string)($row['placeholder'] ?? '')),
+				'description' => trim((string)($row['description'] ?? '')),
+				'adminLabel' => trim((string)($row['adminLabel'] ?? '')),
+				'defaultValue' => trim((string)($row['defaultValue'] ?? '')),
+				'errorMessage' => trim((string)($row['errorMessage'] ?? '')),
+				'conditions' => $conditions,
 			];
 		}
 

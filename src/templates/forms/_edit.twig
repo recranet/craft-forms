@@ -1,8 +1,9 @@
 {# Form edit screen: name/handle, drag & drop field builder, notification settings.
    The builder renders each field as a draggable card (Garnish.DragSort, the same
    drag JS Craft uses for Matrix). Field inputs are indexed (fields[0][label], …)
-   and reindexed by JS after every reorder/delete so PHP receives them in visual
-   order. #}
+   and reindexed by JS after every reorder/delete/duplicate so PHP receives them
+   in visual order. Each card organizes its settings in three tabs
+   (General / Appearance / Advanced), Gravity-Forms-style. #}
 {% extends '_layouts/cp' %}
 {% import '_includes/forms' as forms %}
 
@@ -20,7 +21,7 @@
 
 {# A single field card. Used for saved fields; the JS <template> clone uses the
    same markup with a fresh index. #}
-{% macro fieldCard(field, index, fieldTypes) %}
+{% macro fieldCard(field, index, fieldTypes, allFields) %}
 	<div class="rf-field" data-type="{{ field.type }}">
 		{# The uid is the field's stable identity — submissions key their values
 		   by it. It must survive every re-save; new cards post an empty uid and
@@ -30,63 +31,114 @@
 			<a class="move icon rf-field__move" title="Drag to reorder" role="button" aria-label="Drag to reorder"></a>
 			<strong class="rf-field__title">{{ field.label ?: 'New field' }}</strong>
 			<span class="rf-field__badge">{{ field.type }}</span>
+			<button type="button" class="btn small rf-field__duplicate" title="Duplicate field">Duplicate</button>
 			<button type="button" class="delete icon rf-field__delete" title="Delete field" aria-label="Delete field"></button>
 		</div>
-		<div class="rf-field__grid">
-			<div class="rf-cell--wide">
-				<label class="rf-label">Label</label>
-				<input
-					type="text"
-					class="text fullwidth rf-input-label"
-					name="fields[{{ index }}][label]"
-					value="{{ field.label }}"
-					autocomplete="off"
-				/>
-			</div>
-			<div>
-				<label class="rf-label">Handle</label>
-				<input
-					type="text"
-					class="text fullwidth code rf-input-handle"
-					name="fields[{{ index }}][handle]"
-					value="{{ field.handle }}"
-					autocomplete="off"
-					{% if not field.handle %}data-auto="1"{% endif %}
-				/>
-			</div>
-			<div>
-				<label class="rf-label">Type</label>
-				<div class="select fullwidth">
-					<select name="fields[{{ index }}][type]" class="rf-input-type">
-						{% for type in fieldTypes %}
-							<option value="{{ type }}" {{ field.type == type ? 'selected' }}>{{ type|capitalize }}</option>
-						{% endfor %}
-					</select>
+
+		{# Per-card tab nav; panes are toggled by JS #}
+		<nav class="rf-tabs" aria-label="Field settings">
+			<button type="button" class="rf-tab sel" data-rf-tab="general">General</button>
+			<button type="button" class="rf-tab" data-rf-tab="appearance">Appearance</button>
+			<button type="button" class="rf-tab" data-rf-tab="advanced">Advanced</button>
+		</nav>
+
+		<div class="rf-pane" data-rf-pane="general">
+			<div class="rf-field__grid">
+				<div class="rf-cell--wide">
+					<label class="rf-label">Label</label>
+					<input
+						type="text"
+						class="text fullwidth rf-input-label"
+						name="fields[{{ index }}][label]"
+						value="{{ field.label }}"
+						autocomplete="off"
+					/>
+				</div>
+				<div>
+					<label class="rf-label">Handle</label>
+					<input
+						type="text"
+						class="text fullwidth code rf-input-handle"
+						name="fields[{{ index }}][handle]"
+						value="{{ field.handle }}"
+						autocomplete="off"
+						{% if not field.handle %}data-auto="1"{% endif %}
+					/>
+				</div>
+				<div>
+					<label class="rf-label">Type</label>
+					<div class="select fullwidth">
+						<select name="fields[{{ index }}][type]" class="rf-input-type">
+							{% for type in fieldTypes %}
+								<option value="{{ type }}" {{ field.type == type ? 'selected' }}>{{ type|capitalize }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="rf-cell--wide rf-field__options" {{ field.type == 'select' ? '' : 'hidden' }}>
+					<label class="rf-label">Options (comma-separated)</label>
+					<input type="text" class="text fullwidth" name="fields[{{ index }}][options]" value="{{ field.options ?? '' }}" />
+				</div>
+				<div class="rf-field__required">
+					<input
+						type="checkbox"
+						class="checkbox"
+						id="rf-required-{{ index }}"
+						name="fields[{{ index }}][required]"
+						value="1"
+						{{ field.required ? 'checked' }}
+					/>
+					<label for="rf-required-{{ index }}">Required</label>
 				</div>
 			</div>
-			<div>
-				<label class="rf-label">Width</label>
-				<div class="select fullwidth">
-					<select name="fields[{{ index }}][width]">
-						<option value="full" {{ (field.width ?? 'full') == 'full' ? 'selected' }}>Full</option>
-						<option value="half" {{ (field.width ?? 'full') == 'half' ? 'selected' }}>Half</option>
-					</select>
+		</div>
+
+		<div class="rf-pane" data-rf-pane="appearance" hidden>
+			<div class="rf-field__grid">
+				<div>
+					<label class="rf-label">Width</label>
+					<div class="select fullwidth">
+						<select name="fields[{{ index }}][width]">
+							<option value="full" {{ (field.width ?? 'full') == 'full' ? 'selected' }}>Full</option>
+							<option value="half" {{ (field.width ?? 'full') == 'half' ? 'selected' }}>Half</option>
+						</select>
+					</div>
+				</div>
+				<div class="rf-cell--wide">
+					<label class="rf-label">Placeholder</label>
+					<input type="text" class="text fullwidth" name="fields[{{ index }}][placeholder]" value="{{ field.placeholder ?? '' }}" />
+				</div>
+				<div class="rf-cell--wide rf-cell--full">
+					<label class="rf-label">Description</label>
+					<input type="text" class="text fullwidth" name="fields[{{ index }}][description]" value="{{ field.description ?? '' }}" />
+					<p class="rf-hint">Help text shown under the input.</p>
 				</div>
 			</div>
-			<div class="rf-cell--wide rf-field__options" {{ field.type == 'select' ? '' : 'hidden' }}>
-				<label class="rf-label">Options (comma-separated)</label>
-				<input type="text" class="text fullwidth" name="fields[{{ index }}][options]" value="{{ field.options ?? '' }}" />
-			</div>
-			<div class="rf-field__required">
-				<input
-					type="checkbox"
-					class="checkbox"
-					id="rf-required-{{ index }}"
-					name="fields[{{ index }}][required]"
-					value="1"
-					{{ field.required ? 'checked' }}
-				/>
-				<label for="rf-required-{{ index }}">Required</label>
+		</div>
+
+		<div class="rf-pane" data-rf-pane="advanced" hidden>
+			<div class="rf-field__grid">
+				<div class="rf-cell--wide">
+					<label class="rf-label">Admin label</label>
+					<input type="text" class="text fullwidth" name="fields[{{ index }}][adminLabel]" value="{{ field.adminLabel ?? '' }}" />
+					<p class="rf-hint">Short label for the CP and exports; the front end keeps the normal label.</p>
+				</div>
+				<div class="rf-cell--wide">
+					<label class="rf-label">Default value</label>
+					<input type="text" class="text fullwidth" name="fields[{{ index }}][defaultValue]" value="{{ field.defaultValue ?? '' }}" />
+				</div>
+				<div class="rf-cell--wide rf-cell--full">
+					<label class="rf-label">Custom validation message</label>
+					<input type="text" class="text fullwidth" name="fields[{{ index }}][errorMessage]" value="{{ field.errorMessage ?? '' }}" />
+					<p class="rf-hint">Shown instead of the default "… is required." message.</p>
+				</div>
+				<div class="rf-cell--wide rf-cell--full rf-conditions" data-rf-conditions-editor>
+					<label class="rf-label">Conditional visibility</label>
+					<p class="rf-hint">Show this field only when rules match. Fields added in this session can be referenced after saving.</p>
+					{# Serialized to JSON by JS on every change; PHP decodes it in normalizeFieldRows() #}
+					<input type="hidden" name="fields[{{ index }}][conditions]" value="{{ field.conditions is defined and field.conditions ? field.conditions|json_encode }}" class="rf-conditions-json" />
+					<div class="rf-conditions-ui"></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -136,7 +188,7 @@
 		<div id="rf-builder" class="rf-builder">
 			<div class="rf-builder__fields">
 				{% for field in form.fields %}
-					{{ _self.fieldCard(field, loop.index0, fieldTypes) }}
+					{{ _self.fieldCard(field, loop.index0, fieldTypes, form.fields) }}
 				{% endfor %}
 			</div>
 
@@ -152,9 +204,14 @@
 			</div>
 		</div>
 
+		{# Existing fields (uid + label) for the conditions rule editor #}
+		<script type="application/json" id="rf-known-fields">
+			{{ form.fields|filter(f => f.uid is defined and f.uid)|map(f => { uid: f.uid, label: f.label, handle: f.handle })|json_encode|raw }}
+		</script>
+
 		{# Blank card cloned by JS when adding a field; __INDEX__/__TYPE__ are replaced #}
 		<template id="rf-field-template">
-			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes) }}
+			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields) }}
 		</template>
 	</div>
 
@@ -163,7 +220,7 @@
 	{{
 		forms.textField({
 			label: 'Notification recipients',
-			instructions: 'Comma-separated email addresses. Falls back to the system email address when empty.',
+			instructions: 'Comma-separated email addresses. Falls back to the system email address when empty. Supports merge tags: `{afdeling}@example.com`.',
 			name: 'recipients',
 			value: form.recipients,
 			errors: form.getErrors('recipients')
@@ -173,6 +230,7 @@
 	{{
 		forms.textField({
 			label: 'Notification subject',
+			instructions: 'Supports merge tags with field handles: `Aanvraag {onderwerp} — #{ref}`.',
 			name: 'subject',
 			value: form.subject
 		})
@@ -190,6 +248,7 @@
 	{{
 		forms.textField({
 			label: 'Confirmation subject',
+			instructions: 'Supports merge tags with field handles.',
 			name: 'confirmationSubject',
 			value: form.confirmationSubject
 		})
@@ -216,10 +275,18 @@
 	.rf-field__move { cursor: grab; }
 	.rf-field__title { flex: 1; }
 	.rf-field__badge { font-size: 11px; text-transform: uppercase; color: var(--medium-text-color); background: var(--gray-100); border-radius: 3px; padding: 2px 6px; }
+	.rf-tabs { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--hairline-color); }
+	.rf-tab { border: 0; background: none; padding: 6px 10px; font-size: 12px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
+	.rf-tab.sel { color: var(--text-color); background: var(--gray-100); font-weight: 600; }
 	.rf-field__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 14px; padding: 12px; }
 	.rf-cell--wide { grid-column: span 2; }
+	.rf-cell--full { grid-column: 1 / -1; }
 	.rf-field__required { display: flex; align-items: center; gap: 6px; align-self: end; padding-bottom: 4px; }
 	.rf-label { display: block; font-size: 12px; font-weight: 600; color: var(--medium-text-color); margin-bottom: 4px; }
+	.rf-hint { margin: 4px 0 0; font-size: 12px; color: var(--light-text-color); }
+	.rf-rule { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+	.rf-rule select, .rf-rule input { min-width: 0; }
+	.rf-conditions-mode { margin-top: 8px; }
 	@media (max-width: 900px) { .rf-field__grid { grid-template-columns: 1fr 1fr; } }
 {% endcss %}
 
@@ -227,7 +294,16 @@
 	(function () {
 		var list = document.querySelector('#rf-builder .rf-builder__fields');
 		var template = document.getElementById('rf-field-template');
+		var knownFields = JSON.parse(document.getElementById('rf-known-fields').textContent || '[]');
 		var uid = 1000; // fresh index seed for added cards; renumber() makes them sequential
+
+		var OPERATORS = [
+			{ value: 'is', label: 'is' },
+			{ value: 'isNot', label: 'is not' },
+			{ value: 'contains', label: 'contains' },
+			{ value: 'isEmpty', label: 'is empty' },
+			{ value: 'isNotEmpty', label: 'is not empty' },
+		];
 
 		// Rewrite fields[N][...] names (and checkbox id/for pairs) to match visual order
 		function renumber() {
@@ -243,6 +319,107 @@
 				}
 			});
 		}
+
+		// ---- Conditions rule editor: renders rows from the hidden JSON input,
+		// serializes back on every change. Kept dependency-free on purpose. ----
+		function conditionsUI(editor) {
+			var jsonInput = editor.querySelector('.rf-conditions-json');
+			var ui = editor.querySelector('.rf-conditions-ui');
+			var state = { mode: 'all', rules: [] };
+
+			try {
+				var parsed = JSON.parse(jsonInput.value || 'null');
+				if (parsed && Array.isArray(parsed.rules)) state = parsed;
+			} catch (e) { /* malformed stays empty */ }
+
+			function serialize() {
+				jsonInput.value = state.rules.length ? JSON.stringify(state) : '';
+			}
+
+			function fieldOptions(selected) {
+				return knownFields
+					.map(function (f) {
+						return '<option value="' + f.uid + '"' + (f.uid === selected ? ' selected' : '') + '>' +
+							Craft.escapeHtml(f.label || f.handle) + '</option>';
+					})
+					.join('');
+			}
+
+			function render() {
+				var html = '';
+				state.rules.forEach(function (rule, i) {
+					var needsValue = rule.operator !== 'isEmpty' && rule.operator !== 'isNotEmpty';
+					html += '<div class="rf-rule" data-i="' + i + '">' +
+						'<div class="select"><select data-k="field">' + fieldOptions(rule.field) + '</select></div>' +
+						'<div class="select"><select data-k="operator">' +
+						OPERATORS.map(function (o) {
+							return '<option value="' + o.value + '"' + (o.value === rule.operator ? ' selected' : '') + '>' + o.label + '</option>';
+						}).join('') +
+						'</select></div>' +
+						(needsValue ? '<input type="text" class="text" data-k="value" value="' + Craft.escapeHtml(rule.value || '') + '" />' : '') +
+						'<button type="button" class="delete icon" data-rf-rule-delete title="Remove rule"></button>' +
+						'</div>';
+				});
+
+				if (state.rules.length > 1) {
+					html += '<div class="select rf-conditions-mode"><select data-rf-mode>' +
+						'<option value="all"' + (state.mode === 'all' ? ' selected' : '') + '>Match all rules</option>' +
+						'<option value="any"' + (state.mode === 'any' ? ' selected' : '') + '>Match any rule</option>' +
+						'</select></div>';
+				}
+
+				html += '<div style="margin-top: 8px;"><button type="button" class="btn small add icon" data-rf-rule-add' +
+					(knownFields.length ? '' : ' disabled') + '>Add rule</button></div>';
+				ui.innerHTML = html;
+			}
+
+			ui.addEventListener('click', function (e) {
+				if (e.target.closest('[data-rf-rule-add]')) {
+					state.rules.push({ field: knownFields[0] ? knownFields[0].uid : '', operator: 'is', value: '' });
+					render();
+					serialize();
+				}
+				var del = e.target.closest('[data-rf-rule-delete]');
+				if (del) {
+					state.rules.splice(Number(del.closest('.rf-rule').dataset.i), 1);
+					render();
+					serialize();
+				}
+			});
+
+			ui.addEventListener('change', function (e) {
+				var modeSelect = e.target.closest('[data-rf-mode]');
+				if (modeSelect) {
+					state.mode = modeSelect.value;
+					serialize();
+					return;
+				}
+				var row = e.target.closest('.rf-rule');
+				if (!row) return;
+				var rule = state.rules[Number(row.dataset.i)];
+				rule[e.target.dataset.k] = e.target.value;
+				if (e.target.dataset.k === 'operator') render(); // value input may (dis)appear
+				serialize();
+			});
+
+			render();
+		}
+
+		function initCard(card) {
+			// Tab switching within the card
+			card.querySelectorAll('.rf-tab').forEach(function (tab) {
+				tab.addEventListener('click', function () {
+					card.querySelectorAll('.rf-tab').forEach(function (t) { t.classList.toggle('sel', t === tab); });
+					card.querySelectorAll('.rf-pane').forEach(function (pane) {
+						pane.hidden = pane.dataset.rfPane !== tab.dataset.rfTab;
+					});
+				});
+			});
+
+			conditionsUI(card.querySelector('[data-rf-conditions-editor]'));
+		}
+
+		list.querySelectorAll('.rf-field').forEach(initCard);
 
 		// Drag & drop ordering via Craft's own drag implementation
 		var dragSort = new Garnish.DragSort($(list).children('.rf-field'), {
@@ -287,17 +464,36 @@
 		});
 
 		list.addEventListener('click', function (event) {
-			if (!event.target.classList.contains('rf-field__delete')) return;
-			var card = event.target.closest('.rf-field');
-			dragSort.removeItems($(card));
-			card.remove();
-			renumber();
+			if (event.target.classList.contains('rf-field__delete')) {
+				var card = event.target.closest('.rf-field');
+				dragSort.removeItems($(card));
+				card.remove();
+				renumber();
+				return;
+			}
+
+			// Duplicate: clone the card with a blank uid (it's a NEW field —
+			// sharing a uid would make two fields claim the same stored values)
+			if (event.target.classList.contains('rf-field__duplicate')) {
+				var source = event.target.closest('.rf-field');
+				var clone = source.cloneNode(true);
+				clone.querySelector('input[name$="[uid]"]').value = '';
+				var handleInput = clone.querySelector('.rf-input-handle');
+				if (handleInput.value) handleInput.value += 'Copy';
+				source.after(clone);
+				// cloneNode copies values but not selects' state reliably — sync type/width
+				clone.querySelector('.rf-input-type').value = source.querySelector('.rf-input-type').value;
+				initCard(clone);
+				dragSort.addItems($(clone));
+				renumber();
+				return;
+			}
 		});
 
 		// "Add a field" menu: clone the template with the chosen type
 		document.querySelectorAll('[data-rf-add]').forEach(function (item) {
 			item.addEventListener('click', function () {
-				var type = item.dataset.efAdd;
+				var type = item.dataset.rfAdd;
 				var html = template.innerHTML.replace(/__INDEX__/g, ++uid).replace(/__TYPE__/g, type);
 				list.insertAdjacentHTML('beforeend', html);
 				var card = list.lastElementChild;
@@ -305,6 +501,7 @@
 				card.querySelector('.rf-field__badge').textContent = type;
 				card.querySelector('.rf-input-type').value = type;
 				card.querySelector('.rf-field__options').hidden = type !== 'select';
+				initCard(card);
 				dragSort.addItems($(card));
 				renumber();
 				card.querySelector('.rf-input-label').focus();
