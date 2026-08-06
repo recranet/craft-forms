@@ -2,6 +2,7 @@
 
 namespace recranet\forms\elements\exporters;
 
+use Craft;
 use craft\base\ElementExporter;
 use craft\elements\db\ElementQueryInterface;
 use craft\helpers\Db;
@@ -28,11 +29,19 @@ class ExpandedSubmissions extends ElementExporter
 		foreach (Db::each($query) as $submission) {
 			$fields = [];
 
+			// Layout-only rows (heading, paragraph) are already excluded by getValues()
 			foreach ($submission->getValues() as $row) {
 				$value = $row['value'];
 
-				if ($row['type'] === 'checkbox') {
+				if ($row['type'] === 'checkbox' || $row['type'] === 'consent') {
 					$value = $value ? 'yes' : 'no';
+				} elseif ($row['type'] === 'file') {
+					// File value = asset id; export the filename plus its CP url
+					$asset = $value && is_numeric($value) ? Craft::$app->getAssets()->getAssetById((int)$value) : null;
+					$value = $asset ? $asset->getFilename() . ' (' . $asset->getCpEditUrl() . ')' : '';
+				} elseif (is_array($value)) {
+					// Multi-value fields (checkboxes) read as a comma-joined list
+					$value = implode(', ', array_filter($value, 'is_scalar'));
 				} elseif (!is_scalar($value) && $value !== null) {
 					$value = json_encode($value);
 				}

@@ -8,6 +8,15 @@ return [
 	'{label} is required.' => '{label} is verplicht.',
 	'{label} must be a valid email address.' => '{label} moet een geldig e-mailadres zijn.',
 	'{label} has an invalid value.' => '{label} heeft een ongeldige waarde.',
+	'{label} must be a number.' => '{label} moet een getal zijn.',
+	'{label} must be a valid date.' => '{label} moet een geldige datum zijn.',
+	'{label} must be a valid URL.' => '{label} moet een geldige URL zijn.',
+	'{label} could not be uploaded. Please try again.' => '{label} kon niet worden geüpload. Probeer het opnieuw.',
+	'File uploads are not configured. Please contact the site owner.' => 'Bestandsuploads zijn niet geconfigureerd. Neem contact op met de sitebeheerder.',
+	'{label} must be one of the following file types: {extensions}.' => '{label} moet een van de volgende bestandstypen zijn: {extensions}.',
+	'{label} may be at most {max} MB.' => '{label} mag maximaal {max} MB zijn.',
+	'Yes' => 'Ja',
+	'No' => 'Nee',
 	'confirmation.body' => 'Bedankt voor je bericht. Hieronder vind je een kopie van je inzending. We nemen zo snel mogelijk contact met je op.',
 
 	// Self-service view (AVG/GDPR): tokenized view/delete page

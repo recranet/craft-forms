@@ -9,9 +9,12 @@
 {% set values = hasErrors ? formContent : {} %}
 {% set formId = 'form-' ~ form.handle %}
 {# Autocomplete tokens by field type, so browsers can assist (a11y + UX) #}
-{% set autocompleteMap = { email: 'email', tel: 'tel' } %}
+{% set autocompleteMap = { email: 'email', tel: 'tel', url: 'url' } %}
+{# inputmode hints mobile keyboards toward the right layout #}
+{% set inputmodeMap = { number: 'numeric' } %}
 
-<form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8">
+{# enctype is unconditional so adding a file field to a form never needs a template change #}
+<form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8" enctype="multipart/form-data">
 	{{ csrfInput() }}
 	{{ actionInput('recranet-forms/submissions/submit') }}
 	{{ redirectInput(options.redirect ?? craft.app.request.pathInfo ~ '?submitted=true') }}
@@ -50,20 +53,93 @@
 			{# Editor-set default value fills the initial render; posted values win on re-render #}
 			{% set value = values[field.handle] ?? field.defaultValue ?? null %}
 			{% set autocomplete = autocompleteMap[field.type] ?? null %}
+			{% set inputmode = inputmodeMap[field.type] ?? null %}
 			{% set description = field.description ?? '' %}
+			{# Consent uses the description AS the checkbox label and a paragraph
+			   uses it AS the content — don't render it a second time below #}
+			{% set showDescription = description and field.type not in ['consent', 'paragraph'] %}
 			{# aria-describedby points at the description and/or the error text #}
-			{% set describedBy = [description ? descriptionId, fieldErrors ? errorId]|filter(v => v)|join(' ') %}
+			{% set describedBy = [showDescription ? descriptionId, fieldErrors ? errorId]|filter(v => v)|join(' ') %}
 			{# Conditional visibility rules, if any — consumed by the inline JS below.
 			   Twig's html auto-escaping turns the JSON's double quotes into &quot;,
 			   so the encoded blob is safe inside a double-quoted attribute. #}
 			{% set conditions = field.conditions ?? null %}
+			{% if field.type == 'hidden' %}
+				{# Hidden field: no label, no visible wrapper. Value = editor default,
+				   overridable via a query param matching the handle (?utm=x fills the
+				   field with handle "utm"). Sanitized: scalar only, capped at 255
+				   chars — the server re-sanitizes in applyPost either way. Never
+				   required: there is nothing a visitor could fill in. #}
+				{% set queryValue = craft.app.request.getQueryParam(field.handle) %}
+				{% set queryValue = queryValue is not null and queryValue is not iterable ? (queryValue ~ '')|slice(0, 255) : null %}
+				<input
+					type="hidden"
+					name="fields[{{ field.handle }}]"
+					id="{{ inputId }}"
+					value="{{ values[field.handle] ?? queryValue ?? field.defaultValue ?? '' }}"
+					data-rf-uid="{{ field.uid }}"
+				/>
+			{% else %}
 			{# Half-width fields sit side by side from md up #}
 			<div
 				class="col-12 {{ (field.width ?? 'full') == 'half' ? 'col-md-6' }}"
 				data-rf-uid="{{ field.uid }}"
 				{% if conditions and (conditions.rules ?? [])|length %}data-rf-conditions="{{ conditions|json_encode }}"{% endif %}
 			>
-				{% if field.type == 'checkbox' %}
+				{% if field.type == 'heading' %}
+					{# Layout-only: renders a heading, never stores a value #}
+					<h3 class="mb-0">{{ field.label }}</h3>
+				{% elseif field.type == 'paragraph' %}
+					{# Layout-only: the description is the content, the label an optional small heading #}
+					{% if field.label %}<h4 class="h6">{{ field.label }}</h4>{% endif %}
+					<p class="mb-0">{{ description|nl2br }}</p>
+				{% elseif field.type == 'radio' %}
+					{# Radio group: fieldset + legend gives the group an accessible name #}
+					<fieldset {% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}>
+						<legend class="form-label fs-6">
+							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+						</legend>
+						{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
+							<div class="form-check">
+								<input
+									type="radio"
+									class="form-check-input {{ fieldErrors ? 'is-invalid' }}"
+									name="fields[{{ field.handle }}]"
+									id="{{ inputId }}-{{ loop.index }}"
+									value="{{ option }}"
+									{{ value == option ? 'checked' }}
+									{{ field.required ? 'required' }}
+									{% if fieldErrors %}aria-invalid="true"{% endif %}
+								/>
+								<label class="form-check-label" for="{{ inputId }}-{{ loop.index }}">{{ option }}</label>
+							</div>
+						{% endfor %}
+					</fieldset>
+				{% elseif field.type == 'checkboxes' %}
+					{# Multi-checkbox group posts as fields[handle][] and stores an array.
+					   No `required` attribute: the browser would demand EVERY box, while
+					   "at least one" is what required means here — the server enforces it. #}
+					{% set checkedValues = value is iterable ? value : (value ? value|split(',')|map(o => o|trim) : []) %}
+					<fieldset {% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}>
+						<legend class="form-label fs-6">
+							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+						</legend>
+						{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
+							<div class="form-check">
+								<input
+									type="checkbox"
+									class="form-check-input {{ fieldErrors ? 'is-invalid' }}"
+									name="fields[{{ field.handle }}][]"
+									id="{{ inputId }}-{{ loop.index }}"
+									value="{{ option }}"
+									{{ option in checkedValues ? 'checked' }}
+									{% if fieldErrors %}aria-invalid="true"{% endif %}
+								/>
+								<label class="form-check-label" for="{{ inputId }}-{{ loop.index }}">{{ option }}</label>
+							</div>
+						{% endfor %}
+					</fieldset>
+				{% elseif field.type == 'checkbox' or field.type == 'consent' %}
 					<div class="form-check">
 						<input
 							type="checkbox"
@@ -76,10 +152,32 @@
 							{% if fieldErrors %}aria-invalid="true"{% endif %}
 							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
 						/>
+						{# Consent (GDPR): the checkbox text is the field's description, falling
+						   back to the label. The full field row — including this text — is
+						   snapshotted on every submission, so exactly what the visitor agreed
+						   to stays on record even after the text changes. #}
 						<label class="form-check-label" for="{{ inputId }}">
-							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+							{{ field.type == 'consent' ? (description ?: field.label) : field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
 						</label>
 					</div>
+				{% elseif field.type == 'file' %}
+					{# Single file upload; accept narrows the picker to the allowed
+					   extensions (server validates the allowlist + size regardless).
+					   No value repopulation — browsers don't allow prefilled file inputs. #}
+					<label class="form-label" for="{{ inputId }}">
+						{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
+					</label>
+					{% set accept = settings.getAllowedFileExtensions()|map(e => '.' ~ e)|join(',') %}
+					<input
+						type="file"
+						class="form-control {{ fieldErrors ? 'is-invalid' }}"
+						name="fields[{{ field.handle }}]"
+						id="{{ inputId }}"
+						{% if accept %}accept="{{ accept }}"{% endif %}
+						{{ field.required ? 'required' }}
+						{% if fieldErrors %}aria-invalid="true"{% endif %}
+						{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
+					/>
 				{% else %}
 					<label class="form-label" for="{{ inputId }}">
 						{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
@@ -119,18 +217,20 @@
 							{% if field.placeholder ?? false %}placeholder="{{ field.placeholder }}"{% endif %}
 							{{ field.required ? 'required' }}
 							{% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+							{% if inputmode %}inputmode="{{ inputmode }}"{% endif %}
 							{% if fieldErrors %}aria-invalid="true"{% endif %}
 							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
 						/>
 					{% endif %}
 				{% endif %}
-				{% if description %}
+				{% if showDescription %}
 					<div class="form-text" id="{{ descriptionId }}">{{ description }}</div>
 				{% endif %}
 				{% if fieldErrors %}
 					<div class="invalid-feedback d-block" id="{{ errorId }}">{{ fieldErrors|join(' ') }}</div>
 				{% endif %}
 			</div>
+			{% endif %}
 		{% endfor %}
 
 		<div class="col-12">
@@ -172,6 +272,8 @@
 	// earlier in the cascade count as empty — same as the server, where
 	// their values are discarded. Returns null when the uid doesn't exist
 	// in the form (broken reference), which makes the rule fail open.
+	// Multi-checkbox groups return an ARRAY of the checked values — the
+	// array branch in rulePasses() mirrors RuleEvaluator::rulePasses().
 	function fieldValue(uid, hiddenSet) {
 		var wrap = form.querySelector('[data-rf-uid="' + uid + '"]');
 		if (!wrap) {
@@ -180,9 +282,25 @@
 		if (hiddenSet.has(uid)) {
 			return '';
 		}
-		var checkbox = wrap.querySelector('input[type="checkbox"]');
-		if (checkbox) {
-			return checkbox.checked ? '1' : '';
+		// Hidden-type fields carry data-rf-uid on the input itself (no wrapper)
+		if (wrap.tagName === 'INPUT') {
+			return wrap.value;
+		}
+		// Radio group: the checked radio's value, or empty
+		if (wrap.querySelector('input[type="radio"]')) {
+			var checkedRadio = wrap.querySelector('input[type="radio"]:checked');
+			return checkedRadio ? checkedRadio.value : '';
+		}
+		var checkboxes = wrap.querySelectorAll('input[type="checkbox"]');
+		if (checkboxes.length) {
+			// Multi-checkbox group (name ends in []): array of checked values
+			if (checkboxes[0].name.slice(-2) === '[]') {
+				return Array.prototype.filter
+					.call(checkboxes, function (checkbox) { return checkbox.checked; })
+					.map(function (checkbox) { return checkbox.value; });
+			}
+			// Single checkbox / consent: boolean semantics as '1'/''
+			return checkboxes[0].checked ? '1' : '';
 		}
 		var input = wrap.querySelector('input, select, textarea');
 		return input ? input.value : '';
@@ -198,8 +316,28 @@
 		if (raw === null) {
 			return true;
 		}
-		var actual = normalize(raw);
 		var expected = normalize(rule.value);
+		// Multi-value fields (checkboxes): a rule matches when ANY selected
+		// option satisfies it; isNot passes only when NO option matches.
+		// Strict parity with the array branch in RuleEvaluator::rulePasses().
+		if (Array.isArray(raw)) {
+			var selected = raw.map(normalize).filter(function (value) { return value !== ''; });
+			switch (rule.operator) {
+				case 'is':
+					return selected.indexOf(expected) !== -1;
+				case 'isNot':
+					return selected.indexOf(expected) === -1;
+				case 'contains':
+					return selected.some(function (value) { return value.indexOf(expected) !== -1; });
+				case 'isEmpty':
+					return selected.length === 0;
+				case 'isNotEmpty':
+					return selected.length > 0;
+				default:
+					return true;
+			}
+		}
+		var actual = normalize(raw);
 		switch (rule.operator) {
 			case 'is':
 				return actual === expected;

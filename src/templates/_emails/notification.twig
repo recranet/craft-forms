@@ -8,12 +8,22 @@
 	<p>{{ intro|nl2br }}</p>
 {% endif %}
 <table cellpadding="6" cellspacing="0" border="0">
+	{# Layout-only rows (heading, paragraph) are already excluded by submission.values #}
 	{% for row in submission.values %}
 		<tr>
 			<td style="vertical-align: top;"><strong>{{ row.label }}</strong></td>
 			<td>
-				{% if row.type == 'checkbox' %}
+				{% if row.type == 'checkbox' or row.type == 'consent' %}
 					{{ row.value ? 'Yes' : 'No' }}
+				{% elseif row.type == 'file' %}
+					{# File value = asset id; link the owner to the asset in the CP (absolute URL) #}
+					{% set asset = row.value ? craft.assets.id(row.value).one() : null %}
+					{% if asset %}
+						<a href="{{ asset.cpEditUrl }}">{{ asset.filename }}</a>
+					{% endif %}
+				{% elseif row.value is iterable %}
+					{# Multi-value fields (checkboxes) read as a comma-joined list #}
+					{{ row.value|join(', ') }}
 				{% else %}
 					{{ row.value|nl2br }}
 				{% endif %}

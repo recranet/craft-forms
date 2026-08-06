@@ -16,9 +16,12 @@ namespace recranet\forms\rules;
  * semantics here:
  *
  * - Values are compared as strings, trimmed and case-insensitive.
- * - Checkbox values are booleans in formData: true normalizes to '1',
- *   false to '' — so builder rules compare against '1' (checked) or
+ * - Checkbox/consent values are booleans in formData: true normalizes to
+ *   '1', false to '' — so builder rules compare against '1' (checked) or
  *   empty (unchecked).
+ * - Multi-value fields (checkboxes) are arrays: `is`/`contains` pass when
+ *   ANY selected option matches, `isNot` passes only when NO option
+ *   matches, `isEmpty`/`isNotEmpty` look at whether anything is selected.
  * - null / missing values normalize to ''.
  * - `contains` with an empty comparison value always matches (mirrors
  *   PHP str_contains / JS String.includes with an empty needle).
@@ -138,8 +141,30 @@ class RuleEvaluator
 			return true;
 		}
 
-		$actual = self::normalize($data[$rule['field']]);
+		$raw = $data[$rule['field']];
 		$expected = self::normalize($rule['value'] ?? '');
+
+		// Multi-value fields (checkboxes): a rule matches when ANY selected
+		// option satisfies it. Kept in strict parity with the array branch of
+		// rulePasses() in the form.twig JS.
+		if (is_array($raw)) {
+			$values = array_values(array_filter(
+				array_map([self::class, 'normalize'], $raw),
+				fn(string $value) => $value !== '',
+			));
+
+			return match ($rule['operator']) {
+				'is' => in_array($expected, $values, true),
+				'isNot' => !in_array($expected, $values, true),
+				'contains' => array_filter($values, fn(string $value) => str_contains($value, $expected)) !== [],
+				'isEmpty' => $values === [],
+				'isNotEmpty' => $values !== [],
+				// Unknown operator: fail open, never hide
+				default => true,
+			};
+		}
+
+		$actual = self::normalize($raw);
 
 		return match ($rule['operator']) {
 			'is' => $actual === $expected,

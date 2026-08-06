@@ -15,8 +15,9 @@ use recranet\forms\rules\RuleEvaluator;
  *   ['uid' => '...', 'handle' => 'name', 'label' => 'Naam', 'type' => 'text', 'required' => true, 'options' => '', 'width' => 'full'],
  *   ...
  * ]
- * Supported types: text, email, tel, textarea, select, checkbox.
- * For select fields, `options` holds comma-separated choices.
+ * Supported types: see FIELD_TYPES. For choice fields (select, radio,
+ * checkboxes), `options` holds comma-separated choices. Layout-only types
+ * (LAYOUT_TYPES) render markup but never store, validate or export a value.
  * `width` is 'full' or 'half' (half-width fields render side by side).
  *
  * The `uid` is the field's stable identity: submissions key their stored
@@ -30,7 +31,20 @@ use recranet\forms\rules\RuleEvaluator;
 class Form extends Model
 {
 	/** Field types the front-end render template and validator understand */
-	public const FIELD_TYPES = ['text', 'email', 'tel', 'textarea', 'select', 'checkbox'];
+	public const FIELD_TYPES = [
+		'text', 'email', 'tel', 'textarea', 'select', 'checkbox',
+		'radio', 'checkboxes', 'number', 'date', 'url', 'hidden',
+		'consent', 'heading', 'paragraph', 'file',
+	];
+
+	/**
+	 * Layout-only types: they render markup (a heading, a paragraph) but carry
+	 * no input. Everything that touches submitted values — validation,
+	 * formData storage, emails, the CP detail view, exports, search keywords —
+	 * must skip these. Always check against this const instead of hardcoding
+	 * type names, so adding a layout type stays a one-line change.
+	 */
+	public const LAYOUT_TYPES = ['heading', 'paragraph'];
 
 	public ?int $id = null;
 	public ?string $name = null;
@@ -96,7 +110,10 @@ class Form extends Model
 		foreach ($this->fields as $i => $field) {
 			$row = $i + 1;
 
-			if (empty($field['handle']) || empty($field['label'])) {
+			// A paragraph's content is its description; the label is an optional small heading
+			$labelOptional = ($field['type'] ?? '') === 'paragraph';
+
+			if (empty($field['handle']) || (empty($field['label']) && !$labelOptional)) {
 				$this->addError('fields', "Field row {$row}: handle and label are required.");
 				continue;
 			}
