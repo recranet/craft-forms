@@ -1,0 +1,82 @@
+{# Email / SMTP test utility content #}
+{% import '_includes/forms.twig' as forms %}
+
+<p>
+	Tests the SMTP connection and sends a test email using the current mail settings, showing the full transport
+	error when something fails.
+</p>
+
+<table class="data">
+	<tbody>
+		<tr>
+			<th class="light">Transport</th>
+			<td><code>{{ transportType }}</code></td>
+		</tr>
+		{% if transportSettings.host is defined %}
+			<tr>
+				<th class="light">Host</th>
+				<td><code>{{ parseEnv(transportSettings.host) }}{{ transportSettings.port is defined ? ':' ~ parseEnv(transportSettings.port) }}</code></td>
+			</tr>
+		{% endif %}
+		<tr>
+			<th class="light">From email</th>
+			<td><code>{{ fromEmail }}</code></td>
+		</tr>
+	</tbody>
+</table>
+
+<form id="rf-email-test" class="utility" style="margin-top: 24px;">
+	{{
+		forms.textField({
+			label: 'Send test email to',
+			id: 'rf-test-recipient',
+			name: 'recipient',
+			value: currentUserEmail,
+			size: 50
+		})
+	}}
+
+	<button type="submit" class="btn submit">Run test</button>
+	<span class="spinner hidden" id="rf-test-spinner"></span>
+</form>
+
+<div id="rf-test-results" style="margin-top: 24px;"></div>
+
+{% js %}
+	(function () {
+		var form = document.getElementById('rf-email-test');
+		var spinner = document.getElementById('rf-test-spinner');
+		var results = document.getElementById('rf-test-results');
+
+		form.addEventListener('submit', function (e) {
+			e.preventDefault();
+			spinner.classList.remove('hidden');
+			results.innerHTML = '';
+
+			Craft.sendActionRequest('POST', 'recranet-forms/utilities/test-email', {
+				data: { recipient: document.getElementById('rf-test-recipient').value },
+			})
+				.then(function (response) {
+					var html = '<table class="data fullwidth"><tbody>';
+					response.data.steps.forEach(function (step) {
+						html +=
+							'<tr><th class="light">' +
+							Craft.escapeHtml(step.label) +
+							'</th><td><span class="status ' +
+							(step.success ? 'green' : 'red') +
+							'"></span> ' +
+							Craft.escapeHtml(step.detail) +
+							'</td></tr>';
+					});
+					html += '</tbody></table>';
+					results.innerHTML = html;
+				})
+				.catch(function (error) {
+					results.innerHTML = '<p class="error">' + Craft.escapeHtml(error.message) + '</p>';
+				})
+				.finally(function () {
+					spinner.classList.add('hidden');
+				});
+		});
+	})();
+{% endjs %}

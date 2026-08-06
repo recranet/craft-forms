@@ -8,13 +8,17 @@ use craft\base\Plugin as BasePlugin;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\services\Elements;
+use craft\services\Gc;
+use craft\services\Utilities;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use recranet\forms\elements\Submission;
 use recranet\forms\models\Settings;
 use recranet\forms\services\Forms;
 use recranet\forms\services\Notifications;
-use recranet\forms\services\Recaptcha;
+use recranet\forms\services\Retention;
+use recranet\forms\services\SpamService;
+use recranet\forms\utilities\EmailTestUtility;
 use recranet\forms\variables\RecranetFormsVariable;
 use yii\base\Event;
 
@@ -27,8 +31,9 @@ use yii\base\Event;
  * marking every submission as spam.
  *
  * @property-read Forms $forms
- * @property-read Recaptcha $recaptcha
+ * @property-read SpamService $spam
  * @property-read Notifications $notifications
+ * @property-read Retention $retention
  */
 class Plugin extends BasePlugin
 {
@@ -36,13 +41,26 @@ class Plugin extends BasePlugin
 	public bool $hasCpSettings = true;
 	public bool $hasCpSection = true;
 
+	/** Log an error under the plugin's own category */
+	public static function error(string $message): void
+	{
+		Craft::error($message, 'recranet-forms');
+	}
+
+	/** Log an informational message under the plugin's own category */
+	public static function info(string $message): void
+	{
+		Craft::info($message, 'recranet-forms');
+	}
+
 	public static function config(): array
 	{
 		return [
 			'components' => [
 				'forms' => Forms::class,
-				'recaptcha' => Recaptcha::class,
+				'spam' => SpamService::class,
 				'notifications' => Notifications::class,
+				'retention' => Retention::class,
 			],
 		];
 	}
@@ -56,11 +74,21 @@ class Plugin extends BasePlugin
 			$event->types[] = Submission::class;
 		});
 
-		// Expose craft.recranetForms in Twig (form lookup, rendering, recaptcha tag)
+		// Expose craft.recranetForms in Twig (form lookup, rendering, captcha tag)
 		Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function (Event $event) {
 			/** @var CraftVariable $variable */
 			$variable = $event->sender;
 			$variable->set('recranetForms', RecranetFormsVariable::class);
+		});
+
+		// Email / SMTP test utility (works with allowAdminChanges disabled)
+		Event::on(Utilities::class, Utilities::EVENT_REGISTER_UTILITIES, function (RegisterComponentTypesEvent $event) {
+			$event->types[] = EmailTestUtility::class;
+		});
+
+		// Retention: prune old submissions whenever Craft's GC runs
+		Event::on(Gc::class, Gc::EVENT_RUN, function () {
+			$this->retention->pruneSubmissions();
 		});
 
 		if (Craft::$app->getRequest()->getIsCpRequest()) {

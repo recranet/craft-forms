@@ -3,7 +3,9 @@
 namespace recranet\forms\variables;
 
 use Craft;
+use craft\helpers\Html;
 use craft\web\View;
+use recranet\forms\FormFields;
 use recranet\forms\models\Form;
 use recranet\forms\Plugin;
 use Twig\Markup;
@@ -49,24 +51,35 @@ class RecranetFormsVariable
 	}
 
 	/**
-	 * reCAPTCHA v3 script + hidden input. Include once inside each <form>.
-	 * Renders nothing when reCAPTCHA is disabled or the site key is missing
-	 * (the back end then logs a config error on submit rather than spamming
-	 * every visitor away).
+	 * Anti-spam fields + captcha widget. Include once inside each <form>:
+	 * renders the hashed render-timestamp (submit-timing check) and the
+	 * configured captcha provider's widget, its token bound to $action
+	 * (defaults to the form handle in the default template) so tokens can't
+	 * be replayed across forms or sites.
+	 */
+	public function captchaTag(?string $action = null): Markup
+	{
+		// Timestamp field always renders — the timing check works without a captcha
+		$html = Html::hiddenInput(
+			FormFields::TIMESTAMP,
+			Craft::$app->getSecurity()->hashData((string)time()),
+		);
+
+		$captcha = Plugin::getInstance()->spam->getCaptcha();
+
+		if ($captcha) {
+			$html .= $captcha->render($action);
+		}
+
+		return new Markup($html, Craft::$app->charset);
+	}
+
+	/**
+	 * @deprecated Use captchaTag() — kept so pre-2.1 templates keep working.
 	 */
 	public function recaptchaTag(): Markup
 	{
-		$settings = Plugin::getInstance()->getSettings();
-		$siteKey = $settings->getRecaptchaSiteKey();
-
-		if (!$settings->recaptchaEnabled || $siteKey === '') {
-			return new Markup('', Craft::$app->charset);
-		}
-
-		$view = Craft::$app->getView();
-		$html = $view->renderTemplate('recranet-forms/_render/recaptcha', ['siteKey' => $siteKey], View::TEMPLATE_MODE_CP);
-
-		return new Markup($html, Craft::$app->charset);
+		return $this->captchaTag();
 	}
 
 	/**

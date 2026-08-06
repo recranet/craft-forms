@@ -17,10 +17,12 @@
 	{{ redirectInput(options.redirect ?? craft.app.request.pathInfo ~ '?submitted=true') }}
 	{{ hiddenInput('formHandle', form.handle|hash) }}
 
-	{# Honeypot: visually hidden, labeled to be ignored by autofill/screen readers #}
-	<div style="position: absolute; left: -9999px;" aria-hidden="true">
-		<input type="text" name="{{ settings.honeypotName }}" tabindex="-1" autocomplete="off" />
-	</div>
+	{% if settings.honeypotEnabled %}
+		{# Honeypot: visually hidden, labeled to be ignored by autofill/screen readers #}
+		<div style="position: absolute; left: -9999px;" aria-hidden="true">
+			<input type="text" name="{{ settings.honeypotName }}" tabindex="-1" autocomplete="off" />
+		</div>
+	{% endif %}
 
 	{% if craft.app.session.hasFlash('success') %}
 		<div class="alert alert-success" role="status">{{ craft.app.session.getFlash('success') }}</div>
@@ -114,5 +116,5 @@
 		</div>
 	</div>
 
-	{{ craft.recranetForms.recaptchaTag() }}
+	{{ craft.recranetForms.captchaTag(form.handle) }}
 </form>

@@ -299,6 +299,15 @@ class Submission extends Element
 		];
 	}
 
+	/** Adds the expanded-fields CSV export next to Craft's default exporters */
+	protected static function defineExporters(string $source): array
+	{
+		$exporters = parent::defineExporters($source);
+		$exporters[] = \recranet\forms\elements\exporters\ExpandedSubmissions::class;
+
+		return $exporters;
+	}
+
 	protected function attributeHtml(string $attribute): string
 	{
 		return match ($attribute) {

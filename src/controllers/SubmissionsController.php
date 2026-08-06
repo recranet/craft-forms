@@ -4,6 +4,7 @@ namespace recranet\forms\controllers;
 
 use Craft;
 use craft\web\Controller;
+use recranet\forms\captchas\CaptchaError;
 use recranet\forms\elements\Submission;
 use recranet\forms\Plugin;
 use yii\web\BadRequestHttpException;
@@ -73,37 +74,45 @@ class SubmissionsController extends Controller
 			return $this->redirectToPostedUrl($submission);
 		}
 
-		// Honeypot: a filled hidden field is a hard spam signal
-		if (trim((string)$request->getBodyParam($settings->honeypotName, '')) !== '') {
-			$submission->isSpam = true;
-			$submission->spamReason = 'Honeypot field was filled';
-		} else {
-			$result = Plugin::getInstance()->recaptcha->verify($request->getBodyParam('g-recaptcha-response'));
-			$submission->spamScore = $result->score;
+		// Spam pipeline: blocklist → honeypot → timing → captcha + token binding.
+		// A CaptchaError is a config/infra problem — our bug, never visitor spam.
+		try {
+			$verdict = Plugin::getInstance()->spam->check($request, $form, $submission);
 
-			if ($result->isSpam()) {
-				$submission->isSpam = true;
-				$submission->spamReason = $result->reason;
-			} elseif ($result->isError()) {
-				// Config/infra problem — this is our bug, not the visitor's spam
-				Craft::warning("Form \"{$form->handle}\": {$result->reason}", __METHOD__);
+			$submission->isSpam = $verdict->isSpam;
+			$submission->spamScore = $verdict->score;
+			$submission->spamReason = $verdict->reason;
 
-				if (!$settings->recaptchaFailOpen) {
-					Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong verifying your submission. Please try again later.'));
-					Craft::$app->getUrlManager()->setRouteParams([
-						'formContent' => $content,
-						'formHandle' => $form->handle,
-					]);
+			// Definite spam (honeypot, forged timestamp, score below the reject
+			// threshold): don't store it, but pretend success so the bot learns
+			// nothing about which check it tripped over
+			if ($verdict->reject) {
+				Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Thank you! Your message has been sent.'));
 
-					return null;
-				}
-
-				// Fail open: accept but record why, so it's diagnosable in the CP
-				$submission->spamReason = 'Accepted despite reCAPTCHA error: ' . $result->reason;
+				return $this->redirectToPostedUrl($submission);
 			}
+		} catch (CaptchaError $e) {
+			Craft::warning("Form \"{$form->handle}\": {$e->getMessage()}", __METHOD__);
+
+			if (!$settings->recaptchaFailOpen) {
+				Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong verifying your submission. Please try again later.'));
+				Craft::$app->getUrlManager()->setRouteParams([
+					'formContent' => $content,
+					'formHandle' => $form->handle,
+				]);
+
+				return null;
+			}
+
+			// Fail open: accept but record why, so it's diagnosable in the CP
+			$submission->spamReason = 'Accepted despite captcha error: ' . $e->getMessage();
 		}
 
-		if (!Craft::$app->getElements()->saveElement($submission)) {
+		// Storage switches: submissions can run mail-only, and spam storage
+		// can be turned off separately (then flagged spam is simply dropped)
+		$shouldSave = $settings->saveSubmissions && (!$submission->isSpam || $settings->saveSpamSubmissions);
+
+		if ($shouldSave && !Craft::$app->getElements()->saveElement($submission)) {
 			Craft::error("Form \"{$form->handle}\": failed to save submission: " . implode('; ', $submission->getFirstErrors()), __METHOD__);
 			Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong. Please try again later.'));
 
@@ -114,7 +123,7 @@ class SubmissionsController extends Controller
 		// success. A notification send failure is recorded on the submission
 		// (status "failed") — the data is already saved, nothing is lost.
 		if (!$submission->isSpam) {
-			if (!Plugin::getInstance()->notifications->sendNotification($form, $submission)) {
+			if (!Plugin::getInstance()->notifications->sendNotification($form, $submission) && $shouldSave) {
 				$submission->sendError = 'Notification email failed to send — see the log for the transport error.';
 				Craft::$app->getElements()->saveElement($submission);
 			}

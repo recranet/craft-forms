@@ -34,6 +34,10 @@ The shared foundation is **one rule shape** used everywhere: `{field: <uid>, ope
 - **Embed snippet + preview** in the form edit screen.
 - **Notes on a submission** (optionally emailed) — later, only if editors ask.
 
+## Phase 0.5 — secure-forms absorption
+
+**✅ Shipped in v2.1.0 (2026-08-06).** Ported from `recranet/craft-secure-forms` (own IP): the captcha provider layer (reCAPTCHA v2/v3/Enterprise + Turnstile behind `CaptchaInterface`), token binding to form action + hostname, minimum fill time, sender blocklist, reject-vs-review spam split, storage switches (`saveSubmissions`, `saveSpamSubmissions`), retention (`retentionDays` + GC hook + `gc/prune`), the Email/SMTP test utility, and the expanded-fields CSV exporter. **Still open:** a `MigrateController` porting secure-forms submissions into recranet-forms, and the decision to archive secure-forms once that path exists.
+
 ## Phase 3 — spam & GDPR
 
 - **Min-submit-time** check (store render timestamp, reject < N seconds): free, no third party, catches most bots.
