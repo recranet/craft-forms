@@ -1,5 +1,13 @@
 # Release Notes for Recranet Forms
 
+## 2.7.0 - 2026-08-06
+
+- **Form text is translatable per site, from the control panel.** Labels, placeholders, descriptions and consent text, option labels, custom validation messages, the form name and the email subjects/bodies now have per-site translations stored in the database — editors change wording on production without a developer or a deploy. Pick a site from the breadcrumb site menu, the same switcher entries use. Structure (field types, handles, widths, rules) stays shared with the source form, and an empty translation falls back to the source text.
+- **Translate with AI**, powered by `recranet/craft-ai-translator` when it's installed: fills the missing strings through that plugin's own provider, so the project glossary and tone of voice apply and merge tags are left alone. Existing translations are never overwritten; without the plugin the button is absent and nothing else changes.
+- The front end, both emails and the previews all resolve the form for the site they're rendering in.
+
+> Replaces the old approach of routing builder text through `translations/{locale}/site.php`. Those files still work as a fallback for anything without a database translation, so existing projects keep rendering as before.
+
 ## 2.6.0 - 2026-08-06
 
 - **Emails now render in the right language.** They are rendered before `send()`, so Craft's own language swap never applied to them: a resend or "Not spam" from the control panel mailed the visitor in the *admin's* language. Both emails now render with the submission's site as the current site (language, site-specific globals and singles included), and the message carries its `siteId` so per-site from/reply-to overrides apply.

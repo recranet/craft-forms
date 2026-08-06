@@ -301,4 +301,14 @@ return [
 	'AI translation is not available. Install and configure the AI Translator plugin.' => 'La traducción con IA no está disponible. Instala y configura el plugin AI Translator.',
 	'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.' => 'El servicio de traducción devolvió {got} traducciones para {expected} textos, por lo que no se pudieron emparejar. No se ha guardado nada.',
 	'Translating form “{form}” into {site}' => 'Traduciendo el formulario «{form}» a {site}',
+
+	// Per-site form translations
+	'translated' => 'traducido',
+	'Translate with AI' => 'Traducir con IA',
+	'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.' => 'Estás traduciendo este formulario al {language}. La estructura — tipos de campo, handles, anchos y reglas — se comparte con el formulario de origen y se edita allí. Deja un campo vacío para usar el texto de origen.',
+	'Translations saved.' => 'Traducciones guardadas.',
+	'{count} strings translated.' => '{count} textos traducidos.',
+	'Nothing left to translate.' => 'No queda nada por traducir.',
+	'Translating failed — check the logs.' => 'La traducción falló — revisa los registros.',
+	'source' => 'origen',
 ];

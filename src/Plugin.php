@@ -18,6 +18,8 @@ use craft\web\UrlManager;
 use recranet\forms\elements\Submission;
 use recranet\forms\fields\FormField;
 use recranet\forms\models\Settings;
+use recranet\forms\services\AiTranslate;
+use recranet\forms\services\FormTranslations;
 use recranet\forms\services\Forms;
 use recranet\forms\services\Notifications;
 use recranet\forms\services\Retention;
@@ -38,10 +40,12 @@ use yii\base\Event;
  * @property-read SpamService $spam
  * @property-read Notifications $notifications
  * @property-read Retention $retention
+ * @property-read FormTranslations $formTranslations
+ * @property-read AiTranslate $aiTranslate
  */
 class Plugin extends BasePlugin
 {
-	public string $schemaVersion = '2.1.0';
+	public string $schemaVersion = '2.2.0';
 	public bool $hasCpSettings = true;
 	public bool $hasCpSection = true;
 
@@ -65,6 +69,8 @@ class Plugin extends BasePlugin
 				'spam' => SpamService::class,
 				'notifications' => Notifications::class,
 				'retention' => Retention::class,
+				'formTranslations' => FormTranslations::class,
+				'aiTranslate' => AiTranslate::class,
 			],
 		];
 	}

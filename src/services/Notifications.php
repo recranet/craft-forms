@@ -42,11 +42,15 @@ class Notifications extends Component
 			? Craft::$app->getSites()->getPrimarySite()->id
 			: $submission->siteId;
 
-		[$subject, $html] = $this->inSiteContext($siteId, fn() => [
+		[$subject, $html] = $this->inSiteContext($siteId, function () use ($form, $submission, $siteId) {
+			$form = Plugin::getInstance()->formTranslations->applyTo($form, $siteId);
+
+			return [
 			// Subject supports merge tags, e.g. "Aanvraag {onderwerp} — #{ref}"
-			$this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission),
-			$this->renderEmail('recranet-forms/_emails/notification', $form, $submission, $form->notificationTemplate),
-		]);
+				$this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission),
+				$this->renderEmail('recranet-forms/_emails/notification', $form, $submission, $form->notificationTemplate),
+			];
+		});
 
 		$message = Craft::$app->getMailer()->compose()
 			->setTo($recipients)
@@ -93,11 +97,15 @@ class Notifications extends Component
 		// Always the visitor's own language: the site they submitted on,
 		// never the language of whoever triggers the send (a CP resend runs
 		// in the admin's language)
-		[$subject, $html] = $this->inSiteContext($submission->siteId, fn() => [
+		[$subject, $html] = $this->inSiteContext($submission->siteId, function () use ($form, $submission) {
+			$form = Plugin::getInstance()->formTranslations->applyTo($form, $submission->siteId);
+
+			return [
 			// Confirmation subject supports the same merge tags as the notification
-			$this->renderTemplateString($form->confirmationSubject ?: $form->name, $form, $submission),
-			$this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission, $form->confirmationTemplate),
-		]);
+				$this->renderTemplateString($form->confirmationSubject ?: $form->name, $form, $submission),
+				$this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission, $form->confirmationTemplate),
+			];
+		});
 
 		$message = Craft::$app->getMailer()->compose()
 			->setTo($submitterEmail)
@@ -114,18 +122,6 @@ class Notifications extends Component
 		return $sent;
 	}
 
-	/**
-	 * Render an email template. Resolution order:
-	 *
-	 * 1. the per-form template override (a site template path picked in the
-	 *    form's mail settings), when set and existing
-	 * 2. the site-wide override at templates/recranet-forms/_emails/*.twig
-	 * 3. the plugin's built-in template
-	 *
-	 * Templates receive `form`, `submission`, plus the editor-managed
-	 * `intro` (notification) and `bodyText` (confirmation) — both rendered
-	 * through the merge-tag pipeline, so `{naam}` works inside them too.
-	 */
 	/**
 	 * Run a render with a given site as the current site, so emails come out
 	 * in the language the visitor used — not the language of whoever happens
@@ -194,6 +190,18 @@ class Notifications extends Component
 			: $this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission);
 	}
 
+	/**
+	 * Render an email template. Resolution order:
+	 *
+	 * 1. the per-form template override (a site template path picked in the
+	 *    form's mail settings), when set and existing
+	 * 2. the site-wide override at templates/recranet-forms/_emails/*.twig
+	 * 3. the plugin's built-in template
+	 *
+	 * Templates receive `form`, `submission`, plus the editor-managed
+	 * `intro` (notification) and `bodyText` (confirmation) — both rendered
+	 * through the merge-tag pipeline, so `{naam}` works inside them too.
+	 */
 	private function renderEmail(string $template, Form $form, Submission $submission, string $formTemplate = ''): string
 	{
 		$view = Craft::$app->getView();

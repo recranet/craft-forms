@@ -40,10 +40,32 @@ class FormsController extends Controller
 			throw new NotFoundHttpException('Form not found.');
 		}
 
+		// The primary site holds the source form; every other site edits only
+		// that site's translations of it (structure stays shared)
+		$sites = Craft::$app->getSites();
+		$primarySite = $sites->getPrimarySite();
+		// ?site=<handle> is how the whole CP switches sites (Cp::siteMenuItems
+		// builds its links that way), so the breadcrumb site menu just works
+		$siteHandle = Craft::$app->getRequest()->getQueryParam('site');
+		$editedSite = $siteHandle ? $sites->getSiteByHandle($siteHandle) : $primarySite;
+
+		if (!$editedSite) {
+			throw new NotFoundHttpException('Site not found.');
+		}
+
+		$translations = Plugin::getInstance()->formTranslations;
+
 		return $this->renderTemplate('recranet-forms/forms/_edit', [
 			'form' => $form,
 			'fieldTypes' => Form::FIELD_TYPES,
 			'emailTemplates' => $this->findEmailTemplates(),
+			'editedSite' => $editedSite,
+			'primarySite' => $primarySite,
+			'isTranslation' => $editedSite->id !== $primarySite->id,
+			'editableSites' => $sites->getEditableSites(),
+			'translations' => $form->id ? $translations->get($form->id, $editedSite->id) : [],
+			'translationProgress' => $form->id ? $translations->progress($form, $editedSite->id) : null,
+			'aiAvailable' => Plugin::getInstance()->aiTranslate->isAvailable(),
 		]);
 	}
 
@@ -88,6 +110,27 @@ class FormsController extends Controller
 
 		if (!$form) {
 			throw new NotFoundHttpException('Form not found.');
+		}
+
+		// A translation site posts only translated strings; the source form
+		// (structure, handles, settings) is edited on the primary site
+		$siteHandle = $request->getBodyParam('siteHandle');
+		$editedSite = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
+
+		if ($editedSite && $editedSite->id !== Craft::$app->getSites()->getPrimarySite()->id) {
+			if (!$form->id) {
+				throw new NotFoundHttpException('Form not found.');
+			}
+
+			Plugin::getInstance()->formTranslations->save(
+				$form->id,
+				$editedSite->id,
+				(array)$request->getBodyParam('translations', []),
+			);
+
+			Craft::$app->getSession()->setNotice(Craft::t('recranet-forms', 'Translations saved.'));
+
+			return $this->redirectToPostedUrl($form);
 		}
 
 		$form->name = $request->getBodyParam('name');
@@ -227,6 +270,35 @@ class FormsController extends Controller
 		Craft::$app->getSession()->setNotice("Form \"{$form->name}\" imported.");
 
 		return $this->redirect('recranet-forms/forms/' . $form->id);
+	}
+
+	/**
+	 * Machine-translate a form's missing strings for one site, using the AI
+	 * Translator plugin's provider (so the project's glossary and tone-of-
+	 * voice apply). Existing translations are never overwritten.
+	 */
+	public function actionTranslate(): Response
+	{
+		$this->requirePostRequest();
+
+		$request = Craft::$app->getRequest();
+		$formId = (int)$request->getRequiredBodyParam('formId');
+		$siteId = (int)$request->getRequiredBodyParam('siteId');
+
+		try {
+			$count = Plugin::getInstance()->formTranslations->translateWithAi($formId, $siteId);
+		} catch (\Throwable $e) {
+			Plugin::error("AI translation failed for form {$formId}: {$e->getMessage()}");
+			Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Translating failed — check the logs.'));
+
+			return $this->redirectToPostedUrl();
+		}
+
+		Craft::$app->getSession()->setNotice($count > 0
+			? Craft::t('recranet-forms', '{count} strings translated.', ['count' => $count])
+			: Craft::t('recranet-forms', 'Nothing left to translate.'));
+
+		return $this->redirectToPostedUrl();
 	}
 
 	/**

@@ -20,5 +20,8 @@
 		"name": "Forms",
 		"developer": "Recranet",
 		"class": "recranet\\forms\\Plugin"
+	},
+	"suggest": {
+		"recranet/craft-ai-translator": "Adds a \"Translate with AI\" button to per-site form translations, using the project glossary and tone of voice"
 	}
 }

@@ -38,6 +38,10 @@ class RecranetFormsVariable
 			throw new \InvalidArgumentException("Unknown form handle \"{$handle}\".");
 		}
 
+		// Visitor-facing text comes from the current site's translation when
+		// the editor made one; untranslated strings keep the source wording
+		$form = Plugin::getInstance()->formTranslations->applyTo($form);
+
 		$view = Craft::$app->getView();
 		$variables = ['form' => $form, 'options' => $options] + $this->routeParams();
 

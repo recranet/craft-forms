@@ -13,6 +13,20 @@
 
 {% set crumbs = [{ label: 'Forms'|t('recranet-forms'), url: url('recranet-forms/forms') }] %}
 
+{# Multi-site: Craft's breadcrumb site menu. siteMenuItems() links to the
+   current path with ?site=<handle>, which is what the controller reads. #}
+{% if craft.app.getIsMultiSite() and form.id %}
+	{% set crumbs = crumbs|merge([{
+		id: 'site-crumb',
+		icon: 'world',
+		label: editedSite.name|t('site'),
+		menu: {
+			items: siteMenuItems(editableSites, editedSite),
+			label: 'Select site'|t('app')
+		},
+	}]) %}
+{% endif %}
+
 {% block actionButton %}
 	<div class="btngroup">
 		<button type="submit" class="btn submit">{{ 'Save'|t('recranet-forms') }}</button>
@@ -185,6 +199,52 @@
 		{{ hiddenInput('formId', form.id) }}
 	{% endif %}
 
+	{% if isTranslation and translationProgress %}
+		<div class="rf-sitebar">
+			<span class="rf-chip">{{ 'translated'|t('recranet-forms') }}: {{ translationProgress.translated }}/{{ translationProgress.total }}</span>
+			{% if aiAvailable %}
+				{# Posts on its own so it never carries unsaved edits along #}
+				<button
+					type="button"
+					class="btn"
+					onclick="Craft.postActionRequest('recranet-forms/forms/translate', { formId: {{ form.id }}, siteId: {{ editedSite.id }} }, () => window.location.reload());"
+				>
+					{{ 'Translate with AI'|t('recranet-forms') }}
+				</button>
+			{% endif %}
+		</div>
+	{% endif %}
+
+	{% if isTranslation %}
+		{{ hiddenInput('siteHandle', editedSite.handle) }}
+		<p class="rf-settings-intro">
+			{{ 'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.'|t('recranet-forms', { language: editedSite.name }) }}
+		</p>
+
+		{% set strings = craft.app.plugins.getPlugin('recranet-forms').formTranslations.sourceStrings(form) %}
+		<table class="data fullwidth rf-translations">
+			<thead>
+				<tr>
+					<th>{{ 'Source'|t('recranet-forms') }} ({{ primarySite.name }})</th>
+					<th>{{ editedSite.name }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for key, source in strings %}
+					<tr>
+						<td class="rf-translations__source">{{ source }}</td>
+						<td>
+							{% if source|length > 60 %}
+								<textarea class="text fullwidth" name="translations[{{ key }}]" rows="3" placeholder="{{ source }}">{{ translations[key] ?? '' }}</textarea>
+							{% else %}
+								<input type="text" class="text fullwidth" name="translations[{{ key }}]" value="{{ translations[key] ?? '' }}" placeholder="{{ source }}" />
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
 	{# Page-level tabs: Settings / Fields / Notification / Confirmation.
 	   All inputs stay in the DOM, so hidden panes post with the single save.
 	   New forms open on Settings (name/handle are required first); saved
@@ -433,7 +493,12 @@
 			{{ _self.previewPanel(form.id, 'confirmation', 'Preview confirmation email'|t('recranet-forms')) }}
 		{% endif %}
 	</div>
+	{% endif %}
+	{# /isTranslation — the tabbed editor above is the source-site view #}
 {% css %}
+	.rf-sitebar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+	.rf-translations__source { color: var(--medium-text-color); width: 45%; padding-top: 12px; }
+	.rf-translations td { vertical-align: top; }
 	/* Split view: builder left, live preview right. Stacks below 1200px so
 	   narrow screens keep the full builder width. */
 	@media (min-width: 1200px) {

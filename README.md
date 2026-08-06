@@ -102,13 +102,14 @@ Plugin settings (CP → Settings → Recranet Forms, stored in project config):
 
 ## Multi-site / translations
 
-Field labels, placeholders, descriptions, option labels and custom validation messages entered in the builder run through Craft's static translations (`site` category) when rendered. To localize a form per site, add the editor-entered strings as keys to `translations/{locale}/site.php`:
+Editors type form text themselves, so translations are content too: they live in the database, per site, next to the source form — no developer and no deploy to change a wording.
 
-```php
-'Naam' => 'Name',
-'Bericht' => 'Message',
-'Vraag, Klacht, Anders' => null, // option VALUES stay in the source language
-'Vraag' => 'Question',
-```
+Open a form and pick a site from the **breadcrumb site menu** (the same switcher entries use). The primary site holds the source form; every other site shows a source → translation table for the strings visitors and recipients read: field labels, placeholders, descriptions and consent text, option labels, custom validation messages, the form name, and the notification and confirmation subjects and body text. Leave a translation empty and that string falls back to the source, so a half-translated form still renders completely.
 
-Option **values** stored with submissions stay in the source language (option labels translate in the UI); validation always checks against the source values. The plugin's own strings (validation messages, buttons) ship translated for nl/en/de/fr/es/it in `src/translations/`.
+Structure — field types, handles, widths, conditional rules — is deliberately shared with the source form. A translated form stays the same form, so submissions from different sites remain comparable, and option **values** stored with a submission stay in the source language (only their labels translate).
+
+### Translate with AI
+
+With [`recranet/craft-ai-translator`](https://github.com/recranet/craft-ai-translator) installed and configured, each translation site gets a **Translate with AI** button that fills the missing strings using that plugin's provider — so the project's glossary and tone-of-voice settings apply, and merge tags like `{naam}` are left alone. Translations an editor already wrote are never overwritten. Without the plugin the button is simply absent and translating stays manual.
+
+Emails render in the language of the site the submission was made on, whoever triggers the send. The owner notification can be pinned to the primary site's language instead — see Notification language under Settings → Storage. The plugin's own strings (validation messages, buttons, the whole control panel) ship translated for nl/en/de/fr/es/it in `src/translations/`.

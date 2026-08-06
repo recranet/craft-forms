@@ -301,4 +301,14 @@ return [
 	'AI translation is not available. Install and configure the AI Translator plugin.' => 'AI-vertaling is niet beschikbaar. Installeer en configureer de AI Translator-plugin.',
 	'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.' => 'De vertaaldienst gaf {got} vertalingen terug voor {expected} teksten, waardoor ze niet aan elkaar te koppelen zijn. Er is niets opgeslagen.',
 	'Translating form “{form}” into {site}' => 'Formulier “{form}” vertalen naar {site}',
+
+	// Per-site form translations
+	'translated' => 'vertaald',
+	'Translate with AI' => 'Vertaal met AI',
+	'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.' => 'Je vertaalt dit formulier naar het {language}. De structuur — veldtypes, handles, breedtes en regels — is gedeeld met het bronformulier en wordt daar bewerkt. Laat een veld leeg om terug te vallen op de brontekst.',
+	'Translations saved.' => 'Vertalingen opgeslagen.',
+	'{count} strings translated.' => '{count} teksten vertaald.',
+	'Nothing left to translate.' => 'Niets meer te vertalen.',
+	'Translating failed — check the logs.' => 'Vertalen mislukt — bekijk de logs.',
+	'source' => 'bron',
 ];

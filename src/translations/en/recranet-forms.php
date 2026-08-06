@@ -296,4 +296,14 @@ return [
 	'AI translation is not available. Install and configure the AI Translator plugin.' => 'AI translation is not available. Install and configure the AI Translator plugin.',
 	'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.' => 'The translation service returned {got} translations for {expected} strings, so they could not be matched up. Nothing was saved.',
 	'Translating form “{form}” into {site}' => 'Translating form “{form}” into {site}',
+
+	// Per-site form translations
+	'translated' => 'translated',
+	'Translate with AI' => 'Translate with AI',
+	'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.' => 'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.',
+	'Translations saved.' => 'Translations saved.',
+	'{count} strings translated.' => '{count} strings translated.',
+	'Nothing left to translate.' => 'Nothing left to translate.',
+	'Translating failed — check the logs.' => 'Translating failed — check the logs.',
+	'source' => 'source',
 ];
