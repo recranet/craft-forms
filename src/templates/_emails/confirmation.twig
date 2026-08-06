@@ -3,15 +3,23 @@
 <p>{{ 'confirmation.body'|t('recranet-forms') }}</p>
 <h3>{{ form.name }}</h3>
 <table cellpadding="6" cellspacing="0" border="0">
-	{% for field in form.fields %}
-		{% set value = submission.formData[field.handle] ?? null %}
+	{# submission.values resolves via the snapshot (formData is uid-keyed) and
+	   already excludes layout-only rows (heading, paragraph) #}
+	{% for row in submission.values %}
 		<tr>
-			<td style="vertical-align: top;"><strong>{{ field.label }}</strong></td>
+			<td style="vertical-align: top;"><strong>{{ row.label }}</strong></td>
 			<td>
-				{% if field.type == 'checkbox' %}
-					{{ value ? 'Yes' : 'No' }}
+				{% if row.type == 'checkbox' or row.type == 'consent' %}
+					{{ (row.value ? 'Yes' : 'No')|t('recranet-forms') }}
+				{% elseif row.type == 'file' %}
+					{# Visitors only get the filename — never a CP link #}
+					{% set asset = row.value ? craft.assets.id(row.value).one() : null %}
+					{{ asset ? asset.filename : '' }}
+				{% elseif row.value is iterable %}
+					{# Multi-value fields (checkboxes) read as a comma-joined list #}
+					{{ row.value|join(', ') }}
 				{% else %}
-					{{ value|nl2br }}
+					{{ row.value|nl2br }}
 				{% endif %}
 			</td>
 		</tr>

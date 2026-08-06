@@ -110,6 +110,23 @@ class Settings extends Model
 	 */
 	public int|string $retentionDays = 0;
 
+	/**
+	 * Handle of the asset volume file-field uploads are stored in (in a
+	 * subfolder named after the form handle). Empty = file fields are not
+	 * usable: an uploaded file becomes a validation error on that field.
+	 */
+	public string $uploadVolume = '';
+
+	/** Maximum upload size for file fields, in MB */
+	public int|string $maxUploadSize = 8;
+
+	/**
+	 * Comma-separated extension allowlist for file fields. Deliberately
+	 * conservative by default: no svg/html/php — anything a browser or the
+	 * server might execute stays out unless a project opts in.
+	 */
+	public string $allowedFileExtensions = 'pdf,jpg,jpeg,png,doc,docx';
+
 	public function getRecaptchaSiteKey(): string
 	{
 		return trim((string)App::parseEnv($this->recaptchaSiteKey));
@@ -158,6 +175,29 @@ class Settings extends Model
 	public function getRetentionDays(): int
 	{
 		return (int)$this->retentionDays;
+	}
+
+	public function getUploadVolume(): string
+	{
+		return trim((string)App::parseEnv($this->uploadVolume));
+	}
+
+	public function getMaxUploadSize(): int
+	{
+		return (int)$this->maxUploadSize;
+	}
+
+	/**
+	 * Allowed file extensions, lowercased, trimmed, without leading dots.
+	 *
+	 * @return string[]
+	 */
+	public function getAllowedFileExtensions(): array
+	{
+		return array_values(array_filter(array_map(
+			fn($ext) => ltrim(mb_strtolower(trim($ext)), '.'),
+			explode(',', $this->allowedFileExtensions),
+		)));
 	}
 
 	/**
@@ -210,6 +250,7 @@ class Settings extends Model
 			]],
 			[['recaptchaThreshold', 'recaptchaRejectThreshold'], 'number', 'min' => 0, 'max' => 1],
 			[['minSubmitSeconds', 'retentionDays'], 'integer', 'min' => 0],
+			[['maxUploadSize'], 'integer', 'min' => 1],
 			[['honeypotName'], 'required'],
 		];
 	}

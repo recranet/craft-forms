@@ -4,12 +4,14 @@ namespace recranet\forms\elements;
 
 use Craft;
 use craft\base\Element;
+use craft\elements\Asset;
 use craft\elements\User;
 use craft\helpers\Db;
 use craft\helpers\Html;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
+use craft\web\UploadedFile;
 use recranet\forms\elements\db\SubmissionQuery;
 use recranet\forms\models\Form;
 use recranet\forms\Plugin;
@@ -62,6 +64,15 @@ class Submission extends Element
 
 	/** Dedupe key: identical double submits within a short window are dropped */
 	public ?string $idempotencyKey = null;
+
+	/**
+	 * @var array<string, UploadedFile> Pending file-field uploads keyed by
+	 * field uid. Collected in applyPost(), validated (extension/size) in
+	 * validateFormData(), and only turned into assets in beforeSave() — after
+	 * validation passed and the spam pipeline decided to store the submission
+	 * — so a rejected/invalid submit never leaves an orphaned asset behind.
+	 */
+	private array $pendingUploads = [];
 
 	public static function displayName(): string
 	{
@@ -134,11 +145,53 @@ class Submission extends Element
 		$byHandle = [];
 
 		foreach ($form->fields as $field) {
+			// Layout-only rows (heading, paragraph) carry no input — nothing to store
+			if (in_array($field['type'], Form::LAYOUT_TYPES, true)) {
+				continue;
+			}
+
+			// File uploads never arrive in body params; stash the UploadedFile
+			// for validation, the asset is only created in beforeSave()
+			if ($field['type'] === 'file') {
+				$upload = UploadedFile::getInstanceByName("fields[{$field['handle']}]");
+
+				if ($upload && $upload->error !== UPLOAD_ERR_NO_FILE) {
+					$this->pendingUploads[$field['uid']] = $upload;
+				}
+
+				$this->formData[$field['uid']] = null;
+				$byHandle[$field['handle']] = null;
+				continue;
+			}
+
 			$value = $posted[$field['handle']] ?? null;
 			$value = is_string($value) ? trim($value) : $value;
 
-			if ($field['type'] === 'checkbox') {
+			// Checkbox-like types store a boolean. For consent that boolean is
+			// the agreement; the exact consent text the visitor saw lives in
+			// the field row's `description`, which lands in $this->snapshot
+			// below — so what was agreed to is snapshotted per submission
+			// automatically, even if the text changes later.
+			if ($field['type'] === 'checkbox' || $field['type'] === 'consent') {
 				$value = (bool)$value;
+			}
+
+			// Multi-value checkboxes post as fields[handle][]: keep an array
+			// of non-empty trimmed strings, whatever a hostile client sends
+			if ($field['type'] === 'checkboxes') {
+				$value = array_values(array_filter(
+					array_map(
+						fn($option) => is_scalar($option) ? trim((string)$option) : '',
+						is_array($value) ? $value : ($value !== null && $value !== '' ? [$value] : []),
+					),
+					fn(string $option) => $option !== '',
+				));
+			}
+
+			// Hidden fields can be seeded from a query param, so sanitize
+			// hard: scalar only, cast to string, capped at 255 chars
+			if ($field['type'] === 'hidden') {
+				$value = is_scalar($value) ? mb_substr(trim((string)$value), 0, 255) : '';
 			}
 
 			$this->formData[$field['uid']] = $value;
@@ -154,6 +207,8 @@ class Submission extends Element
 		// front-end JS, where a hidden field posts nothing.
 		foreach (RuleEvaluator::hiddenFieldUids($form->fields, $this->formData) as $uid) {
 			$this->formData[$uid] = null;
+			// A file field hidden by its conditions must not create an asset either
+			unset($this->pendingUploads[$uid]);
 
 			if ($field = $form->getFieldByUid($uid)) {
 				$byHandle[$field['handle']] = null;
@@ -163,7 +218,15 @@ class Submission extends Element
 		// Canonical dedupe key: same form + same content = same key.
 		// Computed after the conditional null-out, so hidden-field junk
 		// can't make two otherwise identical submits look different.
-		$this->idempotencyKey = hash('sha256', $form->id . '|' . Json::encode($this->formData));
+		// File fields count as their client filename + size (the asset id
+		// doesn't exist yet, and would differ between two identical posts).
+		$keyData = $this->formData;
+
+		foreach ($this->pendingUploads as $uid => $upload) {
+			$keyData[$uid] = 'file:' . $upload->name . ':' . $upload->size;
+		}
+
+		$this->idempotencyKey = hash('sha256', $form->id . '|' . Json::encode($keyData));
 
 		return $byHandle;
 	}
@@ -195,12 +258,27 @@ class Submission extends Element
 			$handle = $field['handle'];
 			$value = $this->formData[$field['uid']] ?? null;
 
+			// Layout-only rows (heading, paragraph) have no value to validate
+			if (in_array($field['type'], Form::LAYOUT_TYPES, true)) {
+				continue;
+			}
+
 			if (isset($hiddenUids[$field['uid'] ?? ''])) {
 				continue;
 			}
 
-			if (!empty($field['required']) && ($value === null || $value === '' || $value === false)) {
-				// Editors can override the default message per field (Advanced tab)
+			// A hidden field has no visible input the visitor could fill, so a
+			// required flag on it can only lock everyone out — never enforce it
+			$skipRequired = $field['type'] === 'hidden';
+
+			// A pending upload counts as a value for a required file field
+			// (the asset id only lands in formData at save time)
+			$hasValue = !($value === null || $value === '' || $value === false || $value === [])
+				|| isset($this->pendingUploads[$field['uid']]);
+
+			if (!empty($field['required']) && !$skipRequired && !$hasValue) {
+				// Editors can override the default message per field (Advanced tab).
+				// This is also the consent check: an unchecked consent box is false = empty.
 				$message = !empty($field['errorMessage'])
 					? $field['errorMessage']
 					: Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]);
@@ -212,14 +290,93 @@ class Submission extends Element
 				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => $field['label']]));
 			}
 
-			// Reject values that aren't one of the configured select options
-			if ($field['type'] === 'select' && $value) {
+			// Reject values that aren't one of the configured choice options
+			if (in_array($field['type'], ['select', 'radio'], true) && $value) {
 				$options = array_map('trim', explode(',', $field['options'] ?? ''));
 
 				if (!in_array($value, $options, true)) {
 					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => $field['label']]));
 				}
 			}
+
+			// Multi-value: every submitted option must be a configured one
+			if ($field['type'] === 'checkboxes' && is_array($value) && $value !== []) {
+				$options = array_map('trim', explode(',', $field['options'] ?? ''));
+
+				if (array_diff($value, $options) !== []) {
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => $field['label']]));
+				}
+			}
+
+			if ($field['type'] === 'number' && $value !== null && $value !== '' && !is_numeric($value)) {
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a number.', ['label' => $field['label']]));
+			}
+
+			// Dates must be exactly what <input type="date"> posts: Y-m-d
+			if ($field['type'] === 'date' && $value) {
+				$parsed = is_string($value) ? \DateTimeImmutable::createFromFormat('Y-m-d', $value) : false;
+
+				if (!$parsed || $parsed->format('Y-m-d') !== $value) {
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid date.', ['label' => $field['label']]));
+				}
+			}
+
+			if ($field['type'] === 'url' && $value && !filter_var($value, FILTER_VALIDATE_URL)) {
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid URL.', ['label' => $field['label']]));
+			}
+
+			if ($field['type'] === 'file') {
+				$this->validateUpload($field);
+			}
+		}
+	}
+
+	/**
+	 * Validate a pending file upload BEFORE any asset is created: extension
+	 * allowlist and size cap come from the plugin settings, and a missing
+	 * upload volume is a config problem surfaced as a field error (never a
+	 * silently dropped file). The client filename is only ever used for the
+	 * extension check and the asset title — Craft's asset layer sanitizes it.
+	 */
+	private function validateUpload(array $field): void
+	{
+		$upload = $this->pendingUploads[$field['uid']] ?? null;
+
+		if (!$upload) {
+			return;
+		}
+
+		$handle = $field['handle'];
+		$settings = Plugin::getInstance()->getSettings();
+
+		if ($upload->hasError) {
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} could not be uploaded. Please try again.', ['label' => $field['label']]));
+
+			return;
+		}
+
+		// No volume configured = uploads can't be stored anywhere
+		if ($settings->getUploadVolume() === '' || !Craft::$app->getVolumes()->getVolumeByHandle($settings->getUploadVolume())) {
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', 'File uploads are not configured. Please contact the site owner.'));
+
+			return;
+		}
+
+		$extension = mb_strtolower(pathinfo($upload->name, PATHINFO_EXTENSION));
+		$allowed = $settings->getAllowedFileExtensions();
+
+		if (!in_array($extension, $allowed, true)) {
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be one of the following file types: {extensions}.', [
+				'label' => $field['label'],
+				'extensions' => implode(', ', $allowed),
+			]));
+		}
+
+		if ($upload->size > $settings->getMaxUploadSize() * 1024 * 1024) {
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} may be at most {max} MB.', [
+				'label' => $field['label'],
+				'max' => $settings->getMaxUploadSize(),
+			]));
 		}
 	}
 
@@ -255,6 +412,12 @@ class Submission extends Element
 		$values = [];
 
 		foreach ($this->snapshot as $field) {
+			// Layout-only rows (heading, paragraph) never carry a value, so
+			// emails, the CP view and exports all skip them via this one gate
+			if (in_array($field['type'] ?? '', Form::LAYOUT_TYPES, true)) {
+				continue;
+			}
+
 			$values[] = [
 				'uid' => $field['uid'],
 				'handle' => $field['handle'],
@@ -362,7 +525,10 @@ class Submission extends Element
 	public function getContentKeywords(): string
 	{
 		return implode(' ', array_map(
-			fn($value) => is_scalar($value) ? (string)$value : Json::encode($value),
+			// Multi-value fields (checkboxes) contribute each selected option
+			fn($value) => is_array($value)
+				? implode(' ', array_filter($value, 'is_scalar'))
+				: (is_scalar($value) ? (string)$value : ''),
 			$this->formData,
 		));
 	}
@@ -378,8 +544,15 @@ class Submission extends Element
 	public function getPreviewText(): string
 	{
 		foreach ($this->getValues() as $row) {
-			if (is_string($row['value']) && trim($row['value']) !== '') {
-				return mb_strimwidth(trim($row['value']), 0, 60, '…');
+			$value = $row['value'];
+
+			// Multi-value fields (checkboxes) read as a comma-joined list
+			if (is_array($value)) {
+				$value = implode(', ', array_filter($value, 'is_scalar'));
+			}
+
+			if (is_string($value) && trim($value) !== '') {
+				return mb_strimwidth(trim($value), 0, 60, '…');
 			}
 		}
 
@@ -409,6 +582,81 @@ class Submission extends Element
 	public function canDelete(User $user): bool
 	{
 		return $user->can('accessPlugin-recranet-forms');
+	}
+
+	/**
+	 * Turn pending file uploads into assets right before the element row is
+	 * written. Running here (not in applyPost) means invalid submissions,
+	 * rejected spam and deduped double posts never create an asset. Trade-off:
+	 * in mail-only mode (saveSubmissions off) the element is never saved, so
+	 * file fields stay empty in the notification email.
+	 */
+	public function beforeSave(bool $isNew): bool
+	{
+		if (!parent::beforeSave($isNew)) {
+			return false;
+		}
+
+		return $this->savePendingUploads();
+	}
+
+	/**
+	 * Create an asset per pending upload and store its id in formData.
+	 * Extension/size/volume were already validated in validateFormData().
+	 */
+	private function savePendingUploads(): bool
+	{
+		if (!$this->pendingUploads) {
+			return true;
+		}
+
+		// Consumed exactly once: a later re-save (e.g. recording a sendError)
+		// must not try to create the assets again
+		$uploads = $this->pendingUploads;
+		$this->pendingUploads = [];
+
+		$settings = Plugin::getInstance()->getSettings();
+		$volume = Craft::$app->getVolumes()->getVolumeByHandle($settings->getUploadVolume());
+
+		if (!$volume) {
+			// validateFormData() already errors on this; belt and braces
+			return false;
+		}
+
+		// Uploads live in a per-form subfolder of the configured volume
+		$folderPath = $this->getForm()?->handle ?? 'form-' . $this->formId;
+		$folder = Craft::$app->getAssets()->ensureFolderByFullPathAndVolume($folderPath, $volume, false);
+
+		foreach ($uploads as $uid => $upload) {
+			// Move the PHP upload to a temp path Craft may relocate; the
+			// client filename is untrusted and only feeds the asset
+			// title/filename, which Craft's asset layer sanitizes
+			$tempPath = $upload->saveAsTempFile();
+
+			if ($tempPath === false) {
+				Plugin::error("Submission for form #{$this->formId}: could not read uploaded file \"{$upload->name}\".");
+
+				return false;
+			}
+
+			$asset = new Asset();
+			$asset->tempFilePath = $tempPath;
+			$asset->setFilename($upload->name);
+			$asset->newFolderId = $folder->id;
+			$asset->setVolumeId($volume->id);
+			$asset->avoidFilenameConflicts = true;
+			$asset->setScenario(Asset::SCENARIO_CREATE);
+
+			if (!Craft::$app->getElements()->saveElement($asset)) {
+				Plugin::error("Submission for form #{$this->formId}: could not save uploaded file \"{$upload->name}\": " . implode('; ', $asset->getFirstErrors()));
+
+				return false;
+			}
+
+			$this->formData[$uid] = $asset->id;
+		}
+
+		return true;
 	}
 
 	/**
@@ -450,5 +698,30 @@ class Submission extends Element
 		}
 
 		parent::afterSave($isNew);
+	}
+
+	/**
+	 * Delete uploaded assets along with the submission — but ONLY on a hard
+	 * delete: a soft delete (CP trash) must keep the files so restoring the
+	 * submission restores its attachments. Retention pruning hard-deletes,
+	 * so GDPR cleanup removes the uploaded files too.
+	 */
+	public function afterDelete(): void
+	{
+		if ($this->hardDelete) {
+			foreach ($this->snapshot as $field) {
+				if (($field['type'] ?? null) !== 'file') {
+					continue;
+				}
+
+				$assetId = $this->formData[$field['uid'] ?? ''] ?? null;
+
+				if ($assetId && is_numeric($assetId)) {
+					Craft::$app->getElements()->deleteElementById((int)$assetId, Asset::class, hardDelete: true);
+				}
+			}
+		}
+
+		parent::afterDelete();
 	}
 }

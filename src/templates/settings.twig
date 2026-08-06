@@ -229,6 +229,43 @@
 		errors: settings.getErrors('retentionDays')
 	})
 }}
+
+{# File-field uploads: which volume, how big, which extensions #}
+{% set volumeOptions = [{ value: '', label: 'None (file fields disabled)' }] %}
+{% for volume in craft.app.volumes.allVolumes %}
+	{% set volumeOptions = volumeOptions|merge([{ value: volume.handle, label: volume.name }]) %}
+{% endfor %}
+{{
+	forms.selectField({
+		label: 'Upload volume',
+		instructions: 'Asset volume for file-field uploads, stored in a subfolder named after the form handle. Without a volume, forms with a file field reject uploads with a validation error.',
+		name: 'uploadVolume',
+		value: settings.uploadVolume,
+		options: volumeOptions,
+		errors: settings.getErrors('uploadVolume')
+	})
+}}
+
+{{
+	forms.textField({
+		label: 'Maximum upload size (MB)',
+		instructions: 'Per file. PHP’s `upload_max_filesize`/`post_max_size` still apply on top of this.',
+		name: 'maxUploadSize',
+		size: 5,
+		value: settings.maxUploadSize,
+		errors: settings.getErrors('maxUploadSize')
+	})
+}}
+
+{{
+	forms.textField({
+		label: 'Allowed file extensions',
+		instructions: 'Comma-separated allowlist for file fields. Keep executable/scriptable types (svg, html, php) out unless a project truly needs them.',
+		name: 'allowedFileExtensions',
+		value: settings.allowedFileExtensions,
+		errors: settings.getErrors('allowedFileExtensions')
+	})
+}}
 </div>
 
 {% css %}
