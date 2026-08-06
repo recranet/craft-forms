@@ -9,22 +9,22 @@
 		var forms = document.querySelectorAll('form');
 		forms.forEach(function (form) {
 			var tokenInput = form.querySelector('input[name="g-recaptcha-response"]');
-			if (!tokenInput || form.dataset.efRecaptchaBound) return;
-			form.dataset.efRecaptchaBound = '1';
+			if (!tokenInput || form.dataset.rfRecaptchaBound) return;
+			form.dataset.rfRecaptchaBound = '1';
 			form.addEventListener('submit', function (event) {
-				if (form.dataset.efTokenReady || typeof grecaptcha === 'undefined') return;
+				if (form.dataset.rfTokenReady || typeof grecaptcha === 'undefined') return;
 				event.preventDefault();
 				grecaptcha.ready(function () {
 					grecaptcha
 						.execute('{{ siteKey }}', { action: 'submit' })
 						.then(function (token) {
 							tokenInput.value = token;
-							form.dataset.efTokenReady = '1';
+							form.dataset.rfTokenReady = '1';
 							form.requestSubmit();
 						})
 						.catch(function () {
 							// Token fetch failed: submit anyway, back end handles it honestly
-							form.dataset.efTokenReady = '1';
+							form.dataset.rfTokenReady = '1';
 							form.requestSubmit();
 						});
 				});

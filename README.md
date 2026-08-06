@@ -67,4 +67,4 @@ Plugin settings (CP → Settings → Recranet Forms, stored in project config):
 | Site/secret key | `$RECAPTCHA_SITE_KEY` / `$RECAPTCHA_SECRET_KEY` | env vars |
 | Score threshold | 0.5 | below = spam |
 | Fail open | on | what happens when verification *itself* errors |
-| Honeypot name | `ef_website` | |
+| Honeypot name | `rf_website` | |

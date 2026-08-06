@@ -33,7 +33,7 @@ class Settings extends Model
 	public bool $recaptchaFailOpen = true;
 
 	/** Name of the hidden honeypot input; bots that fill it are flagged as spam */
-	public string $honeypotName = 'ef_website';
+	public string $honeypotName = 'rf_website';
 
 	public function getRecaptchaSiteKey(): string
 	{
