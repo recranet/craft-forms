@@ -1,11 +1,11 @@
 <?php
 
-namespace elloro\forms\records;
+namespace recranet\forms\records;
 
 use craft\db\ActiveRecord;
 
 /**
- * ActiveRecord for the elloroforms_forms table.
+ * ActiveRecord for the recranetforms_forms table.
  *
  * @property int $id
  * @property string $name
@@ -18,6 +18,6 @@ class FormRecord extends ActiveRecord
 {
 	public static function tableName(): string
 	{
-		return '{{%elloroforms_forms}}';
+		return '{{%recranetforms_forms}}';
 	}
 }

@@ -1,11 +1,11 @@
 <?php
 
-namespace elloro\forms\controllers;
+namespace recranet\forms\controllers;
 
 use Craft;
 use craft\web\Controller;
-use elloro\forms\models\Form;
-use elloro\forms\Plugin;
+use recranet\forms\models\Form;
+use recranet\forms\Plugin;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
@@ -17,14 +17,14 @@ class FormsController extends Controller
 	public function beforeAction($action): bool
 	{
 		$this->requireCpRequest();
-		$this->requirePermission('accessPlugin-elloro-forms');
+		$this->requirePermission('accessPlugin-recranet-forms');
 
 		return parent::beforeAction($action);
 	}
 
 	public function actionIndex(): Response
 	{
-		return $this->renderTemplate('elloro-forms/forms/index', [
+		return $this->renderTemplate('recranet-forms/forms/index', [
 			'forms' => Plugin::getInstance()->forms->getAllForms(),
 		]);
 	}
@@ -40,7 +40,7 @@ class FormsController extends Controller
 			throw new NotFoundHttpException('Form not found.');
 		}
 
-		return $this->renderTemplate('elloro-forms/forms/_edit', [
+		return $this->renderTemplate('recranet-forms/forms/_edit', [
 			'form' => $form,
 			'fieldTypes' => Form::FIELD_TYPES,
 		]);
@@ -89,7 +89,7 @@ class FormsController extends Controller
 		Plugin::getInstance()->forms->deleteFormById($formId);
 		Craft::$app->getSession()->setNotice('Form deleted.');
 
-		return $this->redirect('elloro-forms/forms');
+		return $this->redirect('recranet-forms/forms');
 	}
 
 	/**

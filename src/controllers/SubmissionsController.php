@@ -1,12 +1,12 @@
 <?php
 
-namespace elloro\forms\controllers;
+namespace recranet\forms\controllers;
 
 use Craft;
 use craft\web\Controller;
-use elloro\forms\elements\Submission;
-use elloro\forms\models\Form;
-use elloro\forms\Plugin;
+use recranet\forms\elements\Submission;
+use recranet\forms\models\Form;
+use recranet\forms\Plugin;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -76,7 +76,7 @@ class SubmissionsController extends Controller
 				Craft::warning("Form \"{$form->handle}\": {$result->reason}", __METHOD__);
 
 				if (!$settings->recaptchaFailOpen) {
-					Craft::$app->getSession()->setError(Craft::t('elloro-forms', 'Something went wrong verifying your submission. Please try again later.'));
+					Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong verifying your submission. Please try again later.'));
 					Craft::$app->getUrlManager()->setRouteParams([
 						'formContent' => $content,
 						'formHandle' => $form->handle,
@@ -92,7 +92,7 @@ class SubmissionsController extends Controller
 
 		if (!Craft::$app->getElements()->saveElement($submission)) {
 			Craft::error("Form \"{$form->handle}\": failed to save submission: " . implode('; ', $submission->getFirstErrors()), __METHOD__);
-			Craft::$app->getSession()->setError(Craft::t('elloro-forms', 'Something went wrong. Please try again later.'));
+			Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong. Please try again later.'));
 
 			return null;
 		}
@@ -103,7 +103,7 @@ class SubmissionsController extends Controller
 			Plugin::getInstance()->notifications->sendConfirmation($form, $submission);
 		}
 
-		Craft::$app->getSession()->setSuccess(Craft::t('elloro-forms', 'Thank you! Your message has been sent.'));
+		Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Thank you! Your message has been sent.'));
 
 		return $this->redirectToPostedUrl($submission);
 	}
@@ -128,11 +128,11 @@ class SubmissionsController extends Controller
 			}
 
 			if (!empty($field['required']) && ($value === null || $value === '' || $value === false)) {
-				$errors[$handle][] = Craft::t('elloro-forms', '{label} is required.', ['label' => $field['label']]);
+				$errors[$handle][] = Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]);
 			}
 
 			if ($field['type'] === 'email' && $value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-				$errors[$handle][] = Craft::t('elloro-forms', '{label} must be a valid email address.', ['label' => $field['label']]);
+				$errors[$handle][] = Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => $field['label']]);
 			}
 
 			// Reject values that aren't one of the configured select options
@@ -140,7 +140,7 @@ class SubmissionsController extends Controller
 				$options = array_map('trim', explode(',', $field['options'] ?? ''));
 
 				if (!in_array($value, $options, true)) {
-					$errors[$handle][] = Craft::t('elloro-forms', '{label} has an invalid value.', ['label' => $field['label']]);
+					$errors[$handle][] = Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => $field['label']]);
 				}
 			}
 
@@ -156,9 +156,9 @@ class SubmissionsController extends Controller
 	public function actionIndex(): Response
 	{
 		$this->requireCpRequest();
-		$this->requirePermission('accessPlugin-elloro-forms');
+		$this->requirePermission('accessPlugin-recranet-forms');
 
-		return $this->renderTemplate('elloro-forms/submissions/index');
+		return $this->renderTemplate('recranet-forms/submissions/index');
 	}
 
 	/**
@@ -167,7 +167,7 @@ class SubmissionsController extends Controller
 	public function actionView(int $submissionId): Response
 	{
 		$this->requireCpRequest();
-		$this->requirePermission('accessPlugin-elloro-forms');
+		$this->requirePermission('accessPlugin-recranet-forms');
 
 		$submission = Submission::find()->id($submissionId)->status(null)->one();
 
@@ -175,7 +175,7 @@ class SubmissionsController extends Controller
 			throw new NotFoundHttpException('Submission not found.');
 		}
 
-		return $this->renderTemplate('elloro-forms/submissions/view', [
+		return $this->renderTemplate('recranet-forms/submissions/view', [
 			'submission' => $submission,
 			'form' => $submission->getForm(),
 		]);

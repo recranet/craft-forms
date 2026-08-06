@@ -1,8 +1,8 @@
 {# Default front-end form render (Bootstrap 5 markup, matches the boilerplate style).
-   Override per project with templates/elloro-forms/form.twig.
+   Override per project with templates/recranet-forms/form.twig.
    Variables: form, options (class, buttonLabel, redirect), formErrors, formContent, erroredFormHandle. #}
 
-{% set settings = craft.app.plugins.getPlugin('elloro-forms').settings %}
+{% set settings = craft.app.plugins.getPlugin('recranet-forms').settings %}
 {# Only show this form's errors/values when it was the one that failed #}
 {% set hasErrors = erroredFormHandle == form.handle %}
 {% set errors = hasErrors ? formErrors : {} %}
@@ -11,7 +11,7 @@
 
 <form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8">
 	{{ csrfInput() }}
-	{{ actionInput('elloro-forms/submissions/submit') }}
+	{{ actionInput('recranet-forms/submissions/submit') }}
 	{{ redirectInput(options.redirect ?? craft.app.request.pathInfo ~ '?submitted=true') }}
 	{{ hiddenInput('formHandle', form.handle|hash) }}
 
@@ -94,5 +94,5 @@
 		</div>
 	</div>
 
-	{{ craft.elloroForms.recaptchaTag() }}
+	{{ craft.recranetForms.recaptchaTag() }}
 </form>

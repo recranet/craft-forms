@@ -10,7 +10,7 @@
 {% set selectedSubnavItem = 'forms' %}
 {% set fullPageForm = true %}
 
-{% set crumbs = [{ label: 'Forms', url: url('elloro-forms/forms') }] %}
+{% set crumbs = [{ label: 'Forms', url: url('recranet-forms/forms') }] %}
 
 {% block actionButton %}
 	<div class="btngroup">
@@ -89,8 +89,8 @@
 {% endmacro %}
 
 {% block content %}
-	{{ actionInput('elloro-forms/forms/save') }}
-	{{ redirectInput('elloro-forms/forms') }}
+	{{ actionInput('recranet-forms/forms/save') }}
+	{{ redirectInput('recranet-forms/forms') }}
 	{% if form.id %}
 		{{ hiddenInput('formId', form.id) }}
 	{% endif %}
@@ -109,7 +109,7 @@
 	{{
 		forms.textField({
 			label: 'Handle',
-			instructions: 'Used in templates: `craft.elloroForms.render(\'handle\')`.',
+			instructions: 'Used in templates: `craft.recranetForms.render(\'handle\')`.',
 			name: 'handle',
 			class: 'code',
 			value: form.handle,
@@ -199,7 +199,7 @@
 			class="btn"
 			style="color: var(--error-color);"
 			data-icon="trash"
-			onclick="if (confirm('Delete this form and all its submissions?')) { Craft.postActionRequest('elloro-forms/forms/delete', { formId: {{ form.id }} }, () => (window.location.href = '{{ url('elloro-forms/forms') }}')); }"
+			onclick="if (confirm('Delete this form and all its submissions?')) { Craft.postActionRequest('recranet-forms/forms/delete', { formId: {{ form.id }} }, () => (window.location.href = '{{ url('recranet-forms/forms') }}')); }"
 		>
 			Delete form
 		</button>

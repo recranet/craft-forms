@@ -1,6 +1,6 @@
 <?php
 
-namespace elloro\forms\models;
+namespace recranet\forms\models;
 
 use craft\base\Model;
 use craft\validators\HandleValidator;

@@ -1,6 +1,6 @@
 <?php
 
-namespace elloro\forms\models;
+namespace recranet\forms\models;
 
 /**
  * Outcome of a reCAPTCHA verification. Distinguishes three states that the

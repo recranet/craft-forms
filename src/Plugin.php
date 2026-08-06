@@ -1,6 +1,6 @@
 <?php
 
-namespace elloro\forms;
+namespace recranet\forms;
 
 use Craft;
 use craft\base\Model;
@@ -10,16 +10,16 @@ use craft\events\RegisterUrlRulesEvent;
 use craft\services\Elements;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
-use elloro\forms\elements\Submission;
-use elloro\forms\models\Settings;
-use elloro\forms\services\Forms;
-use elloro\forms\services\Notifications;
-use elloro\forms\services\Recaptcha;
-use elloro\forms\variables\ElloroFormsVariable;
+use recranet\forms\elements\Submission;
+use recranet\forms\models\Settings;
+use recranet\forms\services\Forms;
+use recranet\forms\services\Notifications;
+use recranet\forms\services\Recaptcha;
+use recranet\forms\variables\RecranetFormsVariable;
 use yii\base\Event;
 
 /**
- * Elloro Forms plugin.
+ * Recranet Forms plugin.
  *
  * Provides CP-managed forms (field list per form), stored submissions,
  * email notifications and reCAPTCHA v3 spam protection with honest error
@@ -56,11 +56,11 @@ class Plugin extends BasePlugin
 			$event->types[] = Submission::class;
 		});
 
-		// Expose craft.elloroForms in Twig (form lookup, rendering, recaptcha tag)
+		// Expose craft.recranetForms in Twig (form lookup, rendering, recaptcha tag)
 		Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function (Event $event) {
 			/** @var CraftVariable $variable */
 			$variable = $event->sender;
-			$variable->set('elloroForms', ElloroFormsVariable::class);
+			$variable->set('recranetForms', RecranetFormsVariable::class);
 		});
 
 		if (Craft::$app->getRequest()->getIsCpRequest()) {
@@ -74,12 +74,12 @@ class Plugin extends BasePlugin
 	private function registerCpRoutes(): void
 	{
 		Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
-			$event->rules['elloro-forms'] = 'elloro-forms/forms/index';
-			$event->rules['elloro-forms/forms'] = 'elloro-forms/forms/index';
-			$event->rules['elloro-forms/forms/new'] = 'elloro-forms/forms/edit';
-			$event->rules['elloro-forms/forms/<formId:\d+>'] = 'elloro-forms/forms/edit';
-			$event->rules['elloro-forms/submissions'] = 'elloro-forms/submissions/index';
-			$event->rules['elloro-forms/submissions/<submissionId:\d+>'] = 'elloro-forms/submissions/view';
+			$event->rules['recranet-forms'] = 'recranet-forms/forms/index';
+			$event->rules['recranet-forms/forms'] = 'recranet-forms/forms/index';
+			$event->rules['recranet-forms/forms/new'] = 'recranet-forms/forms/edit';
+			$event->rules['recranet-forms/forms/<formId:\d+>'] = 'recranet-forms/forms/edit';
+			$event->rules['recranet-forms/submissions'] = 'recranet-forms/submissions/index';
+			$event->rules['recranet-forms/submissions/<submissionId:\d+>'] = 'recranet-forms/submissions/view';
 		});
 	}
 
@@ -88,8 +88,8 @@ class Plugin extends BasePlugin
 		$item = parent::getCpNavItem();
 		$item['label'] = 'Forms';
 		$item['subnav'] = [
-			'forms' => ['label' => 'Forms', 'url' => 'elloro-forms/forms'],
-			'submissions' => ['label' => 'Submissions', 'url' => 'elloro-forms/submissions'],
+			'forms' => ['label' => 'Forms', 'url' => 'recranet-forms/forms'],
+			'submissions' => ['label' => 'Submissions', 'url' => 'recranet-forms/submissions'],
 		];
 
 		return $item;
@@ -102,7 +102,7 @@ class Plugin extends BasePlugin
 
 	protected function settingsHtml(): ?string
 	{
-		return Craft::$app->getView()->renderTemplate('elloro-forms/settings', [
+		return Craft::$app->getView()->renderTemplate('recranet-forms/settings', [
 			'settings' => $this->getSettings(),
 		]);
 	}

@@ -4,7 +4,7 @@
 {% set selectedSubnavItem = 'forms' %}
 
 {% block actionButton %}
-	<a href="{{ url('elloro-forms/forms/new') }}" class="btn submit add icon">New form</a>
+	<a href="{{ url('recranet-forms/forms/new') }}" class="btn submit add icon">New form</a>
 {% endblock %}
 
 {% block content %}
@@ -20,7 +20,7 @@
 			<tbody>
 				{% for form in forms %}
 					<tr>
-						<td><a href="{{ url('elloro-forms/forms/' ~ form.id) }}"><strong>{{ form.name }}</strong></a></td>
+						<td><a href="{{ url('recranet-forms/forms/' ~ form.id) }}"><strong>{{ form.name }}</strong></a></td>
 						<td><code>{{ form.handle }}</code></td>
 						<td>{{ form.fields|length }}</td>
 					</tr>

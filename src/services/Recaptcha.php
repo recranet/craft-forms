@@ -1,11 +1,11 @@
 <?php
 
-namespace elloro\forms\services;
+namespace recranet\forms\services;
 
 use Craft;
 use craft\helpers\Json;
-use elloro\forms\models\RecaptchaResult;
-use elloro\forms\Plugin;
+use recranet\forms\models\RecaptchaResult;
+use recranet\forms\Plugin;
 use GuzzleHttp\Exception\GuzzleException;
 use yii\base\Component;
 
@@ -117,7 +117,7 @@ class Recaptcha extends Component
 			$response = Craft::createGuzzleClient(['timeout' => 5])->post(self::VERIFY_URL, [
 				'form_params' => [
 					'secret' => $settings->getRecaptchaSecretKey(),
-					'response' => 'elloro-forms-health-check',
+					'response' => 'recranet-forms-health-check',
 				],
 			]);
 			$data = Json::decode((string)$response->getBody());

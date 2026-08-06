@@ -1,8 +1,7 @@
 {
-	"name": "elloro/craft-forms",
+	"name": "recranet/craft-forms",
 	"description": "Form builder for Craft CMS with submissions, notifications and honest reCAPTCHA handling",
 	"type": "craft-plugin",
-	"version": "1.0.0",
 	"license": "proprietary",
 	"support": {
 		"email": "it-admin@elloro.nl"
@@ -13,13 +12,13 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"elloro\\forms\\": "src/"
+			"recranet\\forms\\": "src/"
 		}
 	},
 	"extra": {
-		"handle": "elloro-forms",
-		"name": "Elloro Forms",
-		"developer": "Elloro",
-		"class": "elloro\\forms\\Plugin"
+		"handle": "recranet-forms",
+		"name": "Recranet Forms",
+		"developer": "Recranet",
+		"class": "recranet\\forms\\Plugin"
 	}
 }

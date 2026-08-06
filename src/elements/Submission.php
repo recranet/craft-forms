@@ -1,6 +1,6 @@
 <?php
 
-namespace elloro\forms\elements;
+namespace recranet\forms\elements;
 
 use Craft;
 use craft\base\Element;
@@ -9,8 +9,8 @@ use craft\helpers\Db;
 use craft\helpers\Html;
 use craft\helpers\Json;
 use craft\helpers\UrlHelper;
-use elloro\forms\elements\db\SubmissionQuery;
-use elloro\forms\Plugin;
+use recranet\forms\elements\db\SubmissionQuery;
+use recranet\forms\Plugin;
 
 /**
  * A stored form submission.
@@ -141,7 +141,7 @@ class Submission extends Element
 		));
 	}
 
-	public function getForm(): ?\elloro\forms\models\Form
+	public function getForm(): ?\recranet\forms\models\Form
 	{
 		return $this->formId ? Plugin::getInstance()->forms->getFormById($this->formId) : null;
 	}
@@ -167,22 +167,22 @@ class Submission extends Element
 
 	public function getCpEditUrl(): ?string
 	{
-		return UrlHelper::cpUrl('elloro-forms/submissions/' . $this->id);
+		return UrlHelper::cpUrl('recranet-forms/submissions/' . $this->id);
 	}
 
 	public function canView(User $user): bool
 	{
-		return $user->can('accessPlugin-elloro-forms');
+		return $user->can('accessPlugin-recranet-forms');
 	}
 
 	public function canSave(User $user): bool
 	{
-		return $user->can('accessPlugin-elloro-forms');
+		return $user->can('accessPlugin-recranet-forms');
 	}
 
 	public function canDelete(User $user): bool
 	{
-		return $user->can('accessPlugin-elloro-forms');
+		return $user->can('accessPlugin-recranet-forms');
 	}
 
 	/**
@@ -198,9 +198,9 @@ class Submission extends Element
 		];
 
 		if ($isNew) {
-			Db::insert('{{%elloroforms_submissions}}', ['id' => $this->id] + $data);
+			Db::insert('{{%recranetforms_submissions}}', ['id' => $this->id] + $data);
 		} else {
-			Db::update('{{%elloroforms_submissions}}', $data, ['id' => $this->id]);
+			Db::update('{{%recranetforms_submissions}}', $data, ['id' => $this->id]);
 		}
 
 		parent::afterSave($isNew);

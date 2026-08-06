@@ -1,9 +1,9 @@
 <?php
 
-namespace elloro\forms\migrations;
+namespace recranet\forms\migrations;
 
 use craft\db\Migration;
-use elloro\forms\elements\Submission;
+use recranet\forms\elements\Submission;
 
 /**
  * Install migration: forms table + submissions table (extends elements).
@@ -12,7 +12,7 @@ class Install extends Migration
 {
 	public function safeUp(): bool
 	{
-		$this->createTable('{{%elloroforms_forms}}', [
+		$this->createTable('{{%recranetforms_forms}}', [
 			'id' => $this->primaryKey(),
 			'name' => $this->string()->notNull(),
 			'handle' => $this->string()->notNull(),
@@ -23,9 +23,9 @@ class Install extends Migration
 			'uid' => $this->uid(),
 		]);
 
-		$this->createIndex(null, '{{%elloroforms_forms}}', ['handle'], true);
+		$this->createIndex(null, '{{%recranetforms_forms}}', ['handle'], true);
 
-		$this->createTable('{{%elloroforms_submissions}}', [
+		$this->createTable('{{%recranetforms_submissions}}', [
 			'id' => $this->integer()->notNull(),
 			'formId' => $this->integer()->notNull(),
 			'formData' => $this->text(),
@@ -35,10 +35,10 @@ class Install extends Migration
 		]);
 
 		// Submission rows follow their element row (soft-delete aware via elements table)
-		$this->addForeignKey(null, '{{%elloroforms_submissions}}', ['id'], '{{%elements}}', ['id'], 'CASCADE');
-		$this->addForeignKey(null, '{{%elloroforms_submissions}}', ['formId'], '{{%elloroforms_forms}}', ['id'], 'CASCADE');
-		$this->createIndex(null, '{{%elloroforms_submissions}}', ['formId']);
-		$this->createIndex(null, '{{%elloroforms_submissions}}', ['isSpam']);
+		$this->addForeignKey(null, '{{%recranetforms_submissions}}', ['id'], '{{%elements}}', ['id'], 'CASCADE');
+		$this->addForeignKey(null, '{{%recranetforms_submissions}}', ['formId'], '{{%recranetforms_forms}}', ['id'], 'CASCADE');
+		$this->createIndex(null, '{{%recranetforms_submissions}}', ['formId']);
+		$this->createIndex(null, '{{%recranetforms_submissions}}', ['isSpam']);
 
 		return true;
 	}
@@ -47,8 +47,8 @@ class Install extends Migration
 	{
 		// Remove submission elements before dropping their data table
 		$this->delete('{{%elements}}', ['type' => Submission::class]);
-		$this->dropTableIfExists('{{%elloroforms_submissions}}');
-		$this->dropTableIfExists('{{%elloroforms_forms}}');
+		$this->dropTableIfExists('{{%recranetforms_submissions}}');
+		$this->dropTableIfExists('{{%recranetforms_forms}}');
 
 		return true;
 	}

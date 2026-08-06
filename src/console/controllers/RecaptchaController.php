@@ -1,16 +1,16 @@
 <?php
 
-namespace elloro\forms\console\controllers;
+namespace recranet\forms\console\controllers;
 
 use craft\console\Controller;
-use elloro\forms\Plugin;
+use recranet\forms\Plugin;
 use yii\console\ExitCode;
 use yii\helpers\Console;
 
 /**
  * Console health check for the reCAPTCHA configuration. Run on deploy:
  *
- *     php craft elloro-forms/recaptcha/check
+ *     php craft recranet-forms/recaptcha/check
  *
  * Exits non-zero when the keys are missing or rejected by Google, so a
  * broken captcha config fails the deploy instead of silently killing all

@@ -1,6 +1,6 @@
 <?php
 
-namespace elloro\forms\elements\db;
+namespace recranet\forms\elements\db;
 
 use craft\elements\db\ElementQuery;
 use craft\helpers\Db;
@@ -35,29 +35,29 @@ class SubmissionQuery extends ElementQuery
 	protected function statusCondition(string $status): mixed
 	{
 		return match ($status) {
-			'live' => ['elloroforms_submissions.isSpam' => false],
-			'spam' => ['elloroforms_submissions.isSpam' => true],
+			'live' => ['recranetforms_submissions.isSpam' => false],
+			'spam' => ['recranetforms_submissions.isSpam' => true],
 			default => parent::statusCondition($status),
 		};
 	}
 
 	protected function beforePrepare(): bool
 	{
-		$this->joinElementTable('elloroforms_submissions');
+		$this->joinElementTable('recranetforms_submissions');
 
 		$this->query->select([
-			'elloroforms_submissions.formId',
-			'elloroforms_submissions.formData',
-			'elloroforms_submissions.isSpam',
-			'elloroforms_submissions.spamReason',
+			'recranetforms_submissions.formId',
+			'recranetforms_submissions.formData',
+			'recranetforms_submissions.isSpam',
+			'recranetforms_submissions.spamReason',
 		]);
 
 		if ($this->formId !== null) {
-			$this->subQuery->andWhere(Db::parseNumericParam('elloroforms_submissions.formId', $this->formId));
+			$this->subQuery->andWhere(Db::parseNumericParam('recranetforms_submissions.formId', $this->formId));
 		}
 
 		if ($this->isSpam !== null) {
-			$this->subQuery->andWhere(['elloroforms_submissions.isSpam' => $this->isSpam]);
+			$this->subQuery->andWhere(['recranetforms_submissions.isSpam' => $this->isSpam]);
 		}
 
 		return parent::beforePrepare();

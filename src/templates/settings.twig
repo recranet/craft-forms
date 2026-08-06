@@ -44,7 +44,7 @@
 {{
 	forms.lightswitchField({
 		label: 'Fail open on verification errors',
-		instructions: 'When reCAPTCHA itself breaks (bad keys, Google unreachable): **on** accepts and flags submissions with a logged warning; **off** shows visitors an error. A broken captcha is never treated as spam. Tip: run `php craft elloro-forms/recaptcha/check` on deploy.',
+		instructions: 'When reCAPTCHA itself breaks (bad keys, Google unreachable): **on** accepts and flags submissions with a logged warning; **off** shows visitors an error. A broken captcha is never treated as spam. Tip: run `php craft recranet-forms/recaptcha/check` on deploy.',
 		name: 'recaptchaFailOpen',
 		on: settings.recaptchaFailOpen
 	})

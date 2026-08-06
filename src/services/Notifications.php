@@ -1,11 +1,11 @@
 <?php
 
-namespace elloro\forms\services;
+namespace recranet\forms\services;
 
 use Craft;
 use craft\web\View;
-use elloro\forms\elements\Submission;
-use elloro\forms\models\Form;
+use recranet\forms\elements\Submission;
+use recranet\forms\models\Form;
 use yii\base\Component;
 
 /**
@@ -29,7 +29,7 @@ class Notifications extends Component
 			return false;
 		}
 
-		$html = $this->renderEmail('elloro-forms/_emails/notification', $form, $submission);
+		$html = $this->renderEmail('recranet-forms/_emails/notification', $form, $submission);
 
 		$message = Craft::$app->getMailer()->compose()
 			->setTo($recipients)
@@ -70,7 +70,7 @@ class Notifications extends Component
 			return true;
 		}
 
-		$html = $this->renderEmail('elloro-forms/_emails/confirmation', $form, $submission);
+		$html = $this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission);
 
 		$sent = Craft::$app->getMailer()->compose()
 			->setTo($submitterEmail)
@@ -87,7 +87,7 @@ class Notifications extends Component
 
 	/**
 	 * Render an email template. Projects can override these by placing
-	 * templates at templates/elloro-forms/_emails/*.twig (site templates
+	 * templates at templates/recranet-forms/_emails/*.twig (site templates
 	 * take precedence over the plugin's CP-mode fallbacks).
 	 */
 	private function renderEmail(string $template, Form $form, Submission $submission): string
