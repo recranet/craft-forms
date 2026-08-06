@@ -284,4 +284,11 @@ return [
 	'CSS class' => 'CSS class',
 	'Added to the rendered <form> element.' => 'Added to the rendered <form> element.',
 	'Refresh' => 'Refresh',
+
+	// Email language
+	'Language' => 'Language',
+	'Notification language' => 'Notification language',
+	'The site the visitor submitted on' => 'The site the visitor submitted on',
+	'Always the primary site’s language' => 'Always the primary site’s language',
+	'settings.language.hint' => 'The visitor’s confirmation is always sent in the language they submitted in. Only the owner notification is a choice: follow the visitor, or always use the primary site’s language when you don’t read every locale your site serves.',
 ];

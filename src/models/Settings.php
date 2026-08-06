@@ -108,6 +108,16 @@ class Settings extends Model
 	public string $blocklist = '';
 
 	/**
+	 * Which language the owner notification is rendered in:
+	 * 'submission' = the site the visitor submitted on (default), so the
+	 * mail matches the message it carries; 'primary' = always the primary
+	 * site's language, for owners who don't read every locale their site
+	 * serves. The visitor's confirmation is always in the visitor's own
+	 * language — that one is never a choice.
+	 */
+	public string $notificationLanguage = 'submission';
+
+	/**
 	 * Store submissions in the database. Off = notification emails still go
 	 * out, but nothing is persisted (mail-only mode; a send failure is then
 	 * only visible in the logs).
@@ -272,6 +282,7 @@ class Settings extends Model
 				self::CAPTCHA_RECAPTCHA_ENTERPRISE,
 				self::CAPTCHA_TURNSTILE,
 			]],
+			[['notificationLanguage'], 'in', 'range' => ['submission', 'primary']],
 			[['recaptchaThreshold', 'recaptchaRejectThreshold'], 'number', 'min' => 0, 'max' => 1],
 			[['minSubmitSeconds', 'retentionDays', 'throttleCount', 'throttleWindow'], 'integer', 'min' => 0],
 			[['maxUploadSize'], 'integer', 'min' => 1],

@@ -72,6 +72,9 @@ class Retention extends Component
 	{
 		$ids = Submission::find()
 			->formId($form->id)
+			// Every site: retention runs from the console (primary site) but
+			// must reach submissions made on any site
+			->siteId('*')
 			->status(null)
 			->andWhere(['<', 'elements.dateCreated', $cutoff])
 			->ids();
@@ -100,6 +103,7 @@ class Retention extends Component
 	{
 		$submissions = Submission::find()
 			->formId($form->id)
+			->siteId('*')
 			->status(null)
 			->andWhere(['<', 'elements.dateCreated', $cutoff])
 			->andWhere(['recranetforms_submissions.anonymizedAt' => null])

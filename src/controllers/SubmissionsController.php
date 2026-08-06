@@ -203,6 +203,7 @@ class SubmissionsController extends Controller
 	private function submissionByToken(string $token): Submission
 	{
 		$submission = Submission::find()
+			->siteId('*')
 			->status(null)
 			->andWhere(['recranetforms_submissions.token' => $token])
 			->one();
@@ -233,7 +234,9 @@ class SubmissionsController extends Controller
 		$this->requireCpRequest();
 		$this->requirePermission('recranetForms-viewSubmissions');
 
-		$submission = Submission::find()->id($submissionId)->status(null)->one();
+		// siteId('*') — a submission belongs to the site it was made on, and
+		// an editor works in whatever site the CP happens to be set to
+		$submission = Submission::find()->id($submissionId)->siteId('*')->status(null)->one();
 
 		if (!$submission) {
 			throw new NotFoundHttpException('Submission not found.');
@@ -324,7 +327,9 @@ class SubmissionsController extends Controller
 	private function requireCpSubmission(): Submission
 	{
 		$submissionId = (int)Craft::$app->getRequest()->getRequiredBodyParam('submissionId');
-		$submission = Submission::find()->id($submissionId)->status(null)->one();
+		// siteId('*') — a submission belongs to the site it was made on, and
+		// an editor works in whatever site the CP happens to be set to
+		$submission = Submission::find()->id($submissionId)->siteId('*')->status(null)->one();
 
 		if (!$submission) {
 			throw new NotFoundHttpException('Submission not found.');

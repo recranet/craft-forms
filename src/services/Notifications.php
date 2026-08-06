@@ -35,15 +35,26 @@ class Notifications extends Component
 			return false;
 		}
 
-		$html = $this->renderEmail('recranet-forms/_emails/notification', $form, $submission, $form->notificationTemplate);
+		// Owner mail: the site the visitor used, or the primary site's
+		// language when the setting says the owner shouldn't get mails in
+		// whatever locale a visitor happened to browse in
+		$siteId = Plugin::getInstance()->getSettings()->notificationLanguage === 'primary'
+			? Craft::$app->getSites()->getPrimarySite()->id
+			: $submission->siteId;
 
-		// Subject supports merge tags, e.g. "Aanvraag {onderwerp} — #{ref}"
-		$subject = $this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission);
+		[$subject, $html] = $this->inSiteContext($siteId, fn() => [
+			// Subject supports merge tags, e.g. "Aanvraag {onderwerp} — #{ref}"
+			$this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission),
+			$this->renderEmail('recranet-forms/_emails/notification', $form, $submission, $form->notificationTemplate),
+		]);
 
 		$message = Craft::$app->getMailer()->compose()
 			->setTo($recipients)
 			->setSubject($subject)
 			->setHtmlBody($html);
+
+		// Lets Craft apply per-site from/reply-to overrides
+		$message->siteId = $siteId;
 
 		// Reply-to the submitter when the form has an email field
 		$emailHandle = $form->getEmailFieldHandle();
@@ -79,16 +90,22 @@ class Notifications extends Component
 			return true;
 		}
 
-		$html = $this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission, $form->confirmationTemplate);
+		// Always the visitor's own language: the site they submitted on,
+		// never the language of whoever triggers the send (a CP resend runs
+		// in the admin's language)
+		[$subject, $html] = $this->inSiteContext($submission->siteId, fn() => [
+			// Confirmation subject supports the same merge tags as the notification
+			$this->renderTemplateString($form->confirmationSubject ?: $form->name, $form, $submission),
+			$this->renderEmail('recranet-forms/_emails/confirmation', $form, $submission, $form->confirmationTemplate),
+		]);
 
-		// Confirmation subject supports the same merge tags as the notification
-		$subject = $this->renderTemplateString($form->confirmationSubject ?: $form->name, $form, $submission);
-
-		$sent = Craft::$app->getMailer()->compose()
+		$message = Craft::$app->getMailer()->compose()
 			->setTo($submitterEmail)
 			->setSubject($subject)
-			->setHtmlBody($html)
-			->send();
+			->setHtmlBody($html);
+		$message->siteId = $submission->siteId;
+
+		$sent = $message->send();
 
 		if (!$sent) {
 			Craft::error("Form \"{$form->handle}\": confirmation email failed to send.", __METHOD__);
@@ -109,6 +126,50 @@ class Notifications extends Component
 	 * `intro` (notification) and `bodyText` (confirmation) — both rendered
 	 * through the merge-tag pipeline, so `{naam}` works inside them too.
 	 */
+	/**
+	 * Run a render with a given site as the current site, so emails come out
+	 * in the language the visitor used — not the language of whoever happens
+	 * to trigger the send. This matters because we render our HTML ourselves,
+	 * before send(): Craft's mailer does the same swap, but only for its own
+	 * system messages. Without it a CP resend mails the visitor in the
+	 * admin's language.
+	 *
+	 * Twig is recreated for the swapped site so site-specific globals and
+	 * singles reload, mirroring what craft\mail\Mailer does.
+	 *
+	 * @template T
+	 * @param callable(): T $render
+	 * @return T
+	 */
+	private function inSiteContext(?int $siteId, callable $render): mixed
+	{
+		$sites = Craft::$app->getSites();
+		$currentSite = $sites->getCurrentSite();
+		$site = $siteId ? $sites->getSiteById($siteId) : null;
+
+		// Nothing to swap: no site recorded, or we're already on it
+		if (!$site || $site->id === $currentSite->id) {
+			return $render();
+		}
+
+		$view = Craft::$app->getView();
+		$originalLanguage = Craft::$app->language;
+		$originalTwig = $view->getTwig();
+
+		$sites->setCurrentSite($site);
+		Craft::$app->language = $site->language;
+		$view->setTwig($view->createTwig());
+
+		try {
+			return $render();
+		} finally {
+			// Restore even when the template throws — the request continues
+			$sites->setCurrentSite($currentSite);
+			Craft::$app->language = $originalLanguage;
+			$view->setTwig($originalTwig);
+		}
+	}
+
 	/**
 	 * Render one of this form's emails for the CP preview, using the exact
 	 * same resolution as a real send (per-form override → site override →

@@ -77,8 +77,8 @@ class UtilitiesController extends Controller
 			$sent = Craft::$app->getMailer()
 				->compose()
 				->setTo($recipient)
-				->setSubject('Recranet Forms test email')
-				->setTextBody('This is a test email sent from the Recranet Forms email test utility.')
+				->setSubject('Forms test email')
+				->setTextBody('This is a test email sent from the Forms email test utility.')
 				->send();
 
 			$steps[] = [

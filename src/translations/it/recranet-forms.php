@@ -289,4 +289,11 @@ return [
 	'CSS class' => 'Classe CSS',
 	'Added to the rendered <form> element.' => 'Aggiunta all’elemento <form> renderizzato.',
 	'Refresh' => 'Aggiorna',
+
+	// Email language
+	'Language' => 'Lingua',
+	'Notification language' => 'Lingua dell’email di notifica',
+	'The site the visitor submitted on' => 'Il sito da cui è stato inviato',
+	'Always the primary site’s language' => 'Sempre la lingua del sito principale',
+	'settings.language.hint' => 'La conferma al visitatore viene sempre inviata nella lingua che ha usato. Solo la notifica per te è una scelta: seguire il visitatore o usare sempre la lingua del sito principale.',
 ];

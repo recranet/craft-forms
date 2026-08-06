@@ -289,4 +289,11 @@ return [
 	'CSS class' => 'CSS-klasse',
 	'Added to the rendered <form> element.' => 'Wordt toegevoegd aan het gerenderde <form>-element.',
 	'Refresh' => 'Vernieuwen',
+
+	// Email language
+	'Language' => 'Taal',
+	'Notification language' => 'Taal van notificatiemail',
+	'The site the visitor submitted on' => 'De site waarop de bezoeker verstuurde',
+	'Always the primary site’s language' => 'Altijd de taal van de primaire site',
+	'settings.language.hint' => 'De bevestiging aan de bezoeker gaat altijd in de taal waarin die verstuurde. Alleen de notificatie aan jezelf is een keuze: meebewegen met de bezoeker, of altijd de taal van de primaire site als je niet elke taal van je site leest.',
 ];

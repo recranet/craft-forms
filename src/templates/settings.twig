@@ -261,6 +261,22 @@
 <div class="rfs-pane" data-rfs-pane="storage" hidden>
 <p class="rf-settings-intro">{{ 'settings.storage.intro'|t('recranet-forms') }}</p>
 
+<h3>{{ 'Language'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.language.hint'|t('recranet-forms') }}</p>
+
+{{
+	forms.selectField({
+		label: 'Notification language'|t('recranet-forms'),
+		name: 'notificationLanguage',
+		value: settings.notificationLanguage,
+		options: [
+			{ value: 'submission', label: 'The site the visitor submitted on'|t('recranet-forms') },
+			{ value: 'primary', label: 'Always the primary site’s language'|t('recranet-forms') }
+		],
+		errors: settings.getErrors('notificationLanguage')
+	})
+}}
+
 {{
 	forms.lightswitchField({
 		label: 'Save submissions'|t('recranet-forms'),

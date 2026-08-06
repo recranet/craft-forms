@@ -1,5 +1,12 @@
 # Release Notes for Recranet Forms
 
+## 2.6.0 - 2026-08-06
+
+- **Emails now render in the right language.** They are rendered before `send()`, so Craft's own language swap never applied to them: a resend or "Not spam" from the control panel mailed the visitor in the *admin's* language. Both emails now render with the submission's site as the current site (language, site-specific globals and singles included), and the message carries its `siteId` so per-site from/reply-to overrides apply.
+- New setting **Notification language**: follow the site the visitor submitted on (default), or always use the primary site's language for owners who don't read every locale their site serves. The visitor's confirmation is always in the visitor's own language.
+- Fixed site-scoped submission lookups: the CP detail view, the Not spam / Resend actions and the tokenized self-service page could not find a submission made on another site (404), and **retention only ever pruned the current site's submissions** — a GDPR-relevant gap on multi-site installs.
+- The plugin is now called **Forms** in the control panel (package and handle unchanged).
+
 ## 2.5.1 - 2026-08-06
 
 - Fixed the Fields tab staying visible after switching tabs on screens from 1200px: the split-view `display: grid` beat the UA stylesheet's `[hidden] { display: none }`.

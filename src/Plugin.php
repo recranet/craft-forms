@@ -27,7 +27,7 @@ use recranet\forms\variables\RecranetFormsVariable;
 use yii\base\Event;
 
 /**
- * Recranet Forms plugin.
+ * Forms plugin (package recranet/craft-forms, handle recranet-forms).
  *
  * Provides CP-managed forms (field list per form), stored submissions,
  * email notifications and reCAPTCHA v3 spam protection with honest error
@@ -105,7 +105,7 @@ class Plugin extends BasePlugin
 		// can read submissions without being able to change form definitions
 		Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, function (RegisterUserPermissionsEvent $event) {
 			$event->permissions[] = [
-				'heading' => 'Recranet Forms',
+				'heading' => Craft::t('recranet-forms', 'Forms'),
 				'permissions' => [
 					'recranetForms-manageForms' => [
 						'label' => Craft::t('recranet-forms', 'Manage forms (create, edit, delete form definitions)'),
