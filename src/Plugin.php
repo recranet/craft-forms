@@ -32,7 +32,7 @@ use yii\base\Event;
  */
 class Plugin extends BasePlugin
 {
-	public string $schemaVersion = '1.0.0';
+	public string $schemaVersion = '2.0.0';
 	public bool $hasCpSettings = true;
 	public bool $hasCpSection = true;
 
@@ -93,6 +93,19 @@ class Plugin extends BasePlugin
 		];
 
 		return $item;
+	}
+
+	/**
+	 * Craft writes elementSources.<Submission FQCN> to project config the
+	 * moment an admin customizes the submissions index columns; clean it up
+	 * on uninstall so it doesn't linger and drift on environments where
+	 * allowAdminChanges is off.
+	 */
+	protected function beforeUninstall(): void
+	{
+		Craft::$app->getProjectConfig()->remove('elementSources.' . Submission::class);
+
+		parent::beforeUninstall();
 	}
 
 	protected function createSettingsModel(): ?Model

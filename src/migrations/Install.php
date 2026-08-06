@@ -28,6 +28,13 @@ class Install extends Migration
 		$this->createTable('{{%recranetforms_submissions}}', [
 			'id' => $this->integer()->notNull(),
 			'formId' => $this->integer()->notNull(),
+			'snapshot' => $this->text(),
+			'spamScore' => $this->decimal(4, 3),
+			'sendError' => $this->text(),
+			'incrementalId' => $this->integer(),
+			'token' => $this->string(32),
+			'sourceUrl' => $this->string(),
+			'idempotencyKey' => $this->string(64),
 			'formData' => $this->text(),
 			'isSpam' => $this->boolean()->notNull()->defaultValue(false),
 			'spamReason' => $this->string(),
@@ -39,6 +46,8 @@ class Install extends Migration
 		$this->addForeignKey(null, '{{%recranetforms_submissions}}', ['formId'], '{{%recranetforms_forms}}', ['id'], 'CASCADE');
 		$this->createIndex(null, '{{%recranetforms_submissions}}', ['formId']);
 		$this->createIndex(null, '{{%recranetforms_submissions}}', ['isSpam']);
+		$this->createIndex(null, '{{%recranetforms_submissions}}', ['token'], true);
+		$this->createIndex(null, '{{%recranetforms_submissions}}', ['idempotencyKey']);
 
 		return true;
 	}

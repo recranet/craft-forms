@@ -22,6 +22,10 @@
    same markup with a fresh index. #}
 {% macro fieldCard(field, index, fieldTypes) %}
 	<div class="rf-field" data-type="{{ field.type }}">
+		{# The uid is the field's stable identity — submissions key their values
+		   by it. It must survive every re-save; new cards post an empty uid and
+		   the Forms service assigns one. #}
+		<input type="hidden" name="fields[{{ index }}][uid]" value="{{ field.uid ?? '' }}" />
 		<div class="rf-field__bar">
 			<a class="move icon rf-field__move" title="Drag to reorder" role="button" aria-label="Drag to reorder"></a>
 			<strong class="rf-field__title">{{ field.label ?: 'New field' }}</strong>

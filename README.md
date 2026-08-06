@@ -7,7 +7,7 @@ Form builder plugin for Craft CMS 5. Built for the Elloro Craft boilerplate as a
 ## Features
 
 - **Form builder in the CP** — drag & drop field cards (text, email, tel, textarea, select, checkbox) with per-field width (full/half for side-by-side columns), auto-suggested handles, and per-form notification recipients and subjects. Forms are content (database), so they're editable on production where `allowAdminChanges` is off.
-- **Stored submissions** — every submission (including spam-flagged ones) is saved as an element, browsable per form in the CP, searchable, with statuses Valid/Spam.
+- **Stored submissions** — every submission (including spam-flagged ones) is saved as an element, browsable per form in the CP, searchable, with statuses Sent/Spam/Failed and a per-form reference number (#1, #2, …). Values are keyed by field **uid** with a submit-time **snapshot** of the form definition, so renaming a field never orphans historical data. Mail send failures are recorded on the submission (status Failed) — nothing is ever lost. Identical double submits within 5 minutes are deduped.
 - **Honest reCAPTCHA v3** — three verdicts instead of one:
   - *pass* → submission goes through
   - *spam* (low score, invalid token) → stored + flagged, visitor sees success (no bot tip-off), no email sent

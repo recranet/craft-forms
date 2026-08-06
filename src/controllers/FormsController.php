@@ -106,6 +106,9 @@ class FormsController extends Controller
 			}
 
 			$fields[] = [
+				// Existing uid carries the field's identity across saves;
+				// empty for new cards (assigned in Forms::saveForm)
+				'uid' => trim((string)($row['uid'] ?? '')),
 				'handle' => trim((string)($row['handle'] ?? '')),
 				'label' => trim((string)($row['label'] ?? '')),
 				'type' => $row['type'] ?? 'text',

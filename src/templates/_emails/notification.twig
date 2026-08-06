@@ -1,16 +1,17 @@
 {# Owner notification email: all submitted values in a simple table.
+   Values come from submission.values (resolved via the submit-time snapshot,
+   so renamed fields keep their historical labels).
    Override per project with templates/recranet-forms/_emails/notification.twig. #}
-<h2>{{ form.name }}</h2>
+<h2>{{ form.name }}{% if submission.incrementalId %} — #{{ submission.incrementalId }}{% endif %}</h2>
 <table cellpadding="6" cellspacing="0" border="0">
-	{% for field in form.fields %}
-		{% set value = submission.formData[field.handle] ?? null %}
+	{% for row in submission.values %}
 		<tr>
-			<td style="vertical-align: top;"><strong>{{ field.label }}</strong></td>
+			<td style="vertical-align: top;"><strong>{{ row.label }}</strong></td>
 			<td>
-				{% if field.type == 'checkbox' %}
-					{{ value ? 'Yes' : 'No' }}
+				{% if row.type == 'checkbox' %}
+					{{ row.value ? 'Yes' : 'No' }}
 				{% else %}
-					{{ value|nl2br }}
+					{{ row.value|nl2br }}
 				{% endif %}
 			</td>
 		</tr>

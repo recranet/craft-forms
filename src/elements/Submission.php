@@ -8,27 +8,59 @@ use craft\elements\User;
 use craft\helpers\Db;
 use craft\helpers\Html;
 use craft\helpers\Json;
+use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use recranet\forms\elements\db\SubmissionQuery;
+use recranet\forms\models\Form;
 use recranet\forms\Plugin;
 
 /**
  * A stored form submission.
  *
- * Field values live in the `content` JSON column keyed by field handle.
+ * Field values live in the `formData` JSON column keyed by field **uid** —
+ * never by handle, so renaming a field in the CP can't orphan historical
+ * data. The `snapshot` column stores the form's field definitions as they
+ * were at submit time; all handle/label lookups on old submissions resolve
+ * against the snapshot, not the (possibly changed) live form.
+ *
  * Spam-flagged submissions are kept and visible in the CP (never silently
  * dropped); `spamReason` records why — including reCAPTCHA config errors,
- * so a broken key setup is diagnosable from the submissions index.
+ * so a broken key setup is diagnosable from the submissions index. Mail
+ * send failures are recorded in `sendError` (status "failed") instead of
+ * losing the message.
  */
 class Submission extends Element
 {
+	public const STATUS_SENT = 'sent';
+	public const STATUS_SPAM = 'spam';
+	public const STATUS_FAILED = 'failed';
+
 	public ?int $formId = null;
 
-	/** @var array<string, mixed> Submitted values keyed by field handle */
+	/** @var array<string, mixed> Submitted values keyed by field uid */
 	public array $formData = [];
 
+	/** @var array<int, array> Form field definitions at submit time */
+	public array $snapshot = [];
+
 	public bool $isSpam = false;
+	public ?float $spamScore = null;
 	public ?string $spamReason = null;
+
+	/** Set when the notification email failed to send (status "failed") */
+	public ?string $sendError = null;
+
+	/** Human-friendly per-form reference number (#1, #2, ...) */
+	public ?int $incrementalId = null;
+
+	/** Random unguessable token, for tokenized view/delete links later */
+	public ?string $token = null;
+
+	/** Path the form was submitted from */
+	public ?string $sourceUrl = null;
+
+	/** Dedupe key: identical double submits within a short window are dropped */
+	public ?string $idempotencyKey = null;
 
 	public static function displayName(): string
 	{
@@ -45,6 +77,18 @@ class Submission extends Element
 		return 'formSubmission';
 	}
 
+	/** Submissions belong to the site they were submitted on */
+	public static function isLocalized(): bool
+	{
+		return true;
+	}
+
+	/** One elements_sites row only — a submission is not translated content */
+	public function getSupportedSites(): array
+	{
+		return [$this->siteId ?? Craft::$app->getSites()->getCurrentSite()->id];
+	}
+
 	public static function hasStatuses(): bool
 	{
 		return true;
@@ -53,19 +97,155 @@ class Submission extends Element
 	public static function statuses(): array
 	{
 		return [
-			'live' => ['label' => 'Valid', 'color' => 'green'],
-			'spam' => ['label' => 'Spam', 'color' => 'red'],
+			self::STATUS_SENT => ['label' => 'Sent', 'color' => 'green'],
+			self::STATUS_SPAM => ['label' => 'Spam', 'color' => 'red'],
+			self::STATUS_FAILED => ['label' => 'Failed', 'color' => 'orange'],
 		];
 	}
 
 	public function getStatus(): ?string
 	{
-		return $this->isSpam ? 'spam' : 'live';
+		if ($this->isSpam) {
+			return self::STATUS_SPAM;
+		}
+
+		return $this->sendError ? self::STATUS_FAILED : self::STATUS_SENT;
 	}
 
 	public static function find(): SubmissionQuery
 	{
 		return new SubmissionQuery(static::class);
+	}
+
+	/**
+	 * Normalize posted values against the form definition and store them
+	 * keyed by field uid, plus the snapshot. Returns the normalized values
+	 * keyed by *handle* for template re-rendering after validation errors.
+	 *
+	 * @param array<string, mixed> $posted Raw fields[...] body params, keyed by handle
+	 * @return array<string, mixed>
+	 */
+	public function applyPost(Form $form, array $posted): array
+	{
+		$this->formId = $form->id;
+		$this->snapshot = $form->fields;
+
+		$byHandle = [];
+
+		foreach ($form->fields as $field) {
+			$value = $posted[$field['handle']] ?? null;
+			$value = is_string($value) ? trim($value) : $value;
+
+			if ($field['type'] === 'checkbox') {
+				$value = (bool)$value;
+			}
+
+			$this->formData[$field['uid']] = $value;
+			$byHandle[$field['handle']] = $value;
+		}
+
+		// Canonical dedupe key: same form + same content = same key
+		$this->idempotencyKey = hash('sha256', $form->id . '|' . Json::encode($this->formData));
+
+		return $byHandle;
+	}
+
+	protected function defineRules(): array
+	{
+		$rules = parent::defineRules();
+		$rules[] = [['formId'], 'required'];
+		$rules[] = [['formData'], 'validateFormData'];
+
+		return $rules;
+	}
+
+	/**
+	 * Validate stored values against the snapshot's field definitions.
+	 * Errors are keyed "field.<handle>" so the controller can hand templates
+	 * a handle-keyed error list.
+	 */
+	public function validateFormData(): void
+	{
+		foreach ($this->snapshot as $field) {
+			$handle = $field['handle'];
+			$value = $this->formData[$field['uid']] ?? null;
+
+			if (!empty($field['required']) && ($value === null || $value === '' || $value === false)) {
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]));
+				continue;
+			}
+
+			if ($field['type'] === 'email' && $value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => $field['label']]));
+			}
+
+			// Reject values that aren't one of the configured select options
+			if ($field['type'] === 'select' && $value) {
+				$options = array_map('trim', explode(',', $field['options'] ?? ''));
+
+				if (!in_array($value, $options, true)) {
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => $field['label']]));
+				}
+			}
+		}
+	}
+
+	/**
+	 * Validation errors keyed by field handle, for front-end re-rendering.
+	 *
+	 * @return array<string, string[]>
+	 */
+	public function getFieldErrors(): array
+	{
+		$errors = [];
+
+		foreach ($this->getErrors() as $attribute => $messages) {
+			if (str_starts_with($attribute, 'field.')) {
+				$errors[substr($attribute, 6)] = $messages;
+			}
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * Submitted values resolved through the snapshot, in field order:
+	 * [['uid' => ..., 'handle' => ..., 'label' => ..., 'type' => ..., 'value' => ...], ...]
+	 *
+	 * This is the template-facing API — emails and CP views iterate this
+	 * instead of poking uid-keyed formData directly.
+	 *
+	 * @return array<int, array{uid: string, handle: string, label: string, type: string, value: mixed}>
+	 */
+	public function getValues(): array
+	{
+		$values = [];
+
+		foreach ($this->snapshot as $field) {
+			$values[] = [
+				'uid' => $field['uid'],
+				'handle' => $field['handle'],
+				'label' => $field['label'],
+				'type' => $field['type'],
+				'value' => $this->formData[$field['uid']] ?? null,
+			];
+		}
+
+		return $values;
+	}
+
+	/**
+	 * A single submitted value by field handle (resolved via the snapshot).
+	 */
+	public function value(string $handle): mixed
+	{
+		foreach ($this->snapshot as $field) {
+			if ($field['handle'] === $handle) {
+				return $this->formData[$field['uid']] ?? null;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -98,16 +278,18 @@ class Submission extends Element
 	protected static function defineTableAttributes(): array
 	{
 		return [
+			'incrementalId' => ['label' => '#'],
 			'form' => ['label' => 'Form'],
 			'preview' => ['label' => 'Preview'],
 			'spamReason' => ['label' => 'Spam reason'],
+			'sourceUrl' => ['label' => 'Source'],
 			'dateCreated' => ['label' => 'Date submitted'],
 		];
 	}
 
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['form', 'preview', 'dateCreated'];
+		return ['incrementalId', 'form', 'preview', 'dateCreated'];
 	}
 
 	protected static function defineSortOptions(): array
@@ -120,9 +302,11 @@ class Submission extends Element
 	protected function attributeHtml(string $attribute): string
 	{
 		return match ($attribute) {
+			'incrementalId' => $this->incrementalId ? '#' . $this->incrementalId : '—',
 			'form' => Html::encode($this->getForm()?->name ?? '—'),
 			'preview' => Html::encode($this->getPreviewText()),
 			'spamReason' => Html::encode($this->spamReason ?? ''),
+			'sourceUrl' => Html::encode($this->sourceUrl ?? ''),
 			default => parent::attributeHtml($attribute),
 		};
 	}
@@ -141,7 +325,7 @@ class Submission extends Element
 		));
 	}
 
-	public function getForm(): ?\recranet\forms\models\Form
+	public function getForm(): ?Form
 	{
 		return $this->formId ? Plugin::getInstance()->forms->getFormById($this->formId) : null;
 	}
@@ -151,9 +335,9 @@ class Submission extends Element
 	 */
 	public function getPreviewText(): string
 	{
-		foreach ($this->formData as $value) {
-			if (is_string($value) && trim($value) !== '') {
-				return mb_strimwidth(trim($value), 0, 60, '…');
+		foreach ($this->getValues() as $row) {
+			if (is_string($row['value']) && trim($row['value']) !== '') {
+				return mb_strimwidth(trim($row['value']), 0, 60, '…');
 			}
 		}
 
@@ -186,15 +370,35 @@ class Submission extends Element
 	}
 
 	/**
-	 * Persist the submission row alongside the element row.
+	 * Persist the submission row alongside the element row. New submissions
+	 * get their token and per-form reference number here.
 	 */
 	public function afterSave(bool $isNew): void
 	{
+		if ($isNew) {
+			$this->token = $this->token ?? StringHelper::randomString(32);
+
+			// Per-form reference number; the row lock inside the element
+			// save transaction keeps concurrent submits from colliding
+			$max = (new \craft\db\Query())
+				->from('{{%recranetforms_submissions}}')
+				->where(['formId' => $this->formId])
+				->max('[[incrementalId]]');
+			$this->incrementalId = ((int)$max) + 1;
+		}
+
 		$data = [
 			'formId' => $this->formId,
 			'formData' => Json::encode($this->formData),
+			'snapshot' => Json::encode($this->snapshot),
 			'isSpam' => $this->isSpam,
+			'spamScore' => $this->spamScore,
 			'spamReason' => $this->spamReason,
+			'sendError' => $this->sendError,
+			'incrementalId' => $this->incrementalId,
+			'token' => $this->token,
+			'sourceUrl' => $this->sourceUrl,
+			'idempotencyKey' => $this->idempotencyKey,
 		];
 
 		if ($isNew) {

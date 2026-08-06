@@ -5,7 +5,6 @@ namespace recranet\forms\controllers;
 use Craft;
 use craft\web\Controller;
 use recranet\forms\elements\Submission;
-use recranet\forms\models\Form;
 use recranet\forms\Plugin;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
@@ -15,18 +14,25 @@ use yii\web\Response;
  * Handles the front-end submit action and the CP submission screens.
  *
  * Submit flow:
- * 1. Validate submitted values against the form's field definitions.
- * 2. Honeypot filled → save flagged as spam, pretend success (don't tip off bots).
- * 3. reCAPTCHA verdict:
+ * 1. Normalize + validate posted values on the Submission element (rules
+ *    derive from the form snapshot stored on the element).
+ * 2. Dedupe: an identical submit within the idempotency window is dropped
+ *    silently (double click / double post).
+ * 3. Honeypot filled → save flagged as spam, pretend success (don't tip off bots).
+ * 4. reCAPTCHA verdict:
  *    - pass → continue
  *    - spam → save flagged, pretend success
  *    - error (broken config/infra) → NEVER treated as spam: fail-open accepts
  *      and flags the submission + logs a warning; fail-closed shows the
  *      visitor a real error.
- * 4. Save submission, send notification + optional confirmation.
+ * 5. Save submission, send notification + optional confirmation. A send
+ *    failure is recorded on the submission (status "failed"), never lost.
  */
 class SubmissionsController extends Controller
 {
+	/** Window in which an identical re-submit counts as a duplicate */
+	private const IDEMPOTENCY_WINDOW_SECONDS = 300;
+
 	protected array|bool|int $allowAnonymous = ['submit'];
 
 	public function actionSubmit(): ?Response
@@ -43,12 +49,15 @@ class SubmissionsController extends Controller
 			throw new BadRequestHttpException('Unknown form.');
 		}
 
-		[$content, $errors] = $this->validateContent($form, (array)$request->getBodyParam('fields', []));
+		$submission = new Submission();
+		$submission->siteId = Craft::$app->getSites()->getCurrentSite()->id;
+		$submission->sourceUrl = '/' . ltrim($request->getPathInfo(), '/');
+		$content = $submission->applyPost($form, (array)$request->getBodyParam('fields', []));
 
-		if ($errors) {
+		if (!$submission->validate()) {
 			// Re-render the page with errors and the submitted values
 			Craft::$app->getUrlManager()->setRouteParams([
-				'formErrors' => $errors,
+				'formErrors' => $submission->getFieldErrors(),
 				'formContent' => $content,
 				'formHandle' => $form->handle,
 			]);
@@ -56,10 +65,13 @@ class SubmissionsController extends Controller
 			return null;
 		}
 
-		$submission = new Submission([
-			'formId' => $form->id,
-			'formData' => $content,
-		]);
+		// Double submit (same form, same content, moments apart): pretend
+		// success without saving a second copy or mailing twice
+		if ($this->isDuplicate($submission)) {
+			Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Thank you! Your message has been sent.'));
+
+			return $this->redirectToPostedUrl($submission);
+		}
 
 		// Honeypot: a filled hidden field is a hard spam signal
 		if (trim((string)$request->getBodyParam($settings->honeypotName, '')) !== '') {
@@ -67,6 +79,7 @@ class SubmissionsController extends Controller
 			$submission->spamReason = 'Honeypot field was filled';
 		} else {
 			$result = Plugin::getInstance()->recaptcha->verify($request->getBodyParam('g-recaptcha-response'));
+			$submission->spamScore = $result->score;
 
 			if ($result->isSpam()) {
 				$submission->isSpam = true;
@@ -97,9 +110,15 @@ class SubmissionsController extends Controller
 			return null;
 		}
 
-		// Spam submissions are stored but never emailed; visitor still sees success
+		// Spam submissions are stored but never emailed; visitor still sees
+		// success. A notification send failure is recorded on the submission
+		// (status "failed") — the data is already saved, nothing is lost.
 		if (!$submission->isSpam) {
-			Plugin::getInstance()->notifications->sendNotification($form, $submission);
+			if (!Plugin::getInstance()->notifications->sendNotification($form, $submission)) {
+				$submission->sendError = 'Notification email failed to send — see the log for the transport error.';
+				Craft::$app->getElements()->saveElement($submission);
+			}
+
 			Plugin::getInstance()->notifications->sendConfirmation($form, $submission);
 		}
 
@@ -109,45 +128,22 @@ class SubmissionsController extends Controller
 	}
 
 	/**
-	 * Validate posted values against the form's field definitions.
-	 *
-	 * @return array{0: array<string, mixed>, 1: array<string, string[]>} [content, errors]
+	 * An identical submission (same idempotency key) saved within the window
+	 * means a double post — browser refresh, double click, retry.
 	 */
-	private function validateContent(Form $form, array $posted): array
+	private function isDuplicate(Submission $submission): bool
 	{
-		$content = [];
-		$errors = [];
+		// prepareDateForDb converts to the UTC storage format Craft uses
+		$since = \craft\helpers\Db::prepareDateForDb(
+			new \DateTimeImmutable('-' . self::IDEMPOTENCY_WINDOW_SECONDS . ' seconds'),
+		);
 
-		foreach ($form->fields as $field) {
-			$handle = $field['handle'];
-			$value = $posted[$handle] ?? null;
-			$value = is_string($value) ? trim($value) : $value;
-
-			if ($field['type'] === 'checkbox') {
-				$value = (bool)$value;
-			}
-
-			if (!empty($field['required']) && ($value === null || $value === '' || $value === false)) {
-				$errors[$handle][] = Craft::t('recranet-forms', '{label} is required.', ['label' => $field['label']]);
-			}
-
-			if ($field['type'] === 'email' && $value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-				$errors[$handle][] = Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => $field['label']]);
-			}
-
-			// Reject values that aren't one of the configured select options
-			if ($field['type'] === 'select' && $value) {
-				$options = array_map('trim', explode(',', $field['options'] ?? ''));
-
-				if (!in_array($value, $options, true)) {
-					$errors[$handle][] = Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => $field['label']]);
-				}
-			}
-
-			$content[$handle] = $value;
-		}
-
-		return [$content, $errors];
+		return (new \craft\db\Query())
+			->from(['s' => '{{%recranetforms_submissions}}'])
+			->innerJoin(['e' => '{{%elements}}'], '[[e.id]] = [[s.id]]')
+			->where(['s.idempotencyKey' => $submission->idempotencyKey])
+			->andWhere(['>=', 'e.dateCreated', $since])
+			->exists();
 	}
 
 	/**

@@ -1,6 +1,8 @@
-{# Single submission detail: all field values plus spam diagnostics. #}
+{# Single submission detail: all field values plus spam diagnostics.
+   Values come from submission.values (submit-time snapshot), so this view
+   stays correct even after the form's fields are renamed or removed. #}
 {% extends '_layouts/cp' %}
-{% set title = 'Submission' %}
+{% set title = 'Submission' ~ (submission.incrementalId ? ' #' ~ submission.incrementalId) %}
 {% set selectedSubnavItem = 'submissions' %}
 
 {% set crumbs = [{ label: 'Submissions', url: url('recranet-forms/submissions') }] %}
@@ -9,6 +11,12 @@
 	{% if submission.isSpam %}
 		<div class="warning-alert warning with-icon" style="margin-bottom: 24px;">
 			<strong>Flagged as spam:</strong> {{ submission.spamReason }}
+			{% if submission.spamScore is not null %}(score: {{ submission.spamScore }}){% endif %}
+		</div>
+	{% elseif submission.sendError %}
+		{# Saved but the notification never went out — the data is safe, resend manually #}
+		<div class="error-alert error with-icon" style="margin-bottom: 24px;">
+			<strong>Notification failed:</strong> {{ submission.sendError }}
 		</div>
 	{% elseif submission.spamReason %}
 		{# Accepted despite a reCAPTCHA config error — surface it for diagnosis #}
@@ -27,15 +35,20 @@
 				<th class="light">Submitted</th>
 				<td>{{ submission.dateCreated|datetime('short') }}</td>
 			</tr>
-			{% for field in form.fields ?? [] %}
+			{% if submission.sourceUrl %}
 				<tr>
-					<th class="light">{{ field.label }}</th>
+					<th class="light">Source</th>
+					<td>{{ submission.sourceUrl }}</td>
+				</tr>
+			{% endif %}
+			{% for row in submission.values %}
+				<tr>
+					<th class="light">{{ row.label }}</th>
 					<td>
-						{% set value = submission.formData[field.handle] ?? null %}
-						{% if field.type == 'checkbox' %}
-							{{ value ? 'Yes' : 'No' }}
+						{% if row.type == 'checkbox' %}
+							{{ row.value ? 'Yes' : 'No' }}
 						{% else %}
-							{{ value|nl2br }}
+							{{ row.value|nl2br }}
 						{% endif %}
 					</td>
 				</tr>

@@ -10,12 +10,17 @@ use craft\validators\HandleValidator;
  *
  * Fields are stored as an ordered array of rows:
  * [
- *   ['handle' => 'name', 'label' => 'Naam', 'type' => 'text', 'required' => true, 'options' => '', 'width' => 'full'],
+ *   ['uid' => '...', 'handle' => 'name', 'label' => 'Naam', 'type' => 'text', 'required' => true, 'options' => '', 'width' => 'full'],
  *   ...
  * ]
  * Supported types: text, email, tel, textarea, select, checkbox.
  * For select fields, `options` holds comma-separated choices.
  * `width` is 'full' or 'half' (half-width fields render side by side).
+ *
+ * The `uid` is the field's stable identity: submissions key their stored
+ * values by uid, so renaming a handle never orphans historical data.
+ * Handles are labels for templates/merge use only. Uids are assigned by
+ * Forms::saveForm() — rows posted from the builder without one get one.
  *
  * Notification settings live on the form so editors can manage recipients
  * per form on production (forms are content, not project config).
@@ -29,7 +34,7 @@ class Form extends Model
 	public ?string $name = null;
 	public ?string $handle = null;
 
-	/** @var array<int, array{handle: string, label: string, type: string, required: bool, options: string}> */
+	/** @var array<int, array{uid: string, handle: string, label: string, type: string, required: bool, options: string, width: string}> */
 	public array $fields = [];
 
 	/** Comma-separated notification recipients; falls back to the system email when empty */
@@ -106,6 +111,20 @@ class Form extends Model
 		foreach ($this->fields as $field) {
 			if (($field['type'] ?? null) === 'email') {
 				return $field['handle'];
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Look up a field row by its uid.
+	 */
+	public function getFieldByUid(string $uid): ?array
+	{
+		foreach ($this->fields as $field) {
+			if (($field['uid'] ?? null) === $uid) {
+				return $field;
 			}
 		}
 

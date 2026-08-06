@@ -8,6 +8,8 @@
 {% set errors = hasErrors ? formErrors : {} %}
 {% set values = hasErrors ? formContent : {} %}
 {% set formId = 'form-' ~ form.handle %}
+{# Autocomplete tokens by field type, so browsers can assist (a11y + UX) #}
+{% set autocompleteMap = { email: 'email', tel: 'tel' } %}
 
 <form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8">
 	{{ csrfInput() }}
@@ -26,11 +28,24 @@
 		<div class="alert alert-danger" role="alert">{{ craft.app.session.getFlash('error') }}</div>
 	{% endif %}
 
+	{# Error summary: announced immediately by screen readers on re-render #}
+	{% if errors|length %}
+		<div class="alert alert-danger" role="alert" tabindex="-1" id="{{ formId }}-errors">
+			<ul class="mb-0">
+				{% for fieldErrors in errors %}
+					{% for error in fieldErrors %}<li>{{ error }}</li>{% endfor %}
+				{% endfor %}
+			</ul>
+		</div>
+	{% endif %}
+
 	<div class="row g-3">
 		{% for field in form.fields %}
 			{% set inputId = formId ~ '-' ~ field.handle %}
+			{% set errorId = inputId ~ '-error' %}
 			{% set fieldErrors = errors[field.handle] ?? [] %}
 			{% set value = values[field.handle] ?? null %}
+			{% set autocomplete = autocompleteMap[field.type] ?? null %}
 			{# Half-width fields sit side by side from md up #}
 			<div class="col-12 {{ (field.width ?? 'full') == 'half' ? 'col-md-6' }}">
 				{% if field.type == 'checkbox' %}
@@ -43,6 +58,7 @@
 							value="1"
 							{{ value ? 'checked' }}
 							{{ field.required ? 'required' }}
+							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
 						/>
 						<label class="form-check-label" for="{{ inputId }}">
 							{{ field.label }}{% if field.required %} <sup aria-hidden="true">*</sup>{% endif %}
@@ -59,6 +75,7 @@
 							id="{{ inputId }}"
 							rows="6"
 							{{ field.required ? 'required' }}
+							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
 						>{{ value }}</textarea>
 					{% elseif field.type == 'select' %}
 						<select
@@ -66,6 +83,7 @@
 							name="fields[{{ field.handle }}]"
 							id="{{ inputId }}"
 							{{ field.required ? 'required' }}
+							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
 						>
 							<option value=""></option>
 							{% for option in field.options|split(',')|map(o => o|trim)|filter(o => o) %}
@@ -80,11 +98,13 @@
 							id="{{ inputId }}"
 							value="{{ value }}"
 							{{ field.required ? 'required' }}
+							{% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+							{% if fieldErrors %}aria-invalid="true" aria-describedby="{{ errorId }}"{% endif %}
 						/>
 					{% endif %}
 				{% endif %}
 				{% if fieldErrors %}
-					<div class="invalid-feedback d-block">{{ fieldErrors|join(' ') }}</div>
+					<div class="invalid-feedback d-block" id="{{ errorId }}">{{ fieldErrors|join(' ') }}</div>
 				{% endif %}
 			</div>
 		{% endfor %}

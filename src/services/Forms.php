@@ -52,6 +52,15 @@ class Forms extends Component
 	 */
 	public function saveForm(Form $form): bool
 	{
+		// Assign a stable uid to new field rows before validation, so the
+		// saved definition is always uid-complete (submissions key by uid)
+		foreach ($form->fields as &$field) {
+			if (empty($field['uid'])) {
+				$field['uid'] = StringHelper::UUID();
+			}
+		}
+		unset($field);
+
 		if (!$form->validate()) {
 			return false;
 		}

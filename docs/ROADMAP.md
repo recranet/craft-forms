@@ -6,7 +6,7 @@ Distilled from a comparison against Formie 3.1.34 (source), Solspace Freeform v5
 
 ## Phase 0 — structural fixes (before real production data exists)
 
-Ordered; each is small now and expensive later.
+**✅ Shipped in v2.0.0 (2026-08-06).** Items 1–6 below are done: field uids + snapshot, element validation, sent/spam/failed statuses, metadata columns (incrementalId/token/sourceUrl/idempotencyKey/spamScore/sendError + native siteId), uninstall cleanup, a11y pass. Kept for the rationale:
 
 1. **Field identity by UID, not handle.** All three competitors key stored content by a stable id; we key `formData` by handle, so renaming a field in the CP silently orphans every historical submission. Give each field row a `uid`, key `formData` by uid, and store a `snapshot` of the form definition on the submission. *(Formie: uid-keyed content column; Freeform: field id is authoritative, handle is a label.)*
 2. **Validation on the element, not the controller.** Move `validateContent()` rules into `Submission::defineRules()` per-field-type rules. Gets repopulation, future AJAX JSON errors and CP-side validation for free.
