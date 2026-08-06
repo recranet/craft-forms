@@ -437,7 +437,9 @@
 	/* Split view: builder left, live preview right. Stacks below 1200px so
 	   narrow screens keep the full builder width. */
 	@media (min-width: 1200px) {
-		.rf-split { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
+		/* :not([hidden]) — an explicit display would otherwise beat the UA
+		   stylesheet's [hidden] { display: none } and keep the pane visible */
+		.rf-split:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; align-items: start; }
 		.rf-split__builder { min-width: 0; }
 		.rf-split__preview { position: sticky; top: 16px; }
 		.rf-preview--docked .rf-preview__frame { height: calc(100vh - 220px); min-height: 420px; }
@@ -585,8 +587,11 @@
 			var docked = panel.hasAttribute('data-rf-preview-docked');
 
 			function load() {
-				// Cache-buster so the iframe re-fetches instead of restoring
-				frame.src = frame.dataset.src + '?t=' + Date.now();
+				// Cache-buster so the iframe re-fetches instead of restoring.
+				// url() already appends ?site=… on multi-site installs, so pick
+				// the separator instead of always using '?'.
+				var sep = frame.dataset.src.indexOf('?') === -1 ? '?' : '&';
+				frame.src = frame.dataset.src + sep + 't=' + Date.now();
 			}
 
 			// The split-view panel is visible from the start

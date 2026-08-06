@@ -1,5 +1,10 @@
 # Release Notes for Recranet Forms
 
+## 2.5.1 - 2026-08-06
+
+- Fixed the Fields tab staying visible after switching tabs on screens from 1200px: the split-view `display: grid` beat the UA stylesheet's `[hidden] { display: none }`.
+- Fixed the preview cache-buster producing `?site=nl?t=…` on multi-site installs — it now picks the right separator.
+
 ## 2.5.0 - 2026-08-06
 
 - **False-positive recovery**: "Not spam" and "Resend notification" element actions on the submissions index (bulk, only on applicable rows) and as buttons on the detail view. Marking as not spam keeps the original reason as an audit trail and sends the emails that were skipped.
