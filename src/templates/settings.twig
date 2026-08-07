@@ -11,6 +11,7 @@
 	<button type="button" class="rfs-tab" data-rfs-tab="storage">{{ 'Storage'|t('recranet-forms') }}</button>
 	<button type="button" class="rfs-tab" data-rfs-tab="retention">{{ 'Retention'|t('recranet-forms') }}</button>
 	<button type="button" class="rfs-tab" data-rfs-tab="uploads">{{ 'Uploads'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="payments">{{ 'Payments'|t('recranet-forms') }}</button>
 </nav>
 
 {# ---------------------------------------------------------------- Captcha #}
@@ -365,6 +366,38 @@
 }}
 </div>
 
+{# --------------------------------------------------------------- Payments #}
+<div class="rfs-pane" data-rfs-pane="payments" hidden>
+<p class="rf-settings-intro">{{ 'settings.payments.intro'|t('recranet-forms') }}</p>
+
+{{
+	forms.selectField({
+		label: 'Payment provider'|t('recranet-forms'),
+		instructions: 'Hosted checkout: the visitor pays on the provider’s page, no payment data touches this site. Enable payment per form in the form’s settings.'|t('recranet-forms'),
+		name: 'paymentProvider',
+		value: settings.paymentProvider,
+		options: [
+			{ value: 'none', label: 'None'|t('recranet-forms') },
+			{ value: 'mollie', label: 'Mollie' }
+		],
+		errors: settings.getErrors('paymentProvider')
+	})
+}}
+
+<div data-rfs-payment-show="mollie">
+	{{
+		forms.autosuggestField({
+			label: 'Mollie API key'|t('recranet-forms'),
+			instructions: 'A `test_` key puts every payment in Mollie’s test mode — shown as a badge in the form builder and on the form, so a test setup is never mistaken for a live one.'|t('recranet-forms'),
+			name: 'mollieApiKey',
+			suggestEnvVars: true,
+			value: settings.mollieApiKey,
+			errors: settings.getErrors('mollieApiKey')
+		})
+	}}
+</div>
+</div>
+
 {% css %}
 	.rfs-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--hairline-color); }
 	.rfs-tab { border: 0; background: none; padding: 8px 14px; font-size: 14px; color: var(--medium-text-color); cursor: pointer; border-radius: 4px 4px 0 0; }
@@ -408,5 +441,18 @@
 
 		providerSelect.addEventListener('change', applyProviderVisibility);
 		applyProviderVisibility();
+
+		// Same pattern for the payment provider's key fields
+		var paymentSelect = document.querySelector('select[name$="[paymentProvider]"], select[name="paymentProvider"]');
+		if (!paymentSelect) return;
+
+		function applyPaymentVisibility() {
+			document.querySelectorAll('[data-rfs-payment-show]').forEach(function (block) {
+				block.hidden = block.dataset.rfsPaymentShow.split(' ').indexOf(paymentSelect.value) === -1;
+			});
+		}
+
+		paymentSelect.addEventListener('change', applyPaymentVisibility);
+		applyPaymentVisibility();
 	})();
 {% endjs %}

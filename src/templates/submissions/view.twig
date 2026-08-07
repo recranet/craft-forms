@@ -70,6 +70,16 @@
 					<td>{{ submission.sourceUrl }}</td>
 				</tr>
 			{% endif %}
+			{% if submission.paymentStatus %}
+				<tr>
+					<th class="light">{{ 'Payment'|t('recranet-forms') }}</th>
+					<td>
+						€ {{ (submission.paymentAmount / 100)|number_format(2, ',', '.') }}
+						— {{ ('payment.status.' ~ submission.paymentStatus)|t('recranet-forms') }}
+						{% if submission.paymentId %}<code>{{ submission.paymentId }}</code>{% endif %}
+					</td>
+				</tr>
+			{% endif %}
 			{# Layout-only rows (heading, paragraph) are already excluded by submission.values #}
 			{% for row in submission.values %}
 				<tr>

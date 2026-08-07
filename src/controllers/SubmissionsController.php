@@ -66,9 +66,19 @@ class SubmissionsController extends Controller
 			return null;
 		}
 
-		// Double submit (same form, same content, moments apart): pretend
-		// success without saving a second copy or mailing twice
-		if ($this->isDuplicate($submission)) {
+		// Double submit (same form, same content, moments apart): don't save
+		// a second copy or mail twice. A duplicate with an unfinished payment
+		// goes back to its checkout instead of faking success — a double
+		// click must never swallow the payment step.
+		if ($duplicate = $this->findDuplicate($submission)) {
+			if ($duplicate->paymentStatus === Submission::PAYMENT_PENDING && $duplicate->paymentId) {
+				$checkoutUrl = Plugin::getInstance()->payments->checkoutUrlFor($duplicate);
+
+				if ($checkoutUrl) {
+					return $this->redirect($checkoutUrl);
+				}
+			}
+
 			Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Thank you! Your message has been sent.'));
 
 			return $this->redirectToPostedUrl($submission);
@@ -108,9 +118,20 @@ class SubmissionsController extends Controller
 			$submission->spamReason = 'Accepted despite captcha error: ' . $e->getMessage();
 		}
 
+		// Payment forms: the amount is computed server-side from the form
+		// definition; anything > 0 defers the emails to the paid transition
+		$amountCents = $submission->isSpam ? 0 : Plugin::getInstance()->payments->amountFor($form, $submission);
+
 		// Storage switches: submissions can run mail-only, and spam storage
-		// can be turned off separately (then flagged spam is simply dropped)
-		$shouldSave = $settings->saveSubmissions && (!$submission->isSpam || $settings->saveSpamSubmissions);
+		// can be turned off separately (then flagged spam is simply dropped).
+		// A payment NEEDS the stored row (status, webhook lookup), so payment
+		// forms always store — mail-only mode cannot apply to them.
+		$shouldSave = ($settings->saveSubmissions || $amountCents > 0) && (!$submission->isSpam || $settings->saveSpamSubmissions);
+
+		if ($amountCents > 0) {
+			$submission->paymentAmount = $amountCents;
+			$submission->paymentStatus = Submission::PAYMENT_PENDING;
+		}
 
 		if ($shouldSave && !Craft::$app->getElements()->saveElement($submission)) {
 			Craft::error("Form \"{$form->handle}\": failed to save submission: " . implode('; ', $submission->getFirstErrors()), __METHOD__);
@@ -122,6 +143,24 @@ class SubmissionsController extends Controller
 			]);
 
 			return null;
+		}
+
+		// Payment due: hand the visitor to the hosted checkout. Emails wait
+		// for the paid webhook/return-poll; the submission is already safe.
+		if ($amountCents > 0) {
+			try {
+				$result = Plugin::getInstance()->payments->startPayment($form, $submission);
+
+				return $this->redirect($result->checkoutUrl);
+			} catch (\recranet\forms\payments\PaymentError $e) {
+				// Config/availability problem — our fault, never the visitor's.
+				// The submission stays stored as "awaiting payment" so nothing
+				// is lost and the editor can see and chase it.
+				Plugin::error("Form \"{$form->handle}\": could not start the payment: {$e->getMessage()}");
+				Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Your submission was received, but the payment could not be started. Please try again later.'));
+
+				return $this->redirectToPostedUrl($submission);
+			}
 		}
 
 		// Spam submissions are stored but never emailed; visitor still sees
@@ -143,21 +182,22 @@ class SubmissionsController extends Controller
 
 	/**
 	 * An identical submission (same idempotency key) saved within the window
-	 * means a double post — browser refresh, double click, retry.
+	 * means a double post — browser refresh, double click, retry. Returns
+	 * the earlier submission so the caller can see its payment state.
 	 */
-	private function isDuplicate(Submission $submission): bool
+	private function findDuplicate(Submission $submission): ?Submission
 	{
 		// prepareDateForDb converts to the UTC storage format Craft uses
 		$since = \craft\helpers\Db::prepareDateForDb(
 			new \DateTimeImmutable('-' . self::IDEMPOTENCY_WINDOW_SECONDS . ' seconds'),
 		);
 
-		return (new \craft\db\Query())
-			->from(['s' => '{{%recranetforms_submissions}}'])
-			->innerJoin(['e' => '{{%elements}}'], '[[e.id]] = [[s.id]]')
-			->where(['s.idempotencyKey' => $submission->idempotencyKey])
-			->andWhere(['>=', 'e.dateCreated', $since])
-			->exists();
+		return Submission::find()
+			->siteId('*')
+			->status(null)
+			->andWhere(['recranetforms_submissions.idempotencyKey' => $submission->idempotencyKey])
+			->andWhere(['>=', 'elements.dateCreated', $since])
+			->one();
 	}
 
 	/**

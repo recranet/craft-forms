@@ -22,6 +22,7 @@ use recranet\forms\services\AiTranslate;
 use recranet\forms\services\FormTranslations;
 use recranet\forms\services\Forms;
 use recranet\forms\services\Notifications;
+use recranet\forms\services\Payments;
 use recranet\forms\services\Retention;
 use recranet\forms\services\SpamService;
 use recranet\forms\utilities\EmailTestUtility;
@@ -42,10 +43,11 @@ use yii\base\Event;
  * @property-read Retention $retention
  * @property-read FormTranslations $formTranslations
  * @property-read AiTranslate $aiTranslate
+ * @property-read Payments $payments
  */
 class Plugin extends BasePlugin
 {
-	public string $schemaVersion = '2.2.0';
+	public string $schemaVersion = '2.3.0';
 	public bool $hasCpSettings = true;
 	public bool $hasCpSection = true;
 
@@ -71,6 +73,7 @@ class Plugin extends BasePlugin
 				'retention' => Retention::class,
 				'formTranslations' => FormTranslations::class,
 				'aiTranslate' => AiTranslate::class,
+				'payments' => Payments::class,
 			],
 		];
 	}
@@ -143,6 +146,9 @@ class Plugin extends BasePlugin
 	{
 		Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function (RegisterUrlRulesEvent $event) {
 			$event->rules['recranet-forms/submission/<token:[A-Za-z0-9]{32}>'] = 'recranet-forms/submissions/view-by-token';
+			// Hosted-checkout return (visitor) and provider webhook (server)
+			$event->rules['recranet-forms/payment/return/<token:[A-Za-z0-9]{32}>'] = 'recranet-forms/payments/return';
+			$event->rules['recranet-forms/payment/webhook'] = 'recranet-forms/payments/webhook';
 		});
 	}
 

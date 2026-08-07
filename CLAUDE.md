@@ -18,6 +18,7 @@ Craft CMS 5 form-builder plugin (`recranet/craft-forms`, handle `recranet-forms`
 - **Entry field** (`src/fields/FormField.php` + `FormFieldValue`): lets authors drop a form into page content. Stores the form's **uid** (survives handle renames and export/import). `{{ entry.myFormField }}` renders the form.
 - **Import/export/duplicate** (`src/services/Forms.php`): JSON export includes field uids (globally unique, safe to import elsewhere); import suffixes the handle until unique, never overwrites. Duplicate assigns NEW uids to every field and remaps condition rules to them — two fields must never share a uid.
 - **Permissions**: `recranetForms-manageForms`, `recranetForms-viewSubmissions` (nests `recranetForms-deleteSubmissions`). Form CRUD requires manage; submission screens + element actions require view.
+- **Payments** (`src/services/Payments.php`, providers in `src/payments/` behind `PaymentProviderInterface` — Mollie first, plain REST, no SDK): hosted checkout per form (`paymentEnabled`), amount computed server-side in whole cents from option `prices`/number-field `price` + `paymentBase` (`PaymentCalculator`, pure + unit-tested). Emails defer to the paid transition (`syncStatus()`, idempotent — webhook + return-poll race safely); non-paid = element status "Awaiting payment" (parity: `Submission::getStatus()` ↔ `SubmissionQuery::statusCondition()`). Test mode = `test_` key → badge in builder + visitor note. `PaymentError` = config problem, never visitor's fault (captcha philosophy). See the `payments` skill.
 - **Console** (`src/console/controllers/`): `recranet-forms/captcha/check` (deploy health check, non-zero exit on config problems), `recranet-forms/forms/export <handle>` / `forms/import <path>` (project seeding), `recranet-forms/gc/prune` (explicit retention run).
 
 ## Skills
@@ -26,6 +27,7 @@ Craft CMS 5 form-builder plugin (`recranet/craft-forms`, handle `recranet-forms`
 - `add-captcha-provider` — new provider class + settings + pipeline wiring.
 - `add-form-setting` — per-form setting; four spots in `Forms.php` alone.
 - `add-plugin-setting` — plugin-wide setting in `Settings.php` + settings screen.
+- `payments` — how the payment flow works + adding a provider.
 - `release` — tag-based Packagist release.
 
 ## Conventions

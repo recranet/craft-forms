@@ -85,6 +85,8 @@ class Forms extends Component
 			'confirmationBody' => $form->confirmationBody,
 			'retentionDays' => $form->retentionDays,
 			'retentionMode' => $form->retentionMode,
+			'paymentEnabled' => $form->paymentEnabled,
+			'paymentBase' => $form->paymentBase,
 		]);
 		$record->uid = $record->uid ?: StringHelper::UUID();
 
@@ -173,6 +175,8 @@ class Forms extends Component
 				'confirmationBody' => $form->confirmationBody,
 				'retentionDays' => $form->retentionDays,
 				'retentionMode' => $form->retentionMode,
+				'paymentEnabled' => $form->paymentEnabled,
+				'paymentBase' => $form->paymentBase,
 			],
 		];
 	}
@@ -202,6 +206,8 @@ class Forms extends Component
 			'retentionMode' => in_array($settings['retentionMode'] ?? '', [Form::RETENTION_MODE_DELETE, Form::RETENTION_MODE_ANONYMIZE], true)
 				? $settings['retentionMode']
 				: Form::RETENTION_MODE_DELETE,
+			'paymentEnabled' => (bool)($settings['paymentEnabled'] ?? false),
+			'paymentBase' => (string)($settings['paymentBase'] ?? ''),
 		]);
 
 		return $form;
@@ -293,6 +299,8 @@ class Forms extends Component
 			// this feature existed have no key, so they inherit too)
 			'retentionDays' => $settings['retentionDays'] ?? '',
 			'retentionMode' => $settings['retentionMode'] ?? Form::RETENTION_MODE_DELETE,
+			'paymentEnabled' => (bool)($settings['paymentEnabled'] ?? false),
+			'paymentBase' => (string)($settings['paymentBase'] ?? ''),
 			'uid' => $record->uid,
 		]);
 	}

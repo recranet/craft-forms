@@ -32,20 +32,38 @@ class SubmissionQuery extends ElementQuery
 	}
 
 	/**
-	 * Map the custom statuses onto the isSpam/sendError columns.
+	 * Map the custom statuses onto the isSpam/sendError/paymentStatus
+	 * columns. Must stay in parity with Submission::getStatus(): spam wins,
+	 * then an unfinished payment, then the send error.
 	 */
 	protected function statusCondition(string $status): mixed
 	{
+		// "The payment is settled or was never involved" — used by sent/failed
+		$paymentSettled = [
+			'or',
+			['recranetforms_submissions.paymentStatus' => null],
+			['recranetforms_submissions.paymentStatus' => Submission::PAYMENT_PAID],
+		];
+
 		return match ($status) {
 			Submission::STATUS_SENT => [
-				'recranetforms_submissions.isSpam' => false,
-				'recranetforms_submissions.sendError' => null,
+				'and',
+				['recranetforms_submissions.isSpam' => false],
+				['recranetforms_submissions.sendError' => null],
+				$paymentSettled,
 			],
 			Submission::STATUS_SPAM => ['recranetforms_submissions.isSpam' => true],
+			Submission::STATUS_UNPAID => [
+				'and',
+				['recranetforms_submissions.isSpam' => false],
+				['not', ['recranetforms_submissions.paymentStatus' => null]],
+				['not', ['recranetforms_submissions.paymentStatus' => Submission::PAYMENT_PAID]],
+			],
 			Submission::STATUS_FAILED => [
 				'and',
 				['recranetforms_submissions.isSpam' => false],
 				['not', ['recranetforms_submissions.sendError' => null]],
+				$paymentSettled,
 			],
 			default => parent::statusCondition($status),
 		};
@@ -68,6 +86,9 @@ class SubmissionQuery extends ElementQuery
 			'recranetforms_submissions.sourceUrl',
 			'recranetforms_submissions.idempotencyKey',
 			'recranetforms_submissions.anonymizedAt',
+			'recranetforms_submissions.paymentStatus',
+			'recranetforms_submissions.paymentId',
+			'recranetforms_submissions.paymentAmount',
 		]);
 
 		if ($this->formId !== null) {
@@ -93,6 +114,7 @@ class SubmissionQuery extends ElementQuery
 		$row['incrementalId'] = isset($row['incrementalId']) ? (int)$row['incrementalId'] : null;
 		// DB datetime string → DateTime (null when never anonymized)
 		$row['anonymizedAt'] = isset($row['anonymizedAt']) ? (DateTimeHelper::toDateTime($row['anonymizedAt']) ?: null) : null;
+		$row['paymentAmount'] = isset($row['paymentAmount']) ? (int)$row['paymentAmount'] : null;
 
 		return parent::createElement($row);
 	}

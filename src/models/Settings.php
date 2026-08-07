@@ -15,6 +15,9 @@ use craft\helpers\App;
  */
 class Settings extends Model
 {
+	public const PAYMENT_NONE = 'none';
+	public const PAYMENT_MOLLIE = 'mollie';
+
 	public const CAPTCHA_NONE = 'none';
 	public const CAPTCHA_RECAPTCHA_V2 = 'recaptcha-v2';
 	public const CAPTCHA_RECAPTCHA_V3 = 'recaptcha-v3';
@@ -151,6 +154,21 @@ class Settings extends Model
 	 */
 	public string $allowedFileExtensions = 'pdf,jpg,jpeg,png,doc,docx';
 
+	/** Payment provider for forms with payment enabled; 'none' disables payments */
+	public string $paymentProvider = self::PAYMENT_NONE;
+
+	/**
+	 * Mollie API key. A `test_` key puts every payment in Mollie's test mode
+	 * — surfaced as a badge in the CP and on the form, so a test setup is
+	 * never mistaken for a live one.
+	 */
+	public string $mollieApiKey = '$MOLLIE_API_KEY';
+
+	public function getMollieApiKey(): string
+	{
+		return trim((string)App::parseEnv($this->mollieApiKey));
+	}
+
 	public function getRecaptchaSiteKey(): string
 	{
 		return trim((string)App::parseEnv($this->recaptchaSiteKey));
@@ -283,6 +301,7 @@ class Settings extends Model
 				self::CAPTCHA_TURNSTILE,
 			]],
 			[['notificationLanguage'], 'in', 'range' => ['submission', 'primary']],
+			[['paymentProvider'], 'in', 'range' => [self::PAYMENT_NONE, self::PAYMENT_MOLLIE]],
 			[['recaptchaThreshold', 'recaptchaRejectThreshold'], 'number', 'min' => 0, 'max' => 1],
 			[['minSubmitSeconds', 'retentionDays', 'throttleCount', 'throttleWindow'], 'integer', 'min' => 0],
 			[['maxUploadSize'], 'integer', 'min' => 1],

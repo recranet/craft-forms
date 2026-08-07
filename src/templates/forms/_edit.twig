@@ -58,7 +58,7 @@
 
 {# A single field card. Used for saved fields; the JS <template> clone uses the
    same markup with a fresh index. #}
-{% macro fieldCard(field, index, fieldTypes, allFields) %}
+{% macro fieldCard(field, index, fieldTypes, allFields, paymentEnabled = false) %}
 	{# data-width drives the builder's two-column grid (mirrors the site layout);
 	   the card starts collapsed — the bar is the toggle #}
 	<div class="rf-field" data-type="{{ field.type }}" data-width="{{ field.width ?? 'full' }}">
@@ -123,6 +123,23 @@
 					<label class="rf-label">{{ 'Options (comma-separated)'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][options]" value="{{ field.options ?? '' }}" />
 				</div>
+				{# Payment pricing (only rendered when the form has payment enabled):
+				   a per-option price list on choice fields, a per-unit price on
+				   number fields. Decimal point for cents — the commas separate. #}
+				{% if paymentEnabled %}
+					<div class="rf-cell--wide rf-field__prices" {{ field.type in ['select', 'radio', 'checkboxes'] ? '' : 'hidden' }}>
+						<label class="rf-label">{{ 'Prices per option (comma-separated, decimal point: "25, 40.50, 0")'|t('recranet-forms') }}</label>
+						<input type="text" class="text fullwidth" name="fields[{{ index }}][prices]" value="{{ field.prices ?? '' }}" />
+					</div>
+					<div class="rf-field__price" {{ field.type == 'number' ? '' : 'hidden' }}>
+						<label class="rf-label">{{ 'Price per unit (EUR)'|t('recranet-forms') }}</label>
+						<input type="text" class="text" size="8" name="fields[{{ index }}][price]" value="{{ field.price ?? '' }}" />
+					</div>
+				{% else %}
+					{# Keep the values through a save even while payment is off #}
+					<input type="hidden" name="fields[{{ index }}][prices]" value="{{ field.prices ?? '' }}" />
+					<input type="hidden" name="fields[{{ index }}][price]" value="{{ field.price ?? '' }}" />
+				{% endif %}
 				<div class="rf-field__required">
 					<input
 						type="checkbox"
@@ -301,6 +318,39 @@
 
 			<hr />
 
+			{# Payment: hosted checkout via the plugin-wide provider. Amounts
+			   come from option prices + number-field unit prices + this base. #}
+			{% if paymentsAvailable %}
+				{% if paymentsTestMode %}
+					<div class="rf-test-badge">{{ 'Test mode — payments use the provider’s test environment, no real money moves.'|t('recranet-forms') }}</div>
+				{% endif %}
+
+				{{
+					forms.lightswitchField({
+						label: 'Require payment'|t('recranet-forms'),
+						instructions: 'Submitting redirects the visitor to the hosted checkout ({provider}). Emails are only sent once the payment succeeds. Set prices per option on choice fields and per unit on number fields — the amount is always computed on the server.'|t('recranet-forms', { provider: paymentsProviderName }),
+						name: 'paymentEnabled',
+						on: form.paymentEnabled
+					})
+				}}
+
+				{{
+					forms.textField({
+						label: 'Base amount (EUR)'|t('recranet-forms'),
+						instructions: 'Flat amount added to every payment of this form. Empty = only the field prices count.'|t('recranet-forms'),
+						name: 'paymentBase',
+						size: 8,
+						value: form.paymentBase
+					})
+				}}
+			{% else %}
+				{# Preserve the stored values while no provider is configured #}
+				{{ hiddenInput('paymentEnabled', form.paymentEnabled ? '1' : '') }}
+				{{ hiddenInput('paymentBase', form.paymentBase) }}
+			{% endif %}
+
+			<hr />
+
 			{# Per-form retention overrides the plugin-wide setting #}
 			{{
 				forms.textField({
@@ -353,7 +403,7 @@
 		<div id="rf-builder" class="rf-builder">
 			<div class="rf-builder__fields">
 				{% for field in form.fields %}
-					{{ _self.fieldCard(field, loop.index0, fieldTypes, form.fields) }}
+					{{ _self.fieldCard(field, loop.index0, fieldTypes, form.fields, form.paymentEnabled) }}
 				{% endfor %}
 			</div>
 
@@ -396,7 +446,7 @@
 
 		{# Blank card cloned by JS when adding a field; __INDEX__/__TYPE__ are replaced #}
 		<template id="rf-field-template">
-			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields) }}
+			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields, form.paymentEnabled) }}
 		</template>
 	</div>
 	{# /.field — end of the builder column #}
@@ -644,6 +694,9 @@
 	.rf-field.rf-card-ghost { opacity: 0.35; }
 	/* The palette popover covers the drop area — fade it out during a drag */
 	.rf-palette--ghost { opacity: 0.1; pointer-events: none; }
+
+	/* Payment test-mode badge on the form settings pane */
+	.rf-test-badge { display: inline-block; margin-bottom: 16px; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #fdf1d9; color: #8a6116; }
 {% endcss %}
 
 {% js %}
@@ -972,6 +1025,10 @@
 				card.dataset.type = event.target.value;
 				card.querySelector('.rf-field__badge').textContent = event.target.value;
 				card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(event.target.value);
+				var prices = card.querySelector('.rf-field__prices');
+				if (prices) prices.hidden = !['select', 'radio', 'checkboxes'].includes(event.target.value);
+				var price = card.querySelector('.rf-field__price');
+				if (price) price.hidden = event.target.value !== 'number';
 			}
 
 			// Width select drives the builder grid span, live
@@ -1063,6 +1120,10 @@
 			card.querySelector('.rf-field__badge').textContent = type;
 			card.querySelector('.rf-input-type').value = type;
 			card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(type);
+			var newPrices = card.querySelector('.rf-field__prices');
+			if (newPrices) newPrices.hidden = !['select', 'radio', 'checkboxes'].includes(type);
+			var newPrice = card.querySelector('.rf-field__price');
+			if (newPrice) newPrice.hidden = type !== 'number';
 			initCard(card);
 			renumber();
 			closePalette();

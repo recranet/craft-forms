@@ -55,8 +55,12 @@ class FormsController extends Controller
 		}
 
 		$translations = Plugin::getInstance()->formTranslations;
+		$paymentProvider = Plugin::getInstance()->payments->getProvider();
 
 		return $this->renderTemplate('recranet-forms/forms/_edit', [
+			'paymentsAvailable' => $paymentProvider !== null,
+			'paymentsProviderName' => $paymentProvider?->getName() ?? '',
+			'paymentsTestMode' => $paymentProvider?->isTestMode() ?? false,
 			'form' => $form,
 			'fieldTypes' => Form::FIELD_TYPES,
 			'layoutTypes' => Form::LAYOUT_TYPES,
@@ -147,6 +151,8 @@ class FormsController extends Controller
 		// Empty string = inherit the plugin-wide retention setting
 		$form->retentionDays = (string)$request->getBodyParam('retentionDays', '');
 		$form->retentionMode = (string)$request->getBodyParam('retentionMode', Form::RETENTION_MODE_DELETE);
+		$form->paymentEnabled = (bool)$request->getBodyParam('paymentEnabled', false);
+		$form->paymentBase = trim((string)$request->getBodyParam('paymentBase', ''));
 		$form->confirmationBody = (string)$request->getBodyParam('confirmationBody', '');
 		$form->fields = $this->normalizeFieldRows((array)$request->getBodyParam('fields', []));
 
@@ -401,6 +407,11 @@ class FormsController extends Controller
 				'required' => (bool)($row['required'] ?? false),
 				'options' => trim((string)($row['options'] ?? '')),
 				'width' => in_array($row['width'] ?? '', ['full', 'half'], true) ? $row['width'] : 'full',
+				// Payment pricing: per-option list on choice fields, per-unit
+				// price on number fields — only meaningful when the form has
+				// payment enabled, harmless otherwise
+				'prices' => trim((string)($row['prices'] ?? '')),
+				'price' => trim((string)($row['price'] ?? '')),
 				'placeholder' => trim((string)($row['placeholder'] ?? '')),
 				'description' => trim((string)($row['description'] ?? '')),
 				'adminLabel' => trim((string)($row['adminLabel'] ?? '')),

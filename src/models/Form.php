@@ -111,6 +111,20 @@ class Form extends Model
 	 */
 	public string $retentionMode = self::RETENTION_MODE_DELETE;
 
+	/**
+	 * Whether submitting this form starts a hosted-checkout payment. The
+	 * amount is computed server-side from option prices (`prices` on choice
+	 * fields, `price` per unit on number fields) plus the base amount below;
+	 * emails only go out once the payment is paid.
+	 */
+	public bool $paymentEnabled = false;
+
+	/**
+	 * Flat base amount (EUR, e.g. "12.50") added to every payment of this
+	 * form. '' or 0 = only the field-derived amounts count.
+	 */
+	public string $paymentBase = '';
+
 	public ?string $uid = null;
 
 	protected function defineRules(): array

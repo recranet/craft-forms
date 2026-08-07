@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Simple payments via Mollie (hosted checkout).** Enable payment per form: set prices per option on choice fields and a price per unit on number fields, plus an optional base amount — the total is always computed on the server, in cents, from the form definition (a manipulated post can never change a price). Submitting redirects to Mollie's checkout; the notification and confirmation emails only go out once the payment succeeds. Unfinished payments stay visible under the new "Awaiting payment" status. Test mode is key-based (a `test_` key) and clearly badged in the builder and on the form. The visitor's return page verifies the payment directly with Mollie, so local development works without a reachable webhook. No Mollie SDK — two stable REST calls. Stripe can slot in next to it behind the same interface.
 - Two new field types: **time** (`<input type="time">`, strict `H:i`/`H:i:s` validation — pairs with the date field for booking forms) and **divider** (layout-only horizontal rule between fields). A divider needs no label or handle; layout rows without one get a handle assigned on save.
 
 ## 2.9.0 - 2026-08-07

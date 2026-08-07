@@ -40,6 +40,17 @@ class Submission extends Element
 	public const STATUS_SPAM = 'spam';
 	public const STATUS_FAILED = 'failed';
 
+	/** Element status for a payment that hasn't succeeded (yet) */
+	public const STATUS_UNPAID = 'unpaid';
+
+	// Normalized payment statuses (providers map their own onto these).
+	// null in paymentStatus = this submission never involved a payment.
+	public const PAYMENT_PENDING = 'pending';
+	public const PAYMENT_PAID = 'paid';
+	public const PAYMENT_FAILED = 'failed';
+	public const PAYMENT_EXPIRED = 'expired';
+	public const PAYMENT_CANCELED = 'canceled';
+
 	/**
 	 * Stored (English) sendError text for a failed notification send — one
 	 * constant so the submit flow, the element actions and the CP resend
@@ -80,6 +91,15 @@ class Submission extends Element
 	 * data — formData values, token, sourceUrl, uploaded files — is gone.
 	 */
 	public ?\DateTime $anonymizedAt = null;
+
+	/** Normalized payment status (PAYMENT_*), or null when no payment was involved */
+	public ?string $paymentStatus = null;
+
+	/** The provider's payment id — the webhook/return lookup key */
+	public ?string $paymentId = null;
+
+	/** Amount owed, in whole cents (EUR) — computed server-side, never posted */
+	public ?int $paymentAmount = null;
 
 	/**
 	 * @var array<string, UploadedFile> Pending file-field uploads keyed by
@@ -126,6 +146,7 @@ class Submission extends Element
 	{
 		return [
 			self::STATUS_SENT => ['label' => Craft::t('recranet-forms', 'Sent'), 'color' => 'green'],
+			self::STATUS_UNPAID => ['label' => Craft::t('recranet-forms', 'Awaiting payment'), 'color' => 'blue'],
 			self::STATUS_SPAM => ['label' => Craft::t('recranet-forms', 'Spam'), 'color' => 'red'],
 			self::STATUS_FAILED => ['label' => Craft::t('recranet-forms', 'Failed'), 'color' => 'orange'],
 		];
@@ -135,6 +156,13 @@ class Submission extends Element
 	{
 		if ($this->isSpam) {
 			return self::STATUS_SPAM;
+		}
+
+		// A payment that hasn't succeeded (pending, failed, expired,
+		// canceled) keeps the submission in "awaiting payment" — emails only
+		// go out on the transition to paid (see Payments::syncStatus())
+		if ($this->paymentStatus !== null && $this->paymentStatus !== self::PAYMENT_PAID) {
+			return self::STATUS_UNPAID;
 		}
 
 		return $this->sendError ? self::STATUS_FAILED : self::STATUS_SENT;
@@ -848,6 +876,9 @@ class Submission extends Element
 			'sourceUrl' => $this->sourceUrl,
 			'idempotencyKey' => $this->idempotencyKey,
 			'anonymizedAt' => Db::prepareDateForDb($this->anonymizedAt),
+			'paymentStatus' => $this->paymentStatus,
+			'paymentId' => $this->paymentId,
+			'paymentAmount' => $this->paymentAmount,
 		];
 
 		if ($isNew) {

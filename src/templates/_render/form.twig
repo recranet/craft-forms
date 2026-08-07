@@ -242,6 +242,17 @@
 			{% endif %}
 		{% endfor %}
 
+		{# Payment forms in test mode announce it — a visitor (or a client
+		   reviewing the site) must never mistake a test checkout for a real one #}
+		{% if form.paymentEnabled ?? false %}
+			{% set rfPaymentProvider = craft.app.plugins.getPlugin('recranet-forms').payments.getProvider() %}
+			{% if rfPaymentProvider and rfPaymentProvider.isTestMode() %}
+				<div class="col-12">
+					<div class="alert alert-warning mb-0">{{ 'Test mode — this payment is not real.'|t('recranet-forms') }}</div>
+				</div>
+			{% endif %}
+		{% endif %}
+
 		<div class="col-12">
 			<button type="submit" class="btn btn-primary">{{ options.buttonLabel ?? 'Send' }}</button>
 		</div>

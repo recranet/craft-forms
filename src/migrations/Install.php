@@ -43,6 +43,11 @@ class Install extends Migration
 			// Set when retention pruning anonymized this submission (form
 			// retention mode "anonymize"): row kept, personal data blanked
 			'anonymizedAt' => $this->dateTime(),
+			// Payments (mirrors m260807_100000): null = no payment involved;
+			// amount in whole cents, id = the provider's payment id
+			'paymentStatus' => $this->string(16),
+			'paymentId' => $this->string(64),
+			'paymentAmount' => $this->integer(),
 			'formData' => $this->text(),
 			'isSpam' => $this->boolean()->notNull()->defaultValue(false),
 			'spamReason' => $this->string(),
@@ -56,6 +61,7 @@ class Install extends Migration
 		$this->createIndex(null, '{{%recranetforms_submissions}}', ['isSpam']);
 		$this->createIndex(null, '{{%recranetforms_submissions}}', ['token'], true);
 		$this->createIndex(null, '{{%recranetforms_submissions}}', ['idempotencyKey']);
+		$this->createIndex(null, '{{%recranetforms_submissions}}', ['paymentId']);
 
 		// Per-site translations of form content (mirrors m260806_210000):
 		// one row per (form, site), JSON of only the strings that differ
