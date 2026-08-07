@@ -14,7 +14,7 @@
 {% set inputmodeMap = { number: 'numeric' } %}
 
 {# enctype is unconditional so adding a file field to a form never needs a template change #}
-<form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8" enctype="multipart/form-data">
+<form method="post" id="{{ formId }}" class="{{ options.class ?? '' }}" accept-charset="UTF-8" enctype="multipart/form-data"{{ (options.ajax ?? false) ? ' data-rf-ajax' }}>
 	{{ csrfInput() }}
 	{{ actionInput('recranet-forms/submissions/submit') }}
 	{# Parenthesized: Twig's ?? binds tighter than ~, so without them the
@@ -260,6 +260,84 @@
 
 	{{ craft.recranetForms.captchaTag(form.handle) }}
 </form>
+
+{% if options.ajax ?? false %}
+{# Ajax submit (options.ajax): posts via fetch with Accept: application/json
+   and renders the server's field errors in place — no page reload. Plays
+   nice with the captcha scripts: their handler runs first and prevents the
+   event while it fetches a token; we only act on the un-prevented re-submit
+   (e.defaultPrevented check), so the token is always on board. #}
+{% js %}
+(function () {
+	var form = document.getElementById({{ formId|json_encode|raw }});
+	if (!form || !form.hasAttribute('data-rf-ajax')) return;
+
+	form.addEventListener('submit', function (e) {
+		// A captcha handler is still fetching its token — it re-submits when done
+		if (e.defaultPrevented) return;
+		e.preventDefault();
+
+		var button = form.querySelector('button[type="submit"]');
+		if (button) button.disabled = true;
+
+		// Clear the previous round's errors
+		form.querySelectorAll('.rf-ajax-error').forEach(function (el) { el.remove(); });
+		form.querySelectorAll('.is-invalid').forEach(function (el) { el.classList.remove('is-invalid'); });
+
+		fetch(window.location.href, {
+			method: 'POST',
+			body: new FormData(form),
+			headers: { 'Accept': 'application/json' },
+		}).then(function (response) {
+			return response.json();
+		}).then(function (data) {
+			if (data.redirect) {
+				window.location.href = data.redirect;
+				return;
+			}
+			if (data.success) {
+				// Replace the form with the success message — also kills
+				// accidental double submits
+				var alert = document.createElement('div');
+				alert.className = 'alert alert-success';
+				alert.setAttribute('role', 'status');
+				alert.setAttribute('tabindex', '-1');
+				alert.textContent = data.message || '';
+				form.replaceWith(alert);
+				alert.focus();
+				return;
+			}
+			if (button) button.disabled = false;
+			// Field errors, same markup as the server-side render
+			var firstInvalid = null;
+			Object.keys(data.errors || {}).forEach(function (handle) {
+				var input = form.querySelector('[name="fields[' + handle + ']"], [name="fields[' + handle + '][]"]');
+				if (!input) return;
+				input.classList.add('is-invalid');
+				if (!firstInvalid) firstInvalid = input;
+				var feedback = document.createElement('div');
+				feedback.className = 'invalid-feedback d-block rf-ajax-error';
+				feedback.textContent = (data.errors[handle] || []).join(' ');
+				(input.closest('.col-12') || input.parentNode).appendChild(feedback);
+			});
+			if (data.message) {
+				var errorAlert = document.createElement('div');
+				errorAlert.className = 'alert alert-danger rf-ajax-error';
+				errorAlert.setAttribute('role', 'alert');
+				errorAlert.textContent = data.message;
+				form.prepend(errorAlert);
+			}
+			if (firstInvalid) firstInvalid.focus();
+		}).catch(function () {
+			// Network/parse trouble: fall back to a normal POST — submit()
+			// bypasses this listener, so no loop
+			if (button) button.disabled = false;
+			form.submit();
+		});
+	});
+})();
+{% endjs %}
+{% endif %}
 
 {# Conditional fields: front-end half of the evaluator. This is a strict
    mirror of src/rules/RuleEvaluator.php — any semantics change there must

@@ -1,0 +1,21 @@
+{
+	"name": "Reservering met betaling",
+	"handle": "reservering",
+	"fields": [
+		{ "handle": "naam", "label": "Naam", "type": "text", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "email", "label": "E-mailadres", "type": "email", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "datum", "label": "Datum", "type": "date", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "tijd", "label": "Tijd", "type": "time", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "personen", "label": "Aantal personen", "type": "number", "required": true, "options": "", "width": "half", "price": "12.50", "placeholder": "", "description": "€ 12,50 per persoon.", "adminLabel": "", "defaultValue": "2", "errorMessage": "" },
+		{ "handle": "arrangement", "label": "Arrangement", "type": "radio", "required": true, "options": "Standaard, Luxe, Deluxe", "prices": "0, 10, 25", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "opmerkingen", "label": "Opmerkingen", "type": "textarea", "required": false, "options": "", "width": "full", "placeholder": "", "description": "Allergieën, wensen — we denken graag mee.", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "privacy", "label": "Privacyverklaring", "type": "consent", "required": true, "options": "", "width": "full", "placeholder": "", "description": "Ik ga akkoord met de verwerking van mijn gegevens volgens de privacyverklaring.", "adminLabel": "", "defaultValue": "", "errorMessage": "" }
+	],
+	"settings": {
+		"subject": "Reservering {datum} {tijd} ({personen} pers.) — #{ref}",
+		"sendConfirmation": true,
+		"confirmationSubject": "Je reservering is bevestigd",
+		"confirmationBody": "Bedankt voor je reservering, {naam}! We verwachten je op {datum} om {tijd} met {personen} personen.",
+		"paymentEnabled": true
+	}
+}

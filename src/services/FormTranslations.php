@@ -38,7 +38,7 @@ class FormTranslations extends Component
 	private const FIELD_KEYS = ['label', 'placeholder', 'description', 'options', 'errorMessage'];
 
 	/** Form-level keys that carry visitor- or owner-facing text */
-	private const FORM_KEYS = ['name', 'subject', 'notificationIntro', 'confirmationSubject', 'confirmationBody'];
+	private const FORM_KEYS = ['name', 'subject', 'notificationIntro', 'confirmationSubject', 'confirmationBody', 'successMessage'];
 
 	/** @var array<string, array<string, string>> Memoized per "formId:siteId" */
 	private array $cache = [];

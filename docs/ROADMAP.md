@@ -33,9 +33,10 @@ The shared foundation is **one rule shape** used everywhere: `{field: <uid>, ope
 
 Still open:
 
-- **Confirmations per form:** success text / redirect choice (merge tags in query string), with a non-deletable default as guaranteed fallback. Today: one flash message + optional redirect in the template.
 - **Multiple notifications per form**, each toggleable, Send To = fixed address / a form field / routing rules (`if onderwerp is X → x@…`) — reuses the rule shape. Today: one notification; routing only via merge tags in the recipients string.
 - **Notes on a submission** (optionally emailed) — later, only if editors ask.
+
+*(Shipped since: per-form success message/redirect + Ajax submit + stencils, 2.10.0.)*
 
 ## Phase 0.5 — secure-forms absorption
 

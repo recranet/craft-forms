@@ -56,6 +56,12 @@ class SubmissionsController extends Controller
 		$content = $submission->applyPost($form, (array)$request->getBodyParam('fields', []));
 
 		if (!$submission->validate()) {
+			// Ajax: field errors as JSON, keyed by handle — same shape the
+			// template renders server-side
+			if ($request->getAcceptsJson()) {
+				return $this->asJson(['success' => false, 'errors' => $submission->getFieldErrors()]);
+			}
+
 			// Re-render the page with errors and the submitted values
 			Craft::$app->getUrlManager()->setRouteParams([
 				'formErrors' => $submission->getFieldErrors(),
@@ -75,13 +81,13 @@ class SubmissionsController extends Controller
 				$checkoutUrl = Plugin::getInstance()->payments->checkoutUrlFor($duplicate);
 
 				if ($checkoutUrl) {
-					return $this->redirect($checkoutUrl);
+					return $request->getAcceptsJson()
+						? $this->asJson(['success' => true, 'redirect' => $checkoutUrl])
+						: $this->redirect($checkoutUrl);
 				}
 			}
 
-			Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Thank you! Your message has been sent.'));
-
-			return $this->redirectToPostedUrl($submission);
+			return $this->successResponse($form, $submission);
 		}
 
 		// Spam pipeline: blocklist → honeypot → timing → captcha + token binding.
@@ -97,15 +103,19 @@ class SubmissionsController extends Controller
 			// threshold): don't store it, but pretend success so the bot learns
 			// nothing about which check it tripped over
 			if ($verdict->reject) {
-				Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Thank you! Your message has been sent.'));
-
-				return $this->redirectToPostedUrl($submission);
+				return $this->successResponse($form, $submission);
 			}
 		} catch (CaptchaError $e) {
 			Craft::warning("Form \"{$form->handle}\": {$e->getMessage()}", __METHOD__);
 
 			if (!$settings->recaptchaFailOpen) {
-				Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong verifying your submission. Please try again later.'));
+				$errorMessage = Craft::t('recranet-forms', 'Something went wrong verifying your submission. Please try again later.');
+
+				if ($request->getAcceptsJson()) {
+					return $this->asJson(['success' => false, 'message' => $errorMessage, 'errors' => []]);
+				}
+
+				Craft::$app->getSession()->setError($errorMessage);
 				Craft::$app->getUrlManager()->setRouteParams([
 					'formContent' => $content,
 					'formHandle' => $form->handle,
@@ -135,7 +145,13 @@ class SubmissionsController extends Controller
 
 		if ($shouldSave && !Craft::$app->getElements()->saveElement($submission)) {
 			Craft::error("Form \"{$form->handle}\": failed to save submission: " . implode('; ', $submission->getFirstErrors()), __METHOD__);
-			Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong. Please try again later.'));
+			$errorMessage = Craft::t('recranet-forms', 'Something went wrong. Please try again later.');
+
+			if ($request->getAcceptsJson()) {
+				return $this->asJson(['success' => false, 'message' => $errorMessage, 'errors' => []]);
+			}
+
+			Craft::$app->getSession()->setError($errorMessage);
 			// Repopulate the form so the visitor's input survives the error
 			Craft::$app->getUrlManager()->setRouteParams([
 				'formContent' => $content,
@@ -151,13 +167,21 @@ class SubmissionsController extends Controller
 			try {
 				$result = Plugin::getInstance()->payments->startPayment($form, $submission);
 
-				return $this->redirect($result->checkoutUrl);
+				return $request->getAcceptsJson()
+					? $this->asJson(['success' => true, 'redirect' => $result->checkoutUrl])
+					: $this->redirect($result->checkoutUrl);
 			} catch (\recranet\forms\payments\PaymentError $e) {
 				// Config/availability problem — our fault, never the visitor's.
 				// The submission stays stored as "awaiting payment" so nothing
 				// is lost and the editor can see and chase it.
 				Plugin::error("Form \"{$form->handle}\": could not start the payment: {$e->getMessage()}");
-				Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Your submission was received, but the payment could not be started. Please try again later.'));
+				$errorMessage = Craft::t('recranet-forms', 'Your submission was received, but the payment could not be started. Please try again later.');
+
+				if ($request->getAcceptsJson()) {
+					return $this->asJson(['success' => false, 'message' => $errorMessage, 'errors' => []]);
+				}
+
+				Craft::$app->getSession()->setError($errorMessage);
 
 				return $this->redirectToPostedUrl($submission);
 			}
@@ -175,9 +199,42 @@ class SubmissionsController extends Controller
 			Plugin::getInstance()->notifications->sendConfirmation($form, $submission);
 		}
 
-		Craft::$app->getSession()->setSuccess(Craft::t('recranet-forms', 'Thank you! Your message has been sent.'));
+		return $this->successResponse($form, $submission);
+	}
 
-		return $this->redirectToPostedUrl($submission);
+	/**
+	 * The per-form success behavior: an editor-managed message (translated
+	 * per site, default thank-you when empty), or a redirect to a page. The
+	 * per-form redirect wins over a template-posted one — form behavior is
+	 * content, editable on production; the template `redirect` option is the
+	 * fallback for forms without one.
+	 *
+	 * Ajax callers get JSON: {success, message, redirect} — the inline form
+	 * JS shows the message or follows the redirect.
+	 */
+	private function successResponse(\recranet\forms\models\Form $form, Submission $submission): Response
+	{
+		// Visitor-facing text follows the current site's translation
+		$translated = Plugin::getInstance()->formTranslations->applyTo($form);
+		$message = $translated->successMessage !== ''
+			? Craft::t('site', $translated->successMessage)
+			: Craft::t('recranet-forms', 'Thank you! Your message has been sent.');
+
+		$redirect = null;
+
+		if ($form->successBehavior === \recranet\forms\models\Form::SUCCESS_REDIRECT && $form->successRedirect !== '') {
+			$redirect = str_starts_with($form->successRedirect, 'http')
+				? $form->successRedirect
+				: \craft\helpers\UrlHelper::siteUrl($form->successRedirect);
+		}
+
+		if (Craft::$app->getRequest()->getAcceptsJson()) {
+			return $this->asJson(['success' => true, 'message' => $message, 'redirect' => $redirect]);
+		}
+
+		Craft::$app->getSession()->setSuccess($message);
+
+		return $redirect ? $this->redirect($redirect) : $this->redirectToPostedUrl($submission);
 	}
 
 	/**

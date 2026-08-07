@@ -344,4 +344,18 @@ return [
 	'Your payment was not completed. Please try again.' => 'Your payment was not completed. Please try again.',
 	'We could not verify your payment yet. If you completed it, you will receive a confirmation shortly.' => 'We could not verify your payment yet. If you completed it, you will receive a confirmation shortly.',
 	'Your submission was received, but the payment could not be started. Please try again later.' => 'Your submission was received, but the payment could not be started. Please try again later.',
+
+	// After-submit behavior + stencils
+	'After submit' => 'After submit',
+	'After a successful submission' => 'After a successful submission',
+	'Show a message' => 'Show a message',
+	'Redirect to a page' => 'Redirect to a page',
+	'Success message' => 'Success message',
+	'Shown after a successful submission (also used when the redirect field below is empty). Empty = the default thank-you message. Translatable per site.' => 'Shown after a successful submission (also used when the redirect field below is empty). Empty = the default thank-you message. Translatable per site.',
+	'Redirect to' => 'Redirect to',
+	'Site path (`bedankt`) or full URL. Only used with "Redirect to a page".' => 'Site path (`bedankt`) or full URL. Only used with "Redirect to a page".',
+	'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.' => 'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.',
+	'Start from a template' => 'Start from a template',
+	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.',
+	'Form "{name}" created — make it yours.' => 'Form "{name}" created — make it yours.',
 ];

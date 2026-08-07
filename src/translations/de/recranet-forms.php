@@ -343,4 +343,18 @@ return [
 	'Your payment was not completed. Please try again.' => 'Deine Zahlung wurde nicht abgeschlossen. Bitte versuche es erneut.',
 	'We could not verify your payment yet. If you completed it, you will receive a confirmation shortly.' => 'Wir konnten deine Zahlung noch nicht überprüfen. Wenn du bezahlt hast, erhältst du in Kürze eine Bestätigung.',
 	'Your submission was received, but the payment could not be started. Please try again later.' => 'Deine Einsendung ist eingegangen, aber die Zahlung konnte nicht gestartet werden. Bitte versuche es später erneut.',
+
+	// After-submit behavior + stencils
+	'After submit' => 'Nach dem Absenden',
+	'After a successful submission' => 'Nach einer erfolgreichen Einsendung',
+	'Show a message' => 'Meldung anzeigen',
+	'Redirect to a page' => 'Zu einer Seite weiterleiten',
+	'Success message' => 'Erfolgsmeldung',
+	'Shown after a successful submission (also used when the redirect field below is empty). Empty = the default thank-you message. Translatable per site.' => 'Wird nach einer erfolgreichen Einsendung angezeigt (auch wenn das Weiterleitungsfeld unten leer ist). Leer = die Standard-Danknachricht. Pro Site übersetzbar.',
+	'Redirect to' => 'Weiterleiten zu',
+	'Site path (`bedankt`) or full URL. Only used with "Redirect to a page".' => 'Site-Pfad (`bedankt`) oder vollständige URL. Nur bei „Zu einer Seite weiterleiten“ verwendet.',
+	'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.' => 'Tipp: rendere das Formular mit `{ ajax: true }`, dann sendet es ohne Neuladen — Fehler und die Erfolgsmeldung erscheinen an Ort und Stelle.',
+	'Start from a template' => 'Mit einer Vorlage starten',
+	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'Ein fertiger Ausgangspunkt — Felder, Betreffzeilen und Bestätigungstexte inklusive. Alles lässt sich danach anpassen.',
+	'Form "{name}" created — make it yours.' => 'Formular „{name}“ erstellt — mach es zu deinem.',
 ];

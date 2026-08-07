@@ -1,0 +1,18 @@
+{
+	"name": "Contactformulier",
+	"handle": "contact",
+	"fields": [
+		{ "handle": "naam", "label": "Naam", "type": "text", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "email", "label": "E-mailadres", "type": "email", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "telefoon", "label": "Telefoonnummer", "type": "tel", "required": false, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "onderwerp", "label": "Onderwerp", "type": "text", "required": false, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "bericht", "label": "Bericht", "type": "textarea", "required": true, "options": "", "width": "full", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "privacy", "label": "Privacyverklaring", "type": "consent", "required": true, "options": "", "width": "full", "placeholder": "", "description": "Ik ga akkoord met de verwerking van mijn gegevens volgens de privacyverklaring.", "adminLabel": "", "defaultValue": "", "errorMessage": "" }
+	],
+	"settings": {
+		"subject": "Contactaanvraag {onderwerp} — #{ref}",
+		"sendConfirmation": true,
+		"confirmationSubject": "Bedankt voor je bericht",
+		"confirmationBody": "Bedankt voor je bericht, {naam}. We nemen zo snel mogelijk contact met je op."
+	}
+}

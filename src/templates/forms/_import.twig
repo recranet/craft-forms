@@ -18,6 +18,24 @@
 {% block content %}
 	{{ actionInput('recranet-forms/forms/import') }}
 
+	{# Stencils: bundled starter forms (fields + subjects + confirmation
+	   texts). Separate mini-forms so they don't collide with the import
+	   form's own submit. #}
+	{% if stencils is defined and stencils %}
+		<div class="rf-stencils">
+			<div class="heading"><label>{{ 'Start from a template'|t('recranet-forms') }}</label></div>
+			<p class="instructions">{{ 'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.'|t('recranet-forms') }}</p>
+			<div class="rf-stencils__grid">
+				{% for key, stencil in stencils %}
+					<button type="submit" class="btn rf-stencil" formaction="{{ actionUrl('recranet-forms/forms/apply-stencil') }}" name="stencil" value="{{ key }}">
+						{{ stencil.name }}
+					</button>
+				{% endfor %}
+			</div>
+		</div>
+		<hr />
+	{% endif %}
+
 	<p>
 		{# The <code> markup travels inside the translation so translators keep the filename pattern intact #}
 		{{ 'Upload a <code>form-*.json</code> export, or paste its contents. The handle is suffixed automatically when it already exists — an import never overwrites an existing form.'|t('recranet-forms')|raw }}
@@ -38,4 +56,9 @@
 			class: 'code'
 		})
 	}}
+
+	{% css %}
+		.rf-stencils__grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 20px; }
+		.rf-stencil { padding: 10px 16px; }
+	{% endcss %}
 {% endblock %}

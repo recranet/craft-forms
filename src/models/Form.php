@@ -125,6 +125,26 @@ class Form extends Model
 	 */
 	public string $paymentBase = '';
 
+	/** After a successful submit: show a message, or redirect */
+	public const SUCCESS_MESSAGE = 'message';
+	public const SUCCESS_REDIRECT = 'redirect';
+
+	/** What happens after a successful submission */
+	public string $successBehavior = self::SUCCESS_MESSAGE;
+
+	/**
+	 * Editor-managed success message (translatable per site). Empty = the
+	 * plugin's default thank-you line.
+	 */
+	public string $successMessage = '';
+
+	/**
+	 * Site path or URL to redirect to after a successful submission, when
+	 * successBehavior is 'redirect'. A template-level `redirect` option
+	 * still wins — it's the developer's escape hatch.
+	 */
+	public string $successRedirect = '';
+
 	public ?string $uid = null;
 
 	protected function defineRules(): array
@@ -136,6 +156,7 @@ class Form extends Model
 			// skipOnEmpty leaves '' (= inherit) alone
 			[['retentionDays'], 'integer', 'min' => 0],
 			[['retentionMode'], 'in', 'range' => [self::RETENTION_MODE_DELETE, self::RETENTION_MODE_ANONYMIZE]],
+			[['successBehavior'], 'in', 'range' => [self::SUCCESS_MESSAGE, self::SUCCESS_REDIRECT]],
 		];
 	}
 

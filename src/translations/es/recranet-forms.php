@@ -343,4 +343,18 @@ return [
 	'Your payment was not completed. Please try again.' => 'Tu pago no se completó. Inténtalo de nuevo.',
 	'We could not verify your payment yet. If you completed it, you will receive a confirmation shortly.' => 'Aún no hemos podido verificar tu pago. Si lo completaste, recibirás una confirmación en breve.',
 	'Your submission was received, but the payment could not be started. Please try again later.' => 'Tu envío se recibió, pero el pago no se pudo iniciar. Inténtalo más tarde.',
+
+	// After-submit behavior + stencils
+	'After submit' => 'Tras el envío',
+	'After a successful submission' => 'Tras un envío correcto',
+	'Show a message' => 'Mostrar un mensaje',
+	'Redirect to a page' => 'Redirigir a una página',
+	'Success message' => 'Mensaje de éxito',
+	'Shown after a successful submission (also used when the redirect field below is empty). Empty = the default thank-you message. Translatable per site.' => 'Se muestra tras un envío correcto (también cuando el campo de redirección de abajo está vacío). Vacío = el mensaje de agradecimiento predeterminado. Traducible por sitio.',
+	'Redirect to' => 'Redirigir a',
+	'Site path (`bedankt`) or full URL. Only used with "Redirect to a page".' => 'Ruta del sitio (`bedankt`) o URL completa. Solo se usa con “Redirigir a una página”.',
+	'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.' => 'Consejo: renderiza el formulario con `{ ajax: true }` y se envía sin recargar la página — los errores y el mensaje de éxito aparecen en el sitio.',
+	'Start from a template' => 'Empezar desde una plantilla',
+	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'Un punto de partida listo — campos, asuntos y textos de confirmación incluidos. Todo se puede cambiar después.',
+	'Form "{name}" created — make it yours.' => 'Formulario “{name}” creado — hazlo tuyo.',
 ];

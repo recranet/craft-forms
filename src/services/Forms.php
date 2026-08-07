@@ -87,6 +87,9 @@ class Forms extends Component
 			'retentionMode' => $form->retentionMode,
 			'paymentEnabled' => $form->paymentEnabled,
 			'paymentBase' => $form->paymentBase,
+			'successBehavior' => $form->successBehavior,
+			'successMessage' => $form->successMessage,
+			'successRedirect' => $form->successRedirect,
 		]);
 		$record->uid = $record->uid ?: StringHelper::UUID();
 
@@ -177,6 +180,9 @@ class Forms extends Component
 				'retentionMode' => $form->retentionMode,
 				'paymentEnabled' => $form->paymentEnabled,
 				'paymentBase' => $form->paymentBase,
+				'successBehavior' => $form->successBehavior,
+				'successMessage' => $form->successMessage,
+				'successRedirect' => $form->successRedirect,
 			],
 		];
 	}
@@ -208,6 +214,11 @@ class Forms extends Component
 				: Form::RETENTION_MODE_DELETE,
 			'paymentEnabled' => (bool)($settings['paymentEnabled'] ?? false),
 			'paymentBase' => (string)($settings['paymentBase'] ?? ''),
+			'successBehavior' => in_array($settings['successBehavior'] ?? '', [Form::SUCCESS_MESSAGE, Form::SUCCESS_REDIRECT], true)
+				? $settings['successBehavior']
+				: Form::SUCCESS_MESSAGE,
+			'successMessage' => (string)($settings['successMessage'] ?? ''),
+			'successRedirect' => (string)($settings['successRedirect'] ?? ''),
 		]);
 
 		return $form;
@@ -301,6 +312,9 @@ class Forms extends Component
 			'retentionMode' => $settings['retentionMode'] ?? Form::RETENTION_MODE_DELETE,
 			'paymentEnabled' => (bool)($settings['paymentEnabled'] ?? false),
 			'paymentBase' => (string)($settings['paymentBase'] ?? ''),
+			'successBehavior' => $settings['successBehavior'] ?? Form::SUCCESS_MESSAGE,
+			'successMessage' => (string)($settings['successMessage'] ?? ''),
+			'successRedirect' => (string)($settings['successRedirect'] ?? ''),
 			'uid' => $record->uid,
 		]);
 	}

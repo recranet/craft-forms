@@ -1,0 +1,20 @@
+{
+	"name": "Offerteaanvraag",
+	"handle": "offerte",
+	"fields": [
+		{ "handle": "bedrijf", "label": "Bedrijfsnaam", "type": "text", "required": false, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "naam", "label": "Contactpersoon", "type": "text", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "email", "label": "E-mailadres", "type": "email", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "telefoon", "label": "Telefoonnummer", "type": "tel", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "dienst", "label": "Waar gaat het om?", "type": "select", "required": true, "options": "Nieuwe website, Onderhoud, Uitbreiding, Anders", "width": "full", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "omschrijving", "label": "Omschrijving", "type": "textarea", "required": true, "options": "", "width": "full", "placeholder": "", "description": "Vertel kort wat je nodig hebt; hoe concreter, hoe beter de offerte.", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "bijlage", "label": "Bijlage", "type": "file", "required": false, "options": "", "width": "full", "placeholder": "", "description": "Bijvoorbeeld een briefing of schetsen (pdf).", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
+		{ "handle": "privacy", "label": "Privacyverklaring", "type": "consent", "required": true, "options": "", "width": "full", "placeholder": "", "description": "Ik ga akkoord met de verwerking van mijn gegevens volgens de privacyverklaring.", "adminLabel": "", "defaultValue": "", "errorMessage": "" }
+	],
+	"settings": {
+		"subject": "Offerteaanvraag {dienst} — #{ref}",
+		"sendConfirmation": true,
+		"confirmationSubject": "We hebben je aanvraag ontvangen",
+		"confirmationBody": "Bedankt voor je aanvraag, {naam}. We sturen je zo snel mogelijk een offerte voor {dienst}."
+	}
+}

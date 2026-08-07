@@ -343,4 +343,18 @@ return [
 	'Your payment was not completed. Please try again.' => 'Je betaling is niet afgerond. Probeer het opnieuw.',
 	'We could not verify your payment yet. If you completed it, you will receive a confirmation shortly.' => 'We konden je betaling nog niet verifiëren. Als je hebt betaald, ontvang je binnenkort een bevestiging.',
 	'Your submission was received, but the payment could not be started. Please try again later.' => 'Je inzending is ontvangen, maar de betaling kon niet worden gestart. Probeer het later opnieuw.',
+
+	// After-submit behavior + stencils
+	'After submit' => 'Na verzenden',
+	'After a successful submission' => 'Na een geslaagde inzending',
+	'Show a message' => 'Toon een melding',
+	'Redirect to a page' => 'Doorsturen naar een pagina',
+	'Success message' => 'Succesmelding',
+	'Shown after a successful submission (also used when the redirect field below is empty). Empty = the default thank-you message. Translatable per site.' => 'Getoond na een geslaagde inzending (ook gebruikt als het doorstuurveld hieronder leeg is). Leeg = de standaard bedanktekst. Per site vertaalbaar.',
+	'Redirect to' => 'Doorsturen naar',
+	'Site path (`bedankt`) or full URL. Only used with "Redirect to a page".' => 'Sitepad (`bedankt`) of volledige URL. Alleen gebruikt bij “Doorsturen naar een pagina”.',
+	'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.' => 'Tip: render het formulier met `{ ajax: true }` en het verstuurt zonder pagina-herlaad — fouten en de succesmelding verschijnen ter plekke.',
+	'Start from a template' => 'Start met een voorbeeld',
+	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'Een kant-en-klaar startpunt — inclusief velden, onderwerpen en bevestigingsteksten. Alles is daarna aan te passen.',
+	'Form "{name}" created — make it yours.' => 'Formulier “{name}” aangemaakt — maak het eigen.',
 ];

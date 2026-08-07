@@ -343,4 +343,18 @@ return [
 	'Your payment was not completed. Please try again.' => 'Votre paiement n’a pas été finalisé. Veuillez réessayer.',
 	'We could not verify your payment yet. If you completed it, you will receive a confirmation shortly.' => 'Nous n’avons pas encore pu vérifier votre paiement. Si vous l’avez effectué, vous recevrez bientôt une confirmation.',
 	'Your submission was received, but the payment could not be started. Please try again later.' => 'Votre envoi a bien été reçu, mais le paiement n’a pas pu être démarré. Veuillez réessayer plus tard.',
+
+	// After-submit behavior + stencils
+	'After submit' => 'Après envoi',
+	'After a successful submission' => 'Après un envoi réussi',
+	'Show a message' => 'Afficher un message',
+	'Redirect to a page' => 'Rediriger vers une page',
+	'Success message' => 'Message de confirmation',
+	'Shown after a successful submission (also used when the redirect field below is empty). Empty = the default thank-you message. Translatable per site.' => 'Affiché après un envoi réussi (aussi utilisé quand le champ de redirection ci-dessous est vide). Vide = le message de remerciement par défaut. Traduisible par site.',
+	'Redirect to' => 'Rediriger vers',
+	'Site path (`bedankt`) or full URL. Only used with "Redirect to a page".' => 'Chemin du site (`bedankt`) ou URL complète. Utilisé uniquement avec « Rediriger vers une page ».',
+	'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.' => 'Astuce : rendez le formulaire avec `{ ajax: true }` et il s’envoie sans rechargement — les erreurs et le message de confirmation s’affichent sur place.',
+	'Start from a template' => 'Partir d’un modèle',
+	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'Un point de départ prêt à l’emploi — champs, objets et textes de confirmation inclus. Tout reste modifiable ensuite.',
+	'Form "{name}" created — make it yours.' => 'Formulaire « {name} » créé — personnalisez-le.',
 ];

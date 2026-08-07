@@ -153,6 +153,9 @@ class FormsController extends Controller
 		$form->retentionMode = (string)$request->getBodyParam('retentionMode', Form::RETENTION_MODE_DELETE);
 		$form->paymentEnabled = (bool)$request->getBodyParam('paymentEnabled', false);
 		$form->paymentBase = trim((string)$request->getBodyParam('paymentBase', ''));
+		$form->successBehavior = (string)$request->getBodyParam('successBehavior', Form::SUCCESS_MESSAGE);
+		$form->successMessage = trim((string)$request->getBodyParam('successMessage', ''));
+		$form->successRedirect = trim((string)$request->getBodyParam('successRedirect', ''));
 		$form->confirmationBody = (string)$request->getBodyParam('confirmationBody', '');
 		$form->fields = $this->normalizeFieldRows((array)$request->getBodyParam('fields', []));
 
@@ -242,11 +245,64 @@ class FormsController extends Controller
 	}
 
 	/**
-	 * Import screen (paste or upload a form JSON export).
+	 * Import screen: start from a bundled stencil, or paste/upload a form
+	 * JSON export.
 	 */
 	public function actionImportScreen(): Response
 	{
-		return $this->renderTemplate('recranet-forms/forms/_import');
+		return $this->renderTemplate('recranet-forms/forms/_import', [
+			'stencils' => $this->stencils(),
+		]);
+	}
+
+	/**
+	 * Create a form from one of the bundled stencils — a regular JSON export
+	 * that ships with the plugin, so a new project starts with sane fields,
+	 * subjects and confirmation texts instead of an empty canvas.
+	 */
+	public function actionApplyStencil(): Response
+	{
+		$this->requirePostRequest();
+
+		$stencil = (string)Craft::$app->getRequest()->getRequiredBodyParam('stencil');
+		$stencils = $this->stencils();
+
+		if (!isset($stencils[$stencil])) {
+			throw new NotFoundHttpException('Stencil not found.');
+		}
+
+		$data = \craft\helpers\Json::decodeIfJson((string)file_get_contents($stencils[$stencil]['path']));
+		$form = Plugin::getInstance()->forms->createFromExport((array)$data);
+
+		if (!Plugin::getInstance()->forms->saveForm($form)) {
+			Craft::$app->getSession()->setError('Couldn’t create the form: ' . implode('; ', $form->getFirstErrors()));
+
+			return $this->redirect('recranet-forms/forms/import');
+		}
+
+		Craft::$app->getSession()->setNotice(Craft::t('recranet-forms', 'Form "{name}" created — make it yours.', ['name' => $form->name]));
+
+		return $this->redirect('recranet-forms/forms/' . $form->id);
+	}
+
+	/**
+	 * The bundled stencils: name (from the JSON) keyed by file basename.
+	 *
+	 * @return array<string, array{name: string, path: string}>
+	 */
+	private function stencils(): array
+	{
+		$stencils = [];
+
+		foreach (glob(__DIR__ . '/../stencils/*.json') ?: [] as $path) {
+			$data = \craft\helpers\Json::decodeIfJson((string)file_get_contents($path));
+
+			if (is_array($data) && !empty($data['name'])) {
+				$stencils[basename($path, '.json')] = ['name' => (string)$data['name'], 'path' => $path];
+			}
+		}
+
+		return $stencils;
 	}
 
 	public function actionImport(): ?Response

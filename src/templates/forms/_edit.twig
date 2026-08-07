@@ -262,19 +262,90 @@
 			</tbody>
 		</table>
 	{% else %}
-	{# Page-level tabs: Settings / Fields / Notification / Confirmation.
+	{# Page-level tabs, ordered by how often editors touch them: Fields is
+	   the daily screen, the emails next, behavior and payment are set once,
+	   and Settings (name/handle/embed/retention) is mostly install-time.
 	   All inputs stay in the DOM, so hidden panes post with the single save.
 	   New forms open on Settings (name/handle are required first); saved
-	   forms open on Fields, the screen editors actually work in. Validation
-	   errors on name/handle force the Settings tab so they're never unseen. #}
+	   forms open on Fields. Validation errors on name/handle force the
+	   Settings tab so they're never unseen. #}
 	{% set startTab = (not form.id) or form.getErrors('name') or form.getErrors('handle') ? 'settings' : 'fields' %}
 
 	<nav class="rfs-tabs" aria-label="{{ 'Form sections'|t('recranet-forms') }}">
-		<button type="button" class="rfs-tab {{ startTab == 'settings' ? 'sel' }}" data-rfs-tab="settings">{{ 'Form settings'|t('recranet-forms') }}</button>
 		<button type="button" class="rfs-tab {{ startTab == 'fields' ? 'sel' }}" data-rfs-tab="fields">{{ 'Fields'|t('recranet-forms') }}</button>
 		<button type="button" class="rfs-tab" data-rfs-tab="notification">{{ 'Notification'|t('recranet-forms') }}</button>
 		<button type="button" class="rfs-tab" data-rfs-tab="confirmation">{{ 'Confirmation'|t('recranet-forms') }}</button>
+		<button type="button" class="rfs-tab" data-rfs-tab="behavior">{{ 'After submit'|t('recranet-forms') }}</button>
+		{% if paymentsAvailable %}
+			<button type="button" class="rfs-tab" data-rfs-tab="payment">{{ 'Payment'|t('recranet-forms') }}</button>
+		{% endif %}
+		<button type="button" class="rfs-tab {{ startTab == 'settings' ? 'sel' }}" data-rfs-tab="settings">{{ 'Form settings'|t('recranet-forms') }}</button>
 	</nav>
+
+	{# ------------------------------------------------------ After submit #}
+	<div class="rfs-pane" data-rfs-pane="behavior" hidden>
+		{{
+			forms.selectField({
+				label: 'After a successful submission'|t('recranet-forms'),
+				name: 'successBehavior',
+				value: form.successBehavior,
+				options: [
+					{ value: 'message', label: 'Show a message'|t('recranet-forms') },
+					{ value: 'redirect', label: 'Redirect to a page'|t('recranet-forms') }
+				],
+				errors: form.getErrors('successBehavior')
+			})
+		}}
+
+		{{
+			forms.textareaField({
+				label: 'Success message'|t('recranet-forms'),
+				instructions: 'Shown after a successful submission (also used when the redirect field below is empty). Empty = the default thank-you message. Translatable per site.'|t('recranet-forms'),
+				name: 'successMessage',
+				rows: 2,
+				value: form.successMessage
+			})
+		}}
+
+		{{
+			forms.textField({
+				label: 'Redirect to'|t('recranet-forms'),
+				instructions: 'Site path (`bedankt`) or full URL. Only used with "Redirect to a page".'|t('recranet-forms'),
+				name: 'successRedirect',
+				value: form.successRedirect
+			})
+		}}
+
+		<p class="rf-settings-hint">{{ 'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.'|t('recranet-forms') }}</p>
+	</div>
+
+	{# ----------------------------------------------------------- Payment #}
+	{% if paymentsAvailable %}
+		<div class="rfs-pane" data-rfs-pane="payment" hidden>
+			{% if paymentsTestMode %}
+				<div class="rf-test-badge">{{ 'Test mode — payments use the provider’s test environment, no real money moves.'|t('recranet-forms') }}</div>
+			{% endif %}
+
+			{{
+				forms.lightswitchField({
+					label: 'Require payment'|t('recranet-forms'),
+					instructions: 'Submitting redirects the visitor to the hosted checkout ({provider}). Emails are only sent once the payment succeeds. Set prices per option on choice fields and per unit on number fields — the amount is always computed on the server.'|t('recranet-forms', { provider: paymentsProviderName }),
+					name: 'paymentEnabled',
+					on: form.paymentEnabled
+				})
+			}}
+
+			{{
+				forms.textField({
+					label: 'Base amount (EUR)'|t('recranet-forms'),
+					instructions: 'Flat amount added to every payment of this form. Empty = only the field prices count.'|t('recranet-forms'),
+					name: 'paymentBase',
+					size: 8,
+					value: form.paymentBase
+				})
+			}}
+		</div>
+	{% endif %}
 
 	<div class="rfs-pane" data-rfs-pane="settings" {{ startTab != 'settings' ? 'hidden' }}>
 		{{
@@ -316,35 +387,9 @@
 				</div>
 			</div>
 
-			<hr />
-
-			{# Payment: hosted checkout via the plugin-wide provider. Amounts
-			   come from option prices + number-field unit prices + this base. #}
-			{% if paymentsAvailable %}
-				{% if paymentsTestMode %}
-					<div class="rf-test-badge">{{ 'Test mode — payments use the provider’s test environment, no real money moves.'|t('recranet-forms') }}</div>
-				{% endif %}
-
-				{{
-					forms.lightswitchField({
-						label: 'Require payment'|t('recranet-forms'),
-						instructions: 'Submitting redirects the visitor to the hosted checkout ({provider}). Emails are only sent once the payment succeeds. Set prices per option on choice fields and per unit on number fields — the amount is always computed on the server.'|t('recranet-forms', { provider: paymentsProviderName }),
-						name: 'paymentEnabled',
-						on: form.paymentEnabled
-					})
-				}}
-
-				{{
-					forms.textField({
-						label: 'Base amount (EUR)'|t('recranet-forms'),
-						instructions: 'Flat amount added to every payment of this form. Empty = only the field prices count.'|t('recranet-forms'),
-						name: 'paymentBase',
-						size: 8,
-						value: form.paymentBase
-					})
-				}}
-			{% else %}
-				{# Preserve the stored values while no provider is configured #}
+			{% if not paymentsAvailable %}
+				{# No provider configured (the Payment tab is absent): preserve
+				   the stored values through the save #}
 				{{ hiddenInput('paymentEnabled', form.paymentEnabled ? '1' : '') }}
 				{{ hiddenInput('paymentBase', form.paymentBase) }}
 			{% endif %}
