@@ -1,6 +1,6 @@
 # Release Notes for Recranet Forms
 
-## Unreleased
+## 2.9.0 - 2026-08-07
 
 - **Drag field types straight into the form.** Palette tiles can now be dragged into the builder: dropping in the middle of a card inserts a new row above or below it (with an insertion marker), dropping on a card's left or right edge places the new field next to it and automatically switches both to half width — the same side-by-side layout visitors get. Clicking a tile still appends, so keyboard flows are unchanged.
 - **Moving existing fields creates columns too.** Dragging a card by its handle now uses the same drop zones as the palette: drop it on another card's edge and the pair goes side by side. While hovering an edge, the target card slides aside to preview the pair; the palette fades out of the way during any drag.
