@@ -138,6 +138,7 @@ class Forms extends Component
 				'url' => 'https://voorbeeld.nl',
 				'number' => '3',
 				'date' => (new \DateTime())->format('Y-m-d'),
+				'time' => '14:30',
 				'textarea' => "Voorbeeldtekst.\nTweede regel.",
 				'checkbox', 'consent' => true,
 				'select', 'radio' => $options[0] ?? '',

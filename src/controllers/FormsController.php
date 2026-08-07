@@ -364,10 +364,19 @@ class FormsController extends Controller
 	{
 		$fields = [];
 
-		foreach ($rows as $row) {
-			// Skip fully empty rows the editable table may post
-			if (empty($row['handle']) && empty($row['label'])) {
+		foreach ($rows as $i => $row) {
+			$isLayout = in_array($row['type'] ?? '', Form::LAYOUT_TYPES, true);
+
+			// Skip fully empty rows the editable table may post — but a layout
+			// row (divider, unlabeled paragraph) legitimately has no label
+			if (empty($row['handle']) && empty($row['label']) && !$isLayout) {
 				continue;
+			}
+
+			// Layout rows without a handle get one, so validation (which keys
+			// on handles) passes without the editor inventing one for an <hr>
+			if ($isLayout && empty($row['handle'])) {
+				$row['handle'] = ($row['type'] ?? 'layout') . ($i + 1);
 			}
 
 			// The builder serializes the conditional-visibility rules to JSON

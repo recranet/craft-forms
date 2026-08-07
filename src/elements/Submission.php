@@ -355,6 +355,25 @@ class Submission extends Element
 				}
 			}
 
+			// Times must be what <input type="time"> posts: H:i, or H:i:s
+			// when the input carries a seconds step
+			if ($field['type'] === 'time' && $value) {
+				$valid = false;
+
+				foreach (['H:i', 'H:i:s'] as $format) {
+					$parsed = is_string($value) ? \DateTimeImmutable::createFromFormat($format, $value) : false;
+
+					if ($parsed && $parsed->format($format) === $value) {
+						$valid = true;
+						break;
+					}
+				}
+
+				if (!$valid) {
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid time.', ['label' => Craft::t('site', $field['label'])]));
+				}
+			}
+
 			if ($field['type'] === 'url' && $value && !filter_var($value, FILTER_VALIDATE_URL)) {
 				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid URL.', ['label' => Craft::t('site', $field['label'])]));
 			}

@@ -33,8 +33,8 @@ class Form extends Model
 	/** Field types the front-end render template and validator understand */
 	public const FIELD_TYPES = [
 		'text', 'email', 'tel', 'textarea', 'select', 'checkbox',
-		'radio', 'checkboxes', 'number', 'date', 'url', 'hidden',
-		'consent', 'heading', 'paragraph', 'file',
+		'radio', 'checkboxes', 'number', 'date', 'time', 'url', 'hidden',
+		'consent', 'heading', 'paragraph', 'divider', 'file',
 	];
 
 	/**
@@ -44,7 +44,7 @@ class Form extends Model
 	 * must skip these. Always check against this const instead of hardcoding
 	 * type names, so adding a layout type stays a one-line change.
 	 */
-	public const LAYOUT_TYPES = ['heading', 'paragraph'];
+	public const LAYOUT_TYPES = ['heading', 'paragraph', 'divider'];
 
 	/** Retention mode: prune hard-deletes the whole submission (current behavior) */
 	public const RETENTION_MODE_DELETE = 'delete';
@@ -149,8 +149,9 @@ class Form extends Model
 		foreach ($this->fields as $i => $field) {
 			$row = $i + 1;
 
-			// A paragraph's content is its description; the label is an optional small heading
-			$labelOptional = ($field['type'] ?? '') === 'paragraph';
+			// A paragraph's content is its description (label = optional small
+			// heading); a divider is pure markup and needs no label at all
+			$labelOptional = in_array($field['type'] ?? '', ['paragraph', 'divider'], true);
 
 			if (empty($field['handle']) || (empty($field['label']) && !$labelOptional)) {
 				$this->addError('fields', "Field row {$row}: handle and label are required.");

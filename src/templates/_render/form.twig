@@ -92,7 +92,10 @@
 				data-rf-uid="{{ field.uid }}"
 				{% if conditions and (conditions.rules ?? [])|length %}data-rf-conditions="{{ conditions|json_encode }}"{% endif %}
 			>
-				{% if field.type == 'heading' %}
+				{% if field.type == 'divider' %}
+					{# Layout-only: a horizontal rule, never stores a value #}
+					<hr class="mb-0" />
+				{% elseif field.type == 'heading' %}
 					{# Layout-only: renders a heading, never stores a value #}
 					<h3 class="mb-0">{{ field.label|t }}</h3>
 				{% elseif field.type == 'paragraph' %}

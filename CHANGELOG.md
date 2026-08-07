@@ -1,5 +1,9 @@
 # Release Notes for Recranet Forms
 
+## Unreleased
+
+- Two new field types: **time** (`<input type="time">`, strict `H:i`/`H:i:s` validation — pairs with the date field for booking forms) and **divider** (layout-only horizontal rule between fields). A divider needs no label or handle; layout rows without one get a handle assigned on save.
+
 ## 2.9.0 - 2026-08-07
 
 - **Drag field types straight into the form.** Palette tiles can now be dragged into the builder: dropping in the middle of a card inserts a new row above or below it (with an insertion marker), dropping on a card's left or right edge places the new field next to it and automatically switches both to half width — the same side-by-side layout visitors get. Clicking a tile still appends, so keyboard flows are unchanged.
