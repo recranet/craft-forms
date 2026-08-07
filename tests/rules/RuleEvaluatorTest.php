@@ -48,6 +48,9 @@ class RuleEvaluatorTest extends TestCase
 			'is mismatch' => ['is', 'yes', 'no', false],
 			// Comparison is trimmed + case-insensitive on both sides
 			'is trimmed/case-insensitive' => ['is', '  YES ', 'yes', true],
+			// Trim is Unicode-aware, matching JS String.trim() (NBSP, em-space, BOM)
+			'is with trailing NBSP' => ['is', 'yes', "yes\u{00A0}", true],
+			'is with em-space + BOM' => ['is', "\u{FEFF}yes\u{2003}", 'yes', true],
 			'isNot mismatch passes' => ['isNot', 'yes', 'no', true],
 			'isNot match fails' => ['isNot', 'yes', 'yes', false],
 			'contains substring' => ['contains', 'oo', 'foobar boo', true],

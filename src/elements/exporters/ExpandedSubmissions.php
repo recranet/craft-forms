@@ -46,8 +46,11 @@ class ExpandedSubmissions extends ElementExporter
 					$value = json_encode($value);
 				}
 
-				$fields[$row['handle']] = $value;
-				$fieldKeys[$row['handle']] = true;
+				// Keyed by uid — the field's identity. Keying by handle would
+				// split one field over two columns after a rename, and merge
+				// two unrelated fields when a handle gets reused.
+				$fields[$row['uid']] = $value;
+				$fieldKeys[$row['uid']] = $row['handle'];
 			}
 
 			$rows[] = [
@@ -63,16 +66,26 @@ class ExpandedSubmissions extends ElementExporter
 			];
 		}
 
-		// Normalize: every row gets every field column, in a stable order
-		$fieldKeys = array_keys($fieldKeys);
+		// Normalize: every row gets every field column, in a stable order.
+		// Columns are labeled by handle (the latest one seen per uid); when
+		// two different fields ever carried the same handle, the uid keeps
+		// them apart in the label instead of silently merging their data.
+		$handleCounts = array_count_values($fieldKeys);
+		$columns = [];
 
-		return array_map(function (array $row) use ($fieldKeys) {
+		foreach ($fieldKeys as $uid => $handle) {
+			$columns[$uid] = $handleCounts[$handle] > 1
+				? "field:{$handle} ({$uid})"
+				: "field:{$handle}";
+		}
+
+		return array_map(function (array $row) use ($columns) {
 			$fields = $row['_fields'];
 			unset($row['_fields']);
 
-			foreach ($fieldKeys as $key) {
+			foreach ($columns as $uid => $column) {
 				// Prefix to avoid collisions with the fixed columns
-				$row["field:$key"] = $fields[$key] ?? '';
+				$row[$column] = $fields[$uid] ?? '';
 			}
 
 			return $row;

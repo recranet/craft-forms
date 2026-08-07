@@ -2,7 +2,14 @@
 
 ## Unreleased
 
-- "Translate with AI" now runs through the queue instead of inline in the CP request — a large form no longer risks a browser timeout, and a failed translation stays visible (and retryable) in the queue. When nothing is missing the button still answers instantly.
+- **Fixed: fresh installs missed the form-translations table.** `Install.php` never gained the `recranetforms_form_translations` table the 2.7.0 migration creates, so a brand-new install errored the moment a form rendered. A new test guards Install.php against every table/column the numbered migrations introduce.
+- **Fixed: a rejected reCAPTCHA `execute()` left the form permanently unsubmittable** (v3 and Enterprise; e.g. a v3 key configured while Enterprise is selected). The widget now submits without a token on rejection, so the server reports the config error visibly — the designed error path.
+- **Fixed: conditional-rule evaluation differences between the browser and the server.** Rules targeting heading/paragraph fields now fail open on both sides (and layout fields are no longer offered as rule targets); rules on file fields now work — both halves compare the chosen filename; conditions placed on a hidden-type field now also apply in the browser; values pasted with Unicode whitespace (NBSP and friends) trim identically on both sides; hidden-field defaults are capped at 255 characters in the template like everywhere else.
+- **Fixed: the expanded CSV export keyed columns by handle** — a renamed field split into two half-empty columns and a reused handle merged unrelated data. Columns are now keyed by field uid.
+- The 2.0 formData migration no longer discards values whose field had been deleted before it ran; they're carried through under their old key for manual recovery.
+- Duplicate reference numbers under concurrent submits are prevented with a row lock.
+- The form preview now shows the translated wording when previewing from a translation site, and a failed submission save re-renders with the visitor's input intact.
+- "Translate with AI" now runs through the queue instead of inline in the CP request — a large form no longer risks a browser timeout, and a failed translation stays visible (and retryable) in the queue. When nothing is missing the button still answers instantly. (Also removed a dead HTML-format branch in the translation service — everything translates as plain text, matching how the templates escape output.)
 - The form preview no longer loads Bootstrap from a CDN: a small bundled stylesheet covers the default template's markup, so the preview also renders on control panels without internet access.
 - Unit tests (rule evaluator PHP/JS contract, six-locale translation parity) and a GitHub Actions CI workflow (lint + tests on PHP 8.2/8.4). `composer lint` / `composer test`.
 - The `en` translation file carries the six front-end keys it was missing (identity mappings; rendering was already correct via fallback).

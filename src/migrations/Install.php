@@ -6,7 +6,12 @@ use craft\db\Migration;
 use recranet\forms\elements\Submission;
 
 /**
- * Install migration: forms table + submissions table (extends elements).
+ * Install migration: forms table, submissions table (extends elements) and
+ * the per-site form translations table.
+ *
+ * Fresh installs run ONLY this migration — Craft marks the numbered ones as
+ * applied via schemaVersion. Every table a numbered migration creates must
+ * therefore also be created here, or new installs miss it.
  */
 class Install extends Migration
 {
@@ -52,6 +57,23 @@ class Install extends Migration
 		$this->createIndex(null, '{{%recranetforms_submissions}}', ['token'], true);
 		$this->createIndex(null, '{{%recranetforms_submissions}}', ['idempotencyKey']);
 
+		// Per-site translations of form content (mirrors m260806_210000):
+		// one row per (form, site), JSON of only the strings that differ
+		// from the source form
+		$this->createTable('{{%recranetforms_form_translations}}', [
+			'id' => $this->primaryKey(),
+			'formId' => $this->integer()->notNull(),
+			'siteId' => $this->integer()->notNull(),
+			'translations' => $this->text(),
+			'dateCreated' => $this->dateTime()->notNull(),
+			'dateUpdated' => $this->dateTime()->notNull(),
+			'uid' => $this->uid(),
+		]);
+
+		$this->createIndex(null, '{{%recranetforms_form_translations}}', ['formId', 'siteId'], true);
+		$this->addForeignKey(null, '{{%recranetforms_form_translations}}', ['formId'], '{{%recranetforms_forms}}', ['id'], 'CASCADE');
+		$this->addForeignKey(null, '{{%recranetforms_form_translations}}', ['siteId'], '{{%sites}}', ['id'], 'CASCADE');
+
 		return true;
 	}
 
@@ -59,6 +81,7 @@ class Install extends Migration
 	{
 		// Remove submission elements before dropping their data table
 		$this->delete('{{%elements}}', ['type' => Submission::class]);
+		$this->dropTableIfExists('{{%recranetforms_form_translations}}');
 		$this->dropTableIfExists('{{%recranetforms_submissions}}');
 		$this->dropTableIfExists('{{%recranetforms_forms}}');
 

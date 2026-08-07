@@ -6,7 +6,9 @@ Form builder plugin for Craft CMS 5. Built for the Elloro Craft boilerplate as a
 
 ## Features
 
-- **Form builder in the CP** — drag & drop field cards (text, email, tel, textarea, select, checkbox) with per-field width (full/half for side-by-side columns), auto-suggested handles, and per-form notification recipients and subjects. Forms are content (database), so they're editable on production where `allowAdminChanges` is off.
+- **Form builder in the CP** — drag & drop field cards (text, email, tel, textarea, select, radio, checkbox, checkboxes, number, date, url, hidden, consent, file upload, plus heading/paragraph layout blocks) with per-field width (full/half), placeholder, description, default value, admin label and custom validation message, auto-suggested handles, and per-form notification recipients and subjects. Forms are content (database), so they're editable on production where `allowAdminChanges` is off — and exportable/importable as JSON (CP or console) and duplicable.
+- **Conditional fields** — show/hide rules (`all`/`any` groups; is / is not / contains / is empty / is not empty) evaluated by strictly matched JS and PHP halves; a hidden field is never required, its posted values are discarded server-side, and a broken rule fails open instead of locking visitors out.
+- **File uploads** — single-file fields upload into a configurable volume (per-form subfolder) with extension/size validation before any asset is created; files are cleaned up on hard delete and by retention.
 - **Stored submissions** — every submission (including spam-flagged ones) is saved as an element, browsable per form in the CP, searchable, with statuses Sent/Spam/Failed and a per-form reference number (#1, #2, …). Values are keyed by field **uid** with a submit-time **snapshot** of the form definition, so renaming a field never orphans historical data. Mail send failures are recorded on the submission (status Failed) — nothing is ever lost. Identical double submits within 5 minutes are deduped.
 - **Multi-provider captcha** — Google reCAPTCHA v2/v3/Enterprise or Cloudflare Turnstile, with honest verdicts:
   - *pass* → submission goes through (v3/Enterprise score persisted on the submission)
@@ -16,7 +18,12 @@ Form builder plugin for Craft CMS 5. Built for the Elloro Craft boilerplate as a
 - **Minimum fill time** — submissions arriving faster than a human could type (default 3s, hashed render timestamp) are rejected before any captcha call is made.
 - **Sender blocklist** — for human-driven spam a captcha score cannot catch: match a full address, `@domain` suffix, local-part prefix or IP prefix. Matches are stored as reviewable spam.
 - **Honeypot** — hidden field, toggleable, configurable name.
-- **Storage switches + retention** — mail-only mode (`saveSubmissions` off), drop spam instead of storing it (`saveSpamSubmissions` off), and auto-delete stored submissions after N days (`retentionDays`, runs with Craft's GC or `php craft recranet-forms/gc/prune`). Match retention to the site's privacy statement.
+- **Throttle** — submissions per IP + form are rate-limited (default 5 per 60s); a hammering bot is rejected before any captcha call.
+- **Storage switches + retention** — mail-only mode (`saveSubmissions` off), drop spam instead of storing it (`saveSpamSubmissions` off), and auto-prune stored submissions after N days (`retentionDays`, runs with Craft's GC or `php craft recranet-forms/gc/prune`). Retention is overridable per form, with a choice between **delete** and **anonymize** (row and reference number survive for statistics, all personal data — values, token, uploads — is blanked). Match retention to the site's privacy statement.
+- **GDPR self-service** — the `{selfServiceUrl}` merge tag links the submitter to a tokenized page where they can view and permanently delete their own submission, no login needed.
+- **Per-site translations** — form wording is translatable per site from the CP, stored as content; optional AI fill via `recranet/craft-ai-translator`. See Multi-site below.
+- **False-positive recovery** — "Not spam" and "Resend notification" as bulk element actions and detail-view buttons; the original spam reason is kept as an audit trail.
+- **Granular permissions** — manage forms, view submissions and delete submissions are separate permissions.
 - **Deploy health check** — `php craft recranet-forms/captcha/check` catches missing keys and provider connectivity problems, exits non-zero. Add it to the deploy flow. Note: Google validates tokens before secrets, so a wrong-but-present secret only surfaces at runtime — where it is reported as a config error (visible in the CP and the notification email), not as spam.
 - **Email / SMTP test utility** — CP → Utilities → Email / SMTP test verifies the SMTP connection and sends a test mail, surfacing the full transport errors Craft's mailer swallows. Works with `allowAdminChanges` disabled.
 - **CSV export** — the submissions index export includes "Submissions (expanded fields)": every form field becomes its own column.
@@ -95,10 +102,14 @@ Plugin settings (CP → Settings → Recranet Forms, stored in project config):
 | Verify token hostname | on | rejects tokens minted on other hostnames |
 | Honeypot | on, `rf_website` | |
 | Minimum submit time | 3s | 0 disables |
+| Throttle | 5 per 60s | per IP + form; 0 disables |
 | Sender blocklist | empty | address / @domain / local-part / IP prefix |
+| Notification language | submission's site | or always the primary site |
 | Save submissions | on | off = mail-only mode |
 | Save spam submissions | on | off = flagged spam is dropped |
-| Retention (days) | 0 (keep forever) | prunes with Craft GC |
+| Retention (days) | 0 (keep forever) | prunes with Craft GC; per-form override + delete/anonymize mode on the form |
+| Upload volume | empty | required for file fields; per-form subfolder |
+| Max upload size / extensions | 8 MB, `pdf,jpg,jpeg,png,doc,docx` | conservative allowlist by default |
 
 ## Multi-site / translations
 

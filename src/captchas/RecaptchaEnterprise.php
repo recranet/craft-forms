@@ -127,6 +127,12 @@ class RecaptchaEnterprise extends BaseCaptcha
 				input.value = token;
 				tokenReady = true;
 				if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
+			}).catch(function () {
+				// execute() rejected (wrong key type, grecaptcha error): submit
+				// without a token so the SERVER reports a visible captcha error —
+				// swallowing this would leave the form permanently unsubmittable
+				tokenReady = true;
+				if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
 			});
 		});
 	});

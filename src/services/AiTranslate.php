@@ -32,17 +32,6 @@ class AiTranslate extends Component
 	 */
 	private const AI_TRANSLATOR_HANDLE = 'ai-translator';
 
-	/**
-	 * Key suffixes whose value may contain simple HTML.
-	 *
-	 * Form content is overwhelmingly plain text (labels, placeholders, button
-	 * captions) and telling the model it is translating HTML invites it to
-	 * "helpfully" wrap that text in markup. Only the long-form fields — a
-	 * form's intro text and an email body — can legitimately carry tags, so
-	 * those are the only ones sent as HTML, where the provider is instructed
-	 * to keep the tag structure intact.
-	 */
-	private const HTML_KEY_SUFFIXES = ['.body', '.intro'];
 
 	/**
 	 * Whether AI translation can actually run right now.
@@ -93,8 +82,13 @@ class AiTranslate extends Component
 				continue;
 			}
 
+			// Everything is sent as plain text: form content is labels,
+			// placeholders and short bodies, and the default email templates
+			// escape their output (nl2br), so HTML in a translation would
+			// render literally anyway. Telling the model it is translating
+			// HTML only invites it to "helpfully" add markup.
 			$keys[] = $key;
-			$items[] = new TranslationItem((string)$value, $this->formatFor((string)$key));
+			$items[] = new TranslationItem((string)$value, TranslationItem::FORMAT_TEXT);
 		}
 
 		if ($items === []) {
@@ -167,19 +161,5 @@ class AiTranslate extends Component
 		}
 
 		return str_replace('_', '-', $site->language);
-	}
-
-	/**
-	 * Picks the TranslationItem format for a string key.
-	 */
-	private function formatFor(string $key): string
-	{
-		foreach (self::HTML_KEY_SUFFIXES as $suffix) {
-			if (str_ends_with($key, $suffix)) {
-				return TranslationItem::FORMAT_HTML;
-			}
-		}
-
-		return TranslationItem::FORMAT_TEXT;
 	}
 }

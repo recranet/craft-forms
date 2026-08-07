@@ -20,7 +20,9 @@ use craft\helpers\StringHelper;
  * The remap resolves handles against the *current* form definition — the
  * best available approximation for pre-uid submissions (handles were the
  * identity up to now, so this is lossless for any form whose handles
- * haven't been reused for different meanings).
+ * haven't been reused for different meanings). Values whose handle matches
+ * no current field are carried through under their old handle key rather
+ * than dropped.
  */
 class m260806_100000_field_uids_and_metadata extends Migration
 {
@@ -78,6 +80,18 @@ class m260806_100000_field_uids_and_metadata extends Migration
 			foreach ($fields as $field) {
 				if (array_key_exists($field['handle'], $oldData)) {
 					$newData[$field['uid']] = $oldData[$field['handle']];
+				}
+			}
+
+			// Carry through values whose handle matches no current field (the
+			// field was deleted before this migration ran, or the form row is
+			// gone). They won't render via the snapshot, but they stay in the
+			// JSON for manual recovery — never silently destroy submitted data.
+			$mappedHandles = array_flip(array_column($fields, 'handle'));
+
+			foreach ($oldData as $handle => $value) {
+				if (!isset($mappedHandles[$handle])) {
+					$newData[$handle] = $value;
 				}
 			}
 

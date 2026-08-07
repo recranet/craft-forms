@@ -59,6 +59,7 @@ class FormsController extends Controller
 		return $this->renderTemplate('recranet-forms/forms/_edit', [
 			'form' => $form,
 			'fieldTypes' => Form::FIELD_TYPES,
+			'layoutTypes' => Form::LAYOUT_TYPES,
 			'emailTemplates' => $this->findEmailTemplates(),
 			'editedSite' => $editedSite,
 			'primarySite' => $primarySite,
@@ -178,6 +179,11 @@ class FormsController extends Controller
 		if (!$form) {
 			throw new NotFoundHttpException('Form not found.');
 		}
+
+		// The CP's ?site= param sets the current site, so an editor previewing
+		// a translation site sees the translated wording — same applyTo() the
+		// real render and the real sends go through
+		$form = Plugin::getInstance()->formTranslations->applyTo($form);
 
 		$view = Craft::$app->getView();
 

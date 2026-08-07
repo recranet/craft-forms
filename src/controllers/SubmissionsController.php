@@ -115,6 +115,11 @@ class SubmissionsController extends Controller
 		if ($shouldSave && !Craft::$app->getElements()->saveElement($submission)) {
 			Craft::error("Form \"{$form->handle}\": failed to save submission: " . implode('; ', $submission->getFirstErrors()), __METHOD__);
 			Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Something went wrong. Please try again later.'));
+			// Repopulate the form so the visitor's input survives the error
+			Craft::$app->getUrlManager()->setRouteParams([
+				'formContent' => $content,
+				'formHandle' => $form->handle,
+			]);
 
 			return null;
 		}

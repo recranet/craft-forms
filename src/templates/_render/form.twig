@@ -74,12 +74,16 @@
 				   required: there is nothing a visitor could fill in. #}
 				{% set queryValue = craft.app.request.getQueryParam(field.handle) %}
 				{% set queryValue = queryValue is not null and queryValue is not iterable ? (queryValue ~ '')|slice(0, 255) : null %}
+				{# The default is capped like the query seed and the server-side
+				   value (255 chars), so rules on this field compare the same
+				   string in the browser and on the server #}
 				<input
 					type="hidden"
 					name="fields[{{ field.handle }}]"
 					id="{{ inputId }}"
-					value="{{ values[field.handle] ?? queryValue ?? field.defaultValue ?? '' }}"
+					value="{{ values[field.handle] ?? queryValue ?? ((field.defaultValue ?? '') ~ '')|slice(0, 255) }}"
 					data-rf-uid="{{ field.uid }}"
+					{% if conditions and (conditions.rules ?? [])|length %}data-rf-conditions="{{ conditions|json_encode }}"{% endif %}
 				/>
 			{% else %}
 			{# Half-width fields sit side by side from md up #}
@@ -314,7 +318,18 @@
 			return checkboxes[0].checked ? '1' : '';
 		}
 		var input = wrap.querySelector('input, select, textarea');
-		return input ? input.value : '';
+		// Layout-only field (heading/paragraph): no input, no value. Fail
+		// open like the server, where these uids never enter formData.
+		if (!input) {
+			return null;
+		}
+		// File field: compare the chosen filename, not the browser's
+		// C:\fakepath\ value — the server evaluates rules against the
+		// pending upload's client filename, which is this same string
+		if (input.type === 'file') {
+			return input.files && input.files.length ? input.files[0].name : '';
+		}
+		return input.value;
 	}
 
 	// Mirrors RuleEvaluator::rulePasses(): malformed rules, unknown
@@ -389,7 +404,11 @@
 	// the field restores it
 	function apply(wrap, visible) {
 		wrap.toggleAttribute('hidden', !visible);
-		wrap.querySelectorAll('input, select, textarea').forEach(function (input) {
+		// Hidden-type fields carry the conditions on the input itself
+		var inputs = wrap.tagName === 'INPUT'
+			? [wrap]
+			: wrap.querySelectorAll('input, select, textarea');
+		inputs.forEach(function (input) {
 			input.disabled = !visible;
 			if (!visible) {
 				if (input.required) {

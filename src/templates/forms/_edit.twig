@@ -383,9 +383,12 @@
 			</div>
 		</div>
 
-		{# Existing fields (uid + label) for the conditions rule editor #}
+		{# Existing fields (uid + label) for the conditions rule editor.
+		   Layout-only types (heading, paragraph) are excluded: they carry no
+		   value, so a rule on them evaluates as "fail open" on both the server
+		   and the front end — offering them would only create dead rules #}
 		<script type="application/json" id="rf-known-fields">
-			{{ form.fields|filter(f => f.uid is defined and f.uid)|map(f => { uid: f.uid, label: f.label, handle: f.handle })|json_encode|raw }}
+			{{ form.fields|filter(f => f.uid is defined and f.uid and f.type not in layoutTypes)|map(f => { uid: f.uid, label: f.label, handle: f.handle })|json_encode|raw }}
 		</script>
 
 		{# Blank card cloned by JS when adding a field; __INDEX__/__TYPE__ are replaced #}

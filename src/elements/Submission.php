@@ -221,7 +221,18 @@ class Submission extends Element
 		// field's value counts as empty for rules on other fields) instead
 		// of evaluating once, so chained conditions resolve exactly like the
 		// front-end JS, where a hidden field posts nothing.
-		foreach (RuleEvaluator::hiddenFieldUids($form->fields, $this->formData) as $uid) {
+		//
+		// Rules see a pending upload as its client filename: the asset id
+		// doesn't exist yet, and the front-end JS compares that same name —
+		// without this, "show X when [file] is not empty" would pass in the
+		// browser and fail here.
+		$dataForRules = $this->formData;
+
+		foreach ($this->pendingUploads as $uploadUid => $upload) {
+			$dataForRules[$uploadUid] = $upload->name;
+		}
+
+		foreach (RuleEvaluator::hiddenFieldUids($form->fields, $dataForRules) as $uid) {
 			$this->formData[$uid] = null;
 			// A file field hidden by its conditions must not create an asset either
 			unset($this->pendingUploads[$uid]);
@@ -268,7 +279,14 @@ class Submission extends Element
 		// required flag says — and its (discarded) value must not fail type
 		// checks either. Recomputed here from the snapshot rather than
 		// carried over from applyPost(), so validation is self-contained.
-		$hiddenUids = array_flip(RuleEvaluator::hiddenFieldUids($this->snapshot, $this->formData));
+		// Pending uploads count as their filename, same as in applyPost().
+		$dataForRules = $this->formData;
+
+		foreach ($this->pendingUploads as $uploadUid => $upload) {
+			$dataForRules[$uploadUid] = $upload->name;
+		}
+
+		$hiddenUids = array_flip(RuleEvaluator::hiddenFieldUids($this->snapshot, $dataForRules));
 
 		foreach ($this->snapshot as $field) {
 			$handle = $field['handle'];
@@ -783,12 +801,18 @@ class Submission extends Element
 		if ($isNew) {
 			$this->token = $this->token ?? StringHelper::randomString(32);
 
-			// Per-form reference number; the row lock inside the element
-			// save transaction keeps concurrent submits from colliding
-			$max = (new \craft\db\Query())
-				->from('{{%recranetforms_submissions}}')
-				->where(['formId' => $this->formId])
-				->max('[[incrementalId]]');
+			// Per-form reference number. FOR UPDATE locks the current top row
+			// until the element save transaction commits, so a concurrent
+			// submit blocks here instead of reading the same number. A plain
+			// MAX() would not lock anything (and Postgres rejects aggregates
+			// with FOR UPDATE), hence the ORDER BY/LIMIT form. Two truly-first
+			// submissions have no row to lock and could in theory still
+			// collide — the number is a human reference, not a key.
+			$max = Craft::$app->getDb()->createCommand(
+				'SELECT [[incrementalId]] FROM {{%recranetforms_submissions}}'
+				. ' WHERE [[formId]] = :formId ORDER BY [[incrementalId]] DESC LIMIT 1 FOR UPDATE',
+				['formId' => $this->formId],
+			)->queryScalar();
 			$this->incrementalId = ((int)$max) + 1;
 		}
 

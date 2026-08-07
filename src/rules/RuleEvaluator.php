@@ -192,6 +192,11 @@ class RuleEvaluator
 			return '';
 		}
 
-		return mb_strtolower(trim((string)$value));
+		// Unicode-aware trim: JS String.trim() strips NBSP, em-space, BOM
+		// and friends, PHP trim() strips ASCII whitespace only — a pasted
+		// NBSP must not make the two evaluator halves disagree
+		$trimmed = preg_replace('/^[\s\p{Z}\x{FEFF}]+|[\s\p{Z}\x{FEFF}]+$/uD', '', (string)$value);
+
+		return mb_strtolower($trimmed ?? trim((string)$value));
 	}
 }
