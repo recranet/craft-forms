@@ -1,6 +1,6 @@
 # Release Notes for Recranet Forms
 
-## Unreleased
+## 2.8.0 - 2026-08-07
 
 - **Fixed: fresh installs missed the form-translations table.** `Install.php` never gained the `recranetforms_form_translations` table the 2.7.0 migration creates, so a brand-new install errored the moment a form rendered. A new test guards Install.php against every table/column the numbered migrations introduce.
 - **Fixed: a rejected reCAPTCHA `execute()` left the form permanently unsubmittable** (v3 and Enterprise; e.g. a v3 key configured while Enterprise is selected). The widget now submits without a token on rejection, so the server reports the config error visibly — the designed error path.
