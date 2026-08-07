@@ -76,6 +76,7 @@ return [
 	'Copy' => 'Copy',
 	'Copied.' => 'Copied.',
 	'Drag the cards to reorder. Half-width fields sit side by side on the site.' => 'Drag the cards to reorder. Half-width fields sit side by side on the site.',
+	'Drag a type from the palette straight into the form — drop it on the left or right edge of a field to place them side by side.' => 'Drag a type from the palette straight into the form — drop it on the left or right edge of a field to place them side by side.',
 	'Add a field' => 'Add a field',
 	'Delete this form and all its submissions?' => 'Delete this form and all its submissions?',
 	'Delete form' => 'Delete form',

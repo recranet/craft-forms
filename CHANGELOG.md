@@ -1,5 +1,9 @@
 # Release Notes for Recranet Forms
 
+## Unreleased
+
+- **Drag field types straight into the form.** Palette tiles can now be dragged into the builder: dropping in the middle of a card inserts a new row above or below it (with an insertion marker), dropping on a card's left or right edge places the new field next to it and automatically switches both to half width — the same side-by-side layout visitors get. Clicking a tile still appends, so keyboard flows are unchanged.
+
 ## 2.8.0 - 2026-08-07
 
 - **Fixed: fresh installs missed the form-translations table.** `Install.php` never gained the `recranetforms_form_translations` table the 2.7.0 migration creates, so a brand-new install errored the moment a form rendered. A new test guards Install.php against every table/column the numbered migrations introduce.

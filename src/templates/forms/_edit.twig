@@ -343,7 +343,7 @@
 
 	<div class="rfs-pane rf-split" data-rfs-pane="fields" {{ startTab != 'fields' ? 'hidden' }}>
 	<div class="field rf-split__builder">
-		<div class="instructions"><p>{{ 'Drag the cards to reorder. Half-width fields sit side by side on the site.'|t('recranet-forms') }}</p></div>
+		<div class="instructions"><p>{{ 'Drag the cards to reorder. Half-width fields sit side by side on the site.'|t('recranet-forms') }} {{ 'Drag a type from the palette straight into the form — drop it on the left or right edge of a field to place them side by side.'|t('recranet-forms') }}</p></div>
 		{% if form.getErrors('fields') %}
 			<ul class="errors">
 				{% for error in form.getErrors('fields') %}<li>{{ error }}</li>{% endfor %}
@@ -372,7 +372,10 @@
 					/>
 					<div class="rf-palette__grid">
 						{% for type in fieldTypes %}
-							<button type="button" class="rf-palette__tile" data-rf-add="{{ type }}">
+							{# draggable: tiles can be dragged straight into the form
+							   (drop position decides placement); clicking still appends,
+							   so keyboard users lose nothing #}
+							<button type="button" class="rf-palette__tile" data-rf-add="{{ type }}" draggable="true">
 								<span class="rf-field__icon" data-icon-type="{{ type }}" aria-hidden="true"></span>
 								<span class="rf-palette__name">{{ ('fieldType.' ~ type)|t('recranet-forms') }}</span>
 								<span class="rf-palette__desc">{{ ('fieldTypeDesc.' ~ type)|t('recranet-forms') }}</span>
@@ -624,6 +627,13 @@
 	.rf-rule select, .rf-rule input { min-width: 0; }
 	.rf-conditions-mode { margin-top: 8px; }
 	@media (max-width: 900px) { .rf-field__grid { grid-template-columns: 1fr 1fr; } .rf-builder__fields { grid-template-columns: 1fr; } .rf-field[data-width='half'] { grid-column: 1 / -1; } }
+
+	/* Drag-from-palette drop feedback: a full-width line marks a row insert,
+	   an edge bar on a card marks a side-by-side (half width) drop */
+	.rf-builder__fields.rf-drop-target { min-height: 56px; outline: 2px dashed var(--hairline-color); outline-offset: 4px; border-radius: var(--large-border-radius); }
+	.rf-drop-marker { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--link-color, #0b69a3); }
+	.rf-field.rf-drop-side-left { box-shadow: inset 4px 0 0 var(--link-color, #0b69a3); }
+	.rf-field.rf-drop-side-right { box-shadow: inset -4px 0 0 var(--link-color, #0b69a3); }
 {% endcss %}
 
 {% js %}
@@ -1019,26 +1029,147 @@
 			});
 		});
 
-		// Picking a tile adds a card of that type
+		// Build a fresh card of the given type and place it with `place`
+		// (defaults to appending). Shared by the click path and the drag path.
+		function addCard(type, place) {
+			var holder = document.createElement('div');
+			holder.innerHTML = template.innerHTML.replace(/__INDEX__/g, ++uid).replace(/__TYPE__/g, type);
+			var card = holder.querySelector('.rf-field');
+			place ? place(card) : list.appendChild(card);
+			card.dataset.type = type;
+			card.querySelector('.rf-field__badge').textContent = type;
+			card.querySelector('.rf-input-type').value = type;
+			card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(type);
+			initCard(card);
+			dragSort.addItems($(card));
+			renumber();
+			closePalette();
+			openCard(card);
+			landCard(card);
+			card.querySelector('.rf-input-label').focus();
+			return card;
+		}
+
+		// Change a card's width from script (side-by-side drops): the select,
+		// the grid span and the bar chip all follow
+		function setCardWidth(card, width) {
+			var select = card.querySelector('select[name$="[width]"]');
+			if (select) select.value = width;
+			card.dataset.width = width;
+			updateChips(card);
+		}
+
+		// Picking a tile adds a card of that type at the end
 		palette.querySelectorAll('[data-rf-add]').forEach(function (item) {
 			item.addEventListener('click', function () {
-				var type = item.dataset.rfAdd;
-				var html = template.innerHTML.replace(/__INDEX__/g, ++uid).replace(/__TYPE__/g, type);
-				list.insertAdjacentHTML('beforeend', html);
-				var card = list.lastElementChild;
-				card.dataset.type = type;
-				card.querySelector('.rf-field__badge').textContent = type;
-				card.querySelector('.rf-input-type').value = type;
-				card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(type);
-				initCard(card);
-				dragSort.addItems($(card));
-				renumber();
-				closePalette();
-				openCard(card);
-				landCard(card);
-				card.querySelector('.rf-input-label').focus();
+				addCard(item.dataset.rfAdd);
 			});
 		});
+
+		// ---- Dragging a tile into the form. The drop position decides the
+		// placement: the middle of a card inserts above/below it (full row),
+		// its left or right edge places the new field NEXT to it — both cards
+		// switch to half width, so the pair sits side by side like on the site.
+		// Uses native HTML5 drag & drop; card reordering stays with DragSort. ----
+		var dropMarker = document.createElement('div');
+		dropMarker.className = 'rf-drop-marker';
+		var dragTileType = null;
+		var drop = null; // {card, zone: 'before'|'after'|'left'|'right'} | {append: true}
+
+		function clearDropUi() {
+			dropMarker.remove();
+			list.querySelectorAll('.rf-drop-side-left, .rf-drop-side-right').forEach(function (card) {
+				card.classList.remove('rf-drop-side-left', 'rf-drop-side-right');
+			});
+			list.classList.remove('rf-drop-target');
+		}
+
+		palette.querySelectorAll('[data-rf-add]').forEach(function (item) {
+			item.addEventListener('dragstart', function (e) {
+				dragTileType = item.dataset.rfAdd;
+				e.dataTransfer.setData('text/plain', dragTileType);
+				e.dataTransfer.effectAllowed = 'copy';
+				list.classList.add('rf-drop-target');
+			});
+			item.addEventListener('dragend', function () {
+				dragTileType = null;
+				clearDropUi();
+			});
+		});
+
+		list.addEventListener('dragover', function (e) {
+			if (!dragTileType) return;
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'copy';
+			list.classList.add('rf-drop-target');
+
+			var card = e.target.closest('.rf-field');
+			clearDropUi();
+			list.classList.add('rf-drop-target');
+
+			if (!card) {
+				// Free space: append at the end
+				drop = { append: true };
+				list.appendChild(dropMarker);
+				return;
+			}
+
+			var rect = card.getBoundingClientRect();
+			var x = (e.clientX - rect.left) / rect.width;
+
+			// Outer quarters = side-by-side drop, the middle = row insert
+			if (x < 0.25) {
+				drop = { card: card, zone: 'left' };
+				card.classList.add('rf-drop-side-left');
+			} else if (x > 0.75) {
+				drop = { card: card, zone: 'right' };
+				card.classList.add('rf-drop-side-right');
+			} else if (e.clientY < rect.top + rect.height / 2) {
+				drop = { card: card, zone: 'before' };
+				card.before(dropMarker);
+			} else {
+				drop = { card: card, zone: 'after' };
+				card.after(dropMarker);
+			}
+		});
+
+		list.addEventListener('dragleave', function (e) {
+			// Only when actually leaving the list, not moving between cards
+			if (!list.contains(e.relatedTarget)) {
+				clearDropUi();
+				drop = null;
+			}
+		});
+
+		list.addEventListener('drop', function (e) {
+			if (!dragTileType) return;
+			e.preventDefault();
+			var type = dragTileType;
+			var target = drop;
+			dragTileType = null;
+			drop = null;
+			clearDropUi();
+
+			if (!target || target.append) {
+				addCard(type);
+				return;
+			}
+
+			var card = addCard(type, function (newCard) {
+				target.zone === 'left' || target.zone === 'before'
+					? target.card.before(newCard)
+					: target.card.after(newCard);
+			});
+
+			// Side drop: the pair shares the row — both go half width
+			if (target.zone === 'left' || target.zone === 'right') {
+				setCardWidth(card, 'half');
+				setCardWidth(target.card, 'half');
+			}
+		});
+
+		// A drag that ends outside the list must not leave a stale marker
+		document.addEventListener('drop', clearDropUi);
 	})();
 {% endjs %}
 {% endblock %}

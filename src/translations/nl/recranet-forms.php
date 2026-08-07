@@ -75,6 +75,7 @@ return [
 	'Copy' => 'Kopiëren',
 	'Copied.' => 'Gekopieerd.',
 	'Drag the cards to reorder. Half-width fields sit side by side on the site.' => 'Sleep de kaarten om te sorteren. Velden met halve breedte staan op de site naast elkaar.',
+	'Drag a type from the palette straight into the form — drop it on the left or right edge of a field to place them side by side.' => 'Sleep een type vanuit het palet direct het formulier in — laat het los op de linker- of rechterrand van een veld om ze naast elkaar te zetten.',
 	'Add a field' => 'Veld toevoegen',
 	'Delete this form and all its submissions?' => 'Dit formulier en alle bijbehorende inzendingen verwijderen?',
 	'Delete form' => 'Formulier verwijderen',

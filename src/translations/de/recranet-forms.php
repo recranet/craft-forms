@@ -75,6 +75,7 @@ return [
 	'Copy' => 'Kopieren',
 	'Copied.' => 'Kopiert.',
 	'Drag the cards to reorder. Half-width fields sit side by side on the site.' => 'Ziehen Sie die Karten, um sie zu sortieren. Felder mit halber Breite stehen auf der Website nebeneinander.',
+	'Drag a type from the palette straight into the form — drop it on the left or right edge of a field to place them side by side.' => 'Ziehe einen Typ direkt aus der Palette ins Formular — lasse ihn am linken oder rechten Rand eines Feldes los, um beide nebeneinander zu stellen.',
 	'Add a field' => 'Feld hinzufügen',
 	'Delete this form and all its submissions?' => 'Dieses Formular und alle zugehörigen Einsendungen löschen?',
 	'Delete form' => 'Formular löschen',

@@ -38,6 +38,7 @@ Variables: `form`, `submission`, `intro` (notification) and `bodyText` (confirma
 Inline CSS + JS, `rf-` prefix on classes/ids/data attributes. Key parts:
 
 - `fieldCard` macro renders a card per field row; `#rf-field-template` is the `<template>` JS clones for new cards — **change both** when the card changes
+- Palette tiles add on click (appends) AND via native HTML5 drag into the form: middle of a card = row insert (drop marker line), left/right quarter = side-by-side drop that sets **both** cards to half width. Card reordering is separate (Garnish DragSort). Clean-room GF-inspired behavior — never copy their code/naming
 - Every card carries a hidden `uid` input — the field's stable identity; it must survive reorder, tab switches and re-render (submissions key by uid)
 - Card tabs: General / Appearance / Advanced (`data-rf-tab`); conditions builder serializes to JSON in a hidden `conditions` input (decoded defensively in `FormsController::normalizeFieldRows()`)
 - JS reindexes `fields[N][…]` names after reorder/delete; `#rf-known-fields` JSON feeds the conditions rule dropdowns
