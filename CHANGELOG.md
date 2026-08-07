@@ -1,6 +1,6 @@
 # Release Notes for Recranet Forms
 
-## Unreleased
+## 2.10.0 - 2026-08-07
 
 - **Per-form submit behavior.** New "After submit" tab: show an editor-managed success message (translatable per site, with a sensible default) or redirect to a page. The per-form redirect wins over the template `redirect` option, so editors control it on production.
 - **Ajax submit.** Render a form with `{ ajax: true }` and it submits without a page reload: field errors appear in place (same markup as the server render), success shows the message or follows the redirect — including payment checkouts. Plays nicely with reCAPTCHA v3/Enterprise's token round-trip.
