@@ -2,3 +2,5 @@
 composer.lock
 .DS_Store
 .phpunit.cache/
+.playwright-mcp/
+rf-demo-*.png
