@@ -357,4 +357,8 @@ return [
 	'Start from a template' => 'Parti da un modello',
 	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'Un punto di partenza pronto — campi, oggetti e testi di conferma inclusi. Tutto è modificabile in seguito.',
 	'Form "{name}" created — make it yours.' => 'Modulo “{name}” creato — rendilo tuo.',
+	'Spam protection' => 'Protezione antispam',
+	'Emails' => 'Email',
+	'Storage & retention' => 'Archiviazione e conservazione',
+	'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.' => 'Destinatari, oggetti, testi e template si configurano per modulo (nelle schede Notifica e Conferma del modulo). Questa scheda contiene il comportamento email a livello di plugin.',
 ];

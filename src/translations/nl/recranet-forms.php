@@ -357,4 +357,8 @@ return [
 	'Start from a template' => 'Start met een voorbeeld',
 	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'Een kant-en-klaar startpunt — inclusief velden, onderwerpen en bevestigingsteksten. Alles is daarna aan te passen.',
 	'Form "{name}" created — make it yours.' => 'Formulier “{name}” aangemaakt — maak het eigen.',
+	'Spam protection' => 'Spambescherming',
+	'Emails' => 'E-mails',
+	'Storage & retention' => 'Opslag & retentie',
+	'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.' => 'Ontvangers, onderwerpen, teksten en templates stel je per formulier in (op de tabbladen Notificatie en Bevestiging van het formulier). Dit tabblad bevat het plugin-brede e-mailgedrag.',
 ];

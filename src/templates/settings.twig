@@ -3,13 +3,15 @@
 
 {# Sections are grouped in tabs (same pattern as the form builder cards);
    plain buttons + hidden panes, no dependencies. All inputs stay in the DOM,
-   so every tab posts with the single settings form. Each pane opens with a short
-   intro and is split into <h3> sub-sections, so ~25 fields stay scannable. #}
+   so every tab posts with the single settings form. Each pane opens with a
+   short intro and is split into <h3> sub-sections. One tab per QUESTION an
+   admin arrives with: spam, emails, what's stored, uploads, payments —
+   captcha and the local checks are one subject, retention belongs with
+   storage, and the email language no longer hides under "Storage". #}
 <nav class="rfs-tabs" aria-label="{{ 'Settings sections'|t('recranet-forms') }}">
-	<button type="button" class="rfs-tab sel" data-rfs-tab="captcha">{{ 'Captcha'|t('recranet-forms') }}</button>
-	<button type="button" class="rfs-tab" data-rfs-tab="spam">{{ 'Spam checks'|t('recranet-forms') }}</button>
-	<button type="button" class="rfs-tab" data-rfs-tab="storage">{{ 'Storage'|t('recranet-forms') }}</button>
-	<button type="button" class="rfs-tab" data-rfs-tab="retention">{{ 'Retention'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab sel" data-rfs-tab="captcha">{{ 'Spam protection'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="emails">{{ 'Emails'|t('recranet-forms') }}</button>
+	<button type="button" class="rfs-tab" data-rfs-tab="storage">{{ 'Storage & retention'|t('recranet-forms') }}</button>
 	<button type="button" class="rfs-tab" data-rfs-tab="uploads">{{ 'Uploads'|t('recranet-forms') }}</button>
 	<button type="button" class="rfs-tab" data-rfs-tab="payments">{{ 'Payments'|t('recranet-forms') }}</button>
 </nav>
@@ -186,10 +188,10 @@
 	})
 }}
 </div>
-</div>
 
-{# ------------------------------------------------------------ Spam checks #}
-<div class="rfs-pane" data-rfs-pane="spam" hidden>
+{# Local checks: always on, whatever the captcha choice — they run BEFORE
+   the captcha in the pipeline, so bots never cost a verification #}
+<hr />
 <p class="rf-settings-intro">{{ 'settings.spam.intro'|t('recranet-forms') }}</p>
 
 <h3>{{ 'Honeypot'|t('recranet-forms') }}</h3>
@@ -268,11 +270,12 @@
 }}
 </div>
 
-{# ---------------------------------------------------------------- Storage #}
-<div class="rfs-pane" data-rfs-pane="storage" hidden>
-<p class="rf-settings-intro">{{ 'settings.storage.intro'|t('recranet-forms') }}</p>
+{# ----------------------------------------------------------------- Emails #}
+<div class="rfs-pane" data-rfs-pane="emails" hidden>
+{# Wegwijzer: recipients, subjects, intro/body texts and templates are all
+   per-form settings — this tab only holds what is truly plugin-wide #}
+<p class="rf-settings-intro">{{ 'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.'|t('recranet-forms') }}</p>
 
-<h3>{{ 'Language'|t('recranet-forms') }}</h3>
 <p class="rf-settings-hint">{{ 'settings.language.hint'|t('recranet-forms') }}</p>
 
 {{
@@ -287,6 +290,11 @@
 		errors: settings.getErrors('notificationLanguage')
 	})
 }}
+</div>
+
+{# ---------------------------------------------------- Storage & retention #}
+<div class="rfs-pane" data-rfs-pane="storage" hidden>
+<p class="rf-settings-intro">{{ 'settings.storage.intro'|t('recranet-forms') }}</p>
 
 {{
 	forms.lightswitchField({
@@ -305,11 +313,9 @@
 		on: settings.saveSpamSubmissions
 	})
 }}
-</div>
 
-{# -------------------------------------------------------------- Retention #}
-<div class="rfs-pane" data-rfs-pane="retention" hidden>
-<p class="rf-settings-intro">{{ 'settings.retention.intro'|t('recranet-forms') }}</p>
+<h3>{{ 'Retention'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.retention.intro'|t('recranet-forms') }}</p>
 
 {{
 	forms.textField({

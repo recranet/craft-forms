@@ -7,7 +7,7 @@ CP templates (builder, indexes, settings) and the overridable defaults for the f
 - `forms/_edit.twig` — the builder (biggest file; see below)
 - `forms/index.twig`, `forms/_import.twig` — form list, JSON import screen
 - `submissions/index.twig`, `submissions/view.twig` — element index + detail view
-- `settings.twig` — plugin settings, six tab panes (captcha / spam checks / storage / retention / uploads / payments; `rfs-` prefix, all inputs stay in the DOM so one form posts everything). Captcha pane blocks carry `data-rfs-show="<provider values>"` — only the chosen provider's fields are visible; hidden inputs still post, so switching providers never wipes stored keys. Craft namespaces the form: the select is `settings[captchaProvider]`
+- `settings.twig` — plugin settings, five tab panes (spam protection / emails / storage & retention / uploads / payments; `rfs-` prefix, all inputs stay in the DOM so one form posts everything). The spam pane holds the captcha (provider-dependent blocks via `data-rfs-show="<provider values>"` — hidden inputs still post, so switching providers never wipes stored keys) followed by the always-on local checks; the emails pane points editors to the per-form mail settings. Craft namespaces the form: the select is `settings[captchaProvider]`
 - `_render/form.twig` — default front-end form; `_render/submission.twig` — tokenized self-service view
 - `_emails/notification.twig` (owner), `_emails/confirmation.twig` (submitter)
 - `_preview.twig` — iframe wrapper for the split-view previews; bundles a small neutral stylesheet for the Bootstrap classes `_render/form.twig` emits (no CDN — works offline; extend it when the render template gains classes). Preview shows structure/wording, not site design

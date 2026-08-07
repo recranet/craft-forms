@@ -358,4 +358,8 @@ return [
 	'Start from a template' => 'Start from a template',
 	'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.' => 'A ready-made starting point — fields, subjects and confirmation texts included. You can change everything afterwards.',
 	'Form "{name}" created — make it yours.' => 'Form "{name}" created — make it yours.',
+	'Spam protection' => 'Spam protection',
+	'Emails' => 'Emails',
+	'Storage & retention' => 'Storage & retention',
+	'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.' => 'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.',
 ];

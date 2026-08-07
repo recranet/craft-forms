@@ -17,7 +17,7 @@ Plugin settings are Craft project config: on production with `allowAdminChanges`
 
 ## 2. Settings screen — `src/templates/settings.twig`
 
-Field in the matching tab pane (captcha / spam checks / storage / retention / uploads — `rfs-` prefix; all panes stay in the DOM, one form posts everything). Keys and env-var fields use Craft's `autosuggestField` with `suggestEnvVars: true`.
+Field in the matching tab pane (spam protection / emails / storage & retention / uploads / payments — `rfs-` prefix; all panes stay in the DOM, one form posts everything). Keys and env-var fields use Craft's `autosuggestField` with `suggestEnvVars: true`.
 
 ## 3. Consumers
 
