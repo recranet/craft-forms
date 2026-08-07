@@ -27,7 +27,7 @@ Add the `match` arm in `getCaptcha()`. That's the only registry there is.
 
 ## 4. Settings screen — `src/templates/settings.twig`
 
-Provider option in the dropdown + key fields in the captcha pane (follow the Turnstile fields: `autosuggestField` with `suggestEnvVars: true`). There is no per-provider show/hide — all key fields are simply listed. A scoring provider reuses the existing threshold settings when they apply, or gets its own.
+Provider option in the dropdown + key fields in the captcha pane (follow the Turnstile fields: `autosuggestField` with `suggestEnvVars: true`). Wrap the new key fields in a `<div data-rfs-show="<provider-value>">` block — the pane shows only the chosen provider's fields — and add the provider value to the existing `data-rfs-show` lists it belongs to (Keys section, Failure handling; Scoring only if it scores). Inputs stay in the DOM, so hidden values still post.
 
 ## 5. Translations
 

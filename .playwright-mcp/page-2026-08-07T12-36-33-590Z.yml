@@ -1,0 +1,171 @@
+- generic [active] [ref=f33e1]:
+  - status [ref=f33e2]
+  - list:
+    - listitem:
+      - link "Doorgaan naar hoofdsectie" [ref=f33e3] [cursor=pointer]:
+        - /url: "#main"
+    - listitem
+    - listitem:
+      - link "Doorgaan naar inhoud" [ref=f33e4] [cursor=pointer]:
+        - /url: "#content-container"
+    - listitem
+  - generic [ref=f33e5]:
+    - banner [ref=f33e7]:
+      - link "Craft Boilerplate" [ref=f33e9] [cursor=pointer]:
+        - /url: https://craft-boilerplate.ddev.site/nl/
+      - navigation "Primair" [ref=f33e17]:
+        - list [ref=f33e18]:
+          - listitem [ref=f33e19]:
+            - link "Dashboard" [ref=f33e21] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/dashboard?site=nl
+          - listitem [ref=f33e27]:
+            - link "Pagina's" [ref=f33e29] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/paginas?site=nl
+          - listitem [ref=f33e35]:
+            - link "Faciliteiten" [ref=f33e37] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/faciliteiten?site=nl
+          - listitem [ref=f33e43]:
+            - link "Activiteiten" [ref=f33e45] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/activiteiten?site=nl
+          - listitem [ref=f33e51]:
+            - link "FAQ" [ref=f33e53] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/faq?site=nl
+          - listitem [ref=f33e59]:
+            - link "Menu's" [ref=f33e61] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/menus?site=nl
+          - listitem [ref=f33e67]:
+            - link "Algemeen" [ref=f33e69] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/globals?site=nl
+          - listitem [ref=f33e75]:
+            - link "Bestanden" [ref=f33e77] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/assets?site=nl
+          - listitem [ref=f33e83]:
+            - link "Gebruikers" [ref=f33e85] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/users?site=nl
+          - listitem [ref=f33e91]:
+            - link "Formulieren Subnavigatie openen" [ref=f33e93]:
+              - /url: https://craft-boilerplate.ddev.site/admin/recranet-forms?site=nl
+              - generic [ref=f33e98]: Formulieren
+              - button "Subnavigatie openen" [expanded] [ref=f33e101] [cursor=pointer]
+            - list [ref=f33e103]:
+              - listitem [ref=f33e104]:
+                - link "Formulieren" [ref=f33e106]:
+                  - /url: https://craft-boilerplate.ddev.site/admin/recranet-forms/forms?site=nl
+              - listitem [ref=f33e111]:
+                - link "Inzendingen" [ref=f33e113] [cursor=pointer]:
+                  - /url: https://craft-boilerplate.ddev.site/admin/recranet-forms/submissions?site=nl
+          - listitem [ref=f33e118]:
+            - link "Recranet Booking Subnavigatie openen" [ref=f33e120] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/recranet-booking?site=nl
+              - generic [ref=f33e127]: Recranet Booking
+              - button "Subnavigatie openen" [ref=f33e130]
+          - listitem [ref=f33e132]:
+            - link "Redirects Subnavigatie openen" [ref=f33e134] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/redirects?site=nl
+              - generic [ref=f33e142]: Redirects
+              - button "Subnavigatie openen" [ref=f33e145]
+          - listitem [ref=f33e147]:
+            - link "Sprig" [ref=f33e149] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/sprig?site=nl
+          - listitem [ref=f33e155]:
+            - link "GraphQL Subnavigatie openen" [ref=f33e157] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/graphql?site=nl
+              - generic [ref=f33e162]: GraphQL
+              - button "Subnavigatie openen" [ref=f33e165]
+          - listitem [ref=f33e167]:
+            - link "Hulpprogramma's" [ref=f33e169] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/utilities?site=nl
+          - listitem [ref=f33e175]:
+            - link "Instellingen" [ref=f33e177] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/settings?site=nl
+          - listitem [ref=f33e183]:
+            - link "Plugin Store" [ref=f33e185] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/plugin-store?site=nl
+          - listitem [ref=f33e191]:
+            - link "Gefaald" [ref=f33e193] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/utilities/queue-manager?site=nl
+      - generic [ref=f33e198]:
+        - button "Zijbalk schakelen" [expanded] [ref=f33e201] [cursor=pointer]
+        - generic [ref=f33e207]: Craft CMS werkt in ontwikkelaarsmodus.
+    - generic [ref=f33e209]:
+      - region "Mijn account" [ref=f33e210]:
+        - generic [ref=f33e212]:
+          - text: menu
+          - navigation "Broodkruimels" [ref=f33e213]:
+            - list [ref=f33e214]:
+              - listitem [ref=f33e215]:
+                - link "Formulieren" [ref=f33e216] [cursor=pointer]:
+                  - /url: https://craft-boilerplate.ddev.site/admin/recranet-forms/forms?site=nl
+              - listitem [ref=f33e218]:
+                - link "Nederlands" [ref=f33e219] [cursor=pointer]:
+                  - /url: https://craft-boilerplate.ddev.site/admin/recranet-forms/forms/2?site=nl
+                - button "Selecteer site" [ref=f33e224] [cursor=pointer]
+        - button "Mijn account" [ref=f33e226] [cursor=pointer]:
+          - img "Admin" [ref=f33e229]:
+            - generic [ref=f33e231]: A
+      - main [ref=f33e233]:
+        - generic [ref=f33e234]:
+          - generic [ref=f33e236]:
+            - heading "Bestelformulier" [level=1] [ref=f33e238]
+            - button "Opslaan" [ref=f33e242] [cursor=pointer]
+          - generic [ref=f33e247]:
+            - navigation "Formulieronderdelen" [ref=f33e248]:
+              - button "Formulierinstellingen" [ref=f33e249] [cursor=pointer]
+              - button "Velden" [ref=f33e250] [cursor=pointer]
+              - button "Notificatie" [ref=f33e251] [cursor=pointer]
+              - button "Bevestiging" [ref=f33e252] [cursor=pointer]
+            - text: asterisk asterisk
+            - generic [ref=f33e253]:
+              - generic [ref=f33e254]:
+                - paragraph [ref=f33e256]: Sleep de kaarten om te sorteren. Velden met halve breedte staan op de site naast elkaar. Sleep een type vanuit het palet direct het formulier in — laat het los op de linker- of rechterrand van een veld om ze naast elkaar te zetten.
+                - generic [ref=f33e257]:
+                  - generic [ref=f33e258]:
+                    - button "Sleep om te sorteren Bestelformulier text Dupliceren Veld verwijderen" [ref=f33e260] [cursor=pointer]:
+                      - button "Sleep om te sorteren" [ref=f33e261]: move
+                      - generic [ref=f33e262]: T
+                      - strong [ref=f33e263]: Bestelformulier
+                      - generic [ref=f33e264]: text
+                      - button "Dupliceren" [ref=f33e265]
+                      - button "Veld verwijderen" [ref=f33e266]: remove
+                    - button "Sleep om te sorteren Kies uw broodje select Dupliceren Veld verwijderen" [ref=f33e268] [cursor=pointer]:
+                      - button "Sleep om te sorteren" [ref=f33e269]: move
+                      - generic [ref=f33e270]: ▾
+                      - strong [ref=f33e271]: Kies uw broodje
+                      - generic [ref=f33e272]: halve breedte
+                      - generic [ref=f33e274]: select
+                      - button "Dupliceren" [ref=f33e275]
+                      - button "Veld verwijderen" [ref=f33e276]: remove
+                  - generic [ref=f33e277]:
+                    - button "Veld toevoegen" [ref=f33e278] [cursor=pointer]
+                    - text: "T @ ✆ ≡ ▾ ✓ ◉ ✓✓ # ▦ ↗ ⊘ § H ¶ ↑"
+              - complementary [ref=f33e280]:
+                - generic [ref=f33e281]:
+                  - generic [ref=f33e282]:
+                    - strong [ref=f33e283]: Formulier bekijken
+                    - button "Vernieuwen" [expanded] [ref=f33e284] [cursor=pointer]
+                  - paragraph [ref=f33e285]: Toont de laatst opgeslagen versie — sla eerst op om wijzigingen te zien.
+                  - iframe [ref=f33e286]:
+                    - generic [ref=f34e1]:
+                      - paragraph [ref=f34e2]: Weergegeven met neutrale opmaak, zonder de eigen vormgeving van je site — het gaat hier om de velden, volgorde en teksten.
+                      - generic [ref=f34e5]:
+                        - generic [ref=f34e6]:
+                          - generic [ref=f34e7]: Bestelformulier
+                          - textbox "Bestelformulier" [ref=f34e8]
+                        - generic [ref=f34e9]:
+                          - generic [ref=f34e10]: Kies uw broodje
+                          - combobox "Kies uw broodje" [ref=f34e11]:
+                            - option [selected]
+                            - option "Gezond oude kaas"
+                            - option "bitterbal"
+                        - button "Send" [ref=f34e13] [cursor=pointer]
+                      - iframe [ref=f34e16]:
+                        - generic [ref=f37e6]:
+                          - text: protected by
+                          - strong [ref=f37e7]: reCAPTCHA
+      - contentinfo [ref=f33e287]:
+        - generic [ref=f33e289]:
+          - generic [ref=f33e290]:
+            - text: Craft CMS
+            - generic "Team-editie" [ref=f33e291]: Team
+          - text: 5.10.13.2
+  - status

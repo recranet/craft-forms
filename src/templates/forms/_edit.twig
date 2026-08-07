@@ -628,12 +628,19 @@
 	.rf-conditions-mode { margin-top: 8px; }
 	@media (max-width: 900px) { .rf-field__grid { grid-template-columns: 1fr 1fr; } .rf-builder__fields { grid-template-columns: 1fr; } .rf-field[data-width='half'] { grid-column: 1 / -1; } }
 
-	/* Drag-from-palette drop feedback: a full-width line marks a row insert,
-	   an edge bar on a card marks a side-by-side (half width) drop */
+	/* Drop feedback (palette tiles and card moves share it): a full-width
+	   line marks a row insert; on a side-by-side drop the target card slides
+	   aside to preview the half-width pair, with an edge bar where the
+	   dragged field will land */
 	.rf-builder__fields.rf-drop-target { min-height: 56px; outline: 2px dashed var(--hairline-color); outline-offset: 4px; border-radius: var(--large-border-radius); }
 	.rf-drop-marker { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--link-color, #0b69a3); }
-	.rf-field.rf-drop-side-left { box-shadow: inset 4px 0 0 var(--link-color, #0b69a3); }
-	.rf-field.rf-drop-side-right { box-shadow: inset -4px 0 0 var(--link-color, #0b69a3); }
+	.rf-field { transition: transform 0.15s ease, opacity 0.15s ease; }
+	.rf-field.rf-drop-side-left { transform: translateX(6%) scaleX(0.88); transform-origin: right center; box-shadow: -6px 0 0 var(--link-color, #0b69a3); }
+	.rf-field.rf-drop-side-right { transform: translateX(-6%) scaleX(0.88); transform-origin: left center; box-shadow: 6px 0 0 var(--link-color, #0b69a3); }
+	/* The original of a card being dragged stays in place, dimmed */
+	.rf-field.rf-card-ghost { opacity: 0.35; }
+	/* The palette popover covers the drop area — fade it out during a drag */
+	.rf-palette--ghost { opacity: 0.1; pointer-events: none; }
 {% endcss %}
 
 {% js %}
@@ -884,6 +891,7 @@
 					if (!sibling) return;
 					e.key === 'ArrowUp' ? sibling.before(card) : sibling.after(card);
 					renumber();
+					fixLonelyHalves();
 					landCard(card);
 					bar.focus();
 					var position = Array.prototype.indexOf.call(list.children, card) + 1;
@@ -893,27 +901,38 @@
 
 			conditionsUI(card.querySelector('[data-rf-conditions-editor]'));
 			updateChips(card);
+			makeCardDraggable(card);
 		}
 
 		list.querySelectorAll('.rf-field').forEach(initCard);
 
-		// Drag & drop ordering via Craft's own drag implementation; no axis
-		// lock — the two-column grid needs free 2D dragging
-		var dragSort = new Garnish.DragSort($(list).children('.rf-field'), {
-			handle: '.rf-field__move',
-			onSortChange: renumber,
-			// Drag-state classes drive the glide transitions and grabbing cursor
-			onDragStart: function () {
+		// Card reordering and palette drops share ONE native HTML5 drag system
+		// (see the handlers further down): the drop position decides row insert
+		// vs side-by-side placement for both. Cards are only draggable from
+		// their handle, so text selection inside open cards keeps working.
+		function makeCardDraggable(card) {
+			var handle = card.querySelector('.rf-field__move');
+
+			handle.addEventListener('mousedown', function () {
+				card.setAttribute('draggable', 'true');
+			});
+
+			card.addEventListener('dragstart', function (e) {
+				activeDrag = { kind: 'card', card: card };
+				e.dataTransfer.setData('text/plain', 'rf-card');
+				e.dataTransfer.effectAllowed = 'move';
 				list.classList.add('rf-dragging');
 				document.body.classList.add('rf-grabbing');
-			},
-			onDragStop: function () {
-				list.classList.remove('rf-dragging');
-				document.body.classList.remove('rf-grabbing');
-				// Settle bounce on the card that was just dropped
-				if (this.$draggee && this.$draggee[0]) landCard(this.$draggee[0]);
-			},
-		});
+				// After the browser took its drag image, dim the original
+				setTimeout(function () { card.classList.add('rf-card-ghost'); }, 0);
+			});
+
+			card.addEventListener('dragend', function () {
+				card.classList.remove('rf-card-ghost');
+				card.removeAttribute('draggable');
+				endDrag();
+			});
+		}
 
 		// camelCase handle suggestion from the label, only while untouched
 		function toHandle(label) {
@@ -964,9 +983,11 @@
 		list.addEventListener('click', function (event) {
 			if (event.target.classList.contains('rf-field__delete')) {
 				var card = event.target.closest('.rf-field');
-				dragSort.removeItems($(card));
 				card.remove();
 				renumber();
+				// Deleting half of a side-by-side pair must not leave the
+				// partner alone on a half row on the site
+				fixLonelyHalves();
 				return;
 			}
 
@@ -982,7 +1003,6 @@
 				// cloneNode copies values but not selects' state reliably — sync type/width
 				clone.querySelector('.rf-input-type').value = source.querySelector('.rf-input-type').value;
 				initCard(clone);
-				dragSort.addItems($(clone));
 				renumber();
 				openCard(clone);
 				landCard(clone);
@@ -1041,7 +1061,6 @@
 			card.querySelector('.rf-input-type').value = type;
 			card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(type);
 			initCard(card);
-			dragSort.addItems($(card));
 			renumber();
 			closePalette();
 			openCard(card);
@@ -1066,14 +1085,14 @@
 			});
 		});
 
-		// ---- Dragging a tile into the form. The drop position decides the
-		// placement: the middle of a card inserts above/below it (full row),
-		// its left or right edge places the new field NEXT to it — both cards
-		// switch to half width, so the pair sits side by side like on the site.
-		// Uses native HTML5 drag & drop; card reordering stays with DragSort. ----
+		// ---- One drag system for palette tiles AND existing cards. The drop
+		// position decides the placement: the middle of a card inserts a full
+		// row above/below it, its left or right quarter places the dragged
+		// field NEXT to it — both cards switch to half width, the same
+		// side-by-side layout visitors get. Native HTML5 drag & drop. ----
 		var dropMarker = document.createElement('div');
 		dropMarker.className = 'rf-drop-marker';
-		var dragTileType = null;
+		var activeDrag = null; // {kind: 'tile', fieldType} | {kind: 'card', card}
 		var drop = null; // {card, zone: 'before'|'after'|'left'|'right'} | {append: true}
 
 		function clearDropUi() {
@@ -1084,28 +1103,55 @@
 			list.classList.remove('rf-drop-target');
 		}
 
+		function endDrag() {
+			activeDrag = null;
+			drop = null;
+			clearDropUi();
+			list.classList.remove('rf-dragging');
+			document.body.classList.remove('rf-grabbing');
+			palette.classList.remove('rf-palette--ghost');
+		}
+
+		// A half-width card with no half-width neighbour sits alone on a half
+		// row on the site. Runs after every structural change (drop, delete,
+		// keyboard move) — never on load, an editor may have set it on purpose.
+		function fixLonelyHalves() {
+			var cards = Array.prototype.slice.call(list.querySelectorAll('.rf-field'));
+			cards.forEach(function (card, i) {
+				if (card.dataset.width !== 'half') return;
+				var prevHalf = i > 0 && cards[i - 1].dataset.width === 'half';
+				var nextHalf = i < cards.length - 1 && cards[i + 1].dataset.width === 'half';
+				if (!prevHalf && !nextHalf) setCardWidth(card, 'full');
+			});
+		}
+
 		palette.querySelectorAll('[data-rf-add]').forEach(function (item) {
 			item.addEventListener('dragstart', function (e) {
-				dragTileType = item.dataset.rfAdd;
-				e.dataTransfer.setData('text/plain', dragTileType);
+				activeDrag = { kind: 'tile', fieldType: item.dataset.rfAdd };
+				e.dataTransfer.setData('text/plain', activeDrag.fieldType);
 				e.dataTransfer.effectAllowed = 'copy';
 				list.classList.add('rf-drop-target');
+				// The palette popover covers the drop area — get it out of the
+				// way for the duration of the drag
+				palette.classList.add('rf-palette--ghost');
 			});
-			item.addEventListener('dragend', function () {
-				dragTileType = null;
-				clearDropUi();
-			});
+			item.addEventListener('dragend', endDrag);
 		});
 
 		list.addEventListener('dragover', function (e) {
-			if (!dragTileType) return;
+			if (!activeDrag) return;
 			e.preventDefault();
-			e.dataTransfer.dropEffect = 'copy';
-			list.classList.add('rf-drop-target');
+			e.dataTransfer.dropEffect = activeDrag.kind === 'card' ? 'move' : 'copy';
 
 			var card = e.target.closest('.rf-field');
 			clearDropUi();
 			list.classList.add('rf-drop-target');
+
+			// A card never targets itself
+			if (activeDrag.kind === 'card' && card === activeDrag.card) {
+				drop = null;
+				return;
+			}
 
 			if (!card) {
 				// Free space: append at the end
@@ -1142,34 +1188,64 @@
 		});
 
 		list.addEventListener('drop', function (e) {
-			if (!dragTileType) return;
+			if (!activeDrag) return;
 			e.preventDefault();
-			var type = dragTileType;
+			var dragged = activeDrag;
 			var target = drop;
-			dragTileType = null;
-			drop = null;
-			clearDropUi();
+			endDrag();
 
-			if (!target || target.append) {
-				addCard(type);
-				return;
+			var card;
+
+			if (dragged.kind === 'tile') {
+				if (!target || target.append) {
+					addCard(dragged.fieldType);
+					return;
+				}
+				card = addCard(dragged.fieldType, function (newCard) {
+					target.zone === 'left' || target.zone === 'before'
+						? target.card.before(newCard)
+						: target.card.after(newCard);
+				});
+			} else {
+				// Moving an existing card
+				card = dragged.card;
+				card.classList.remove('rf-card-ghost');
+
+				if (!target) return;
+
+				if (target.append) {
+					list.appendChild(card);
+				} else {
+					target.zone === 'left' || target.zone === 'before'
+						? target.card.before(card)
+						: target.card.after(card);
+				}
+				renumber();
+				landCard(card);
+				var position = Array.prototype.indexOf.call(list.children, card) + 1;
+				live.textContent = i18n.movedTo.replace('{position}', position);
 			}
 
-			var card = addCard(type, function (newCard) {
-				target.zone === 'left' || target.zone === 'before'
-					? target.card.before(newCard)
-					: target.card.after(newCard);
-			});
-
 			// Side drop: the pair shares the row — both go half width
-			if (target.zone === 'left' || target.zone === 'right') {
+			if (target && (target.zone === 'left' || target.zone === 'right')) {
 				setCardWidth(card, 'half');
 				setCardWidth(target.card, 'half');
 			}
+
+			// A move/insert may have broken up an existing pair elsewhere
+			fixLonelyHalves();
 		});
 
 		// A drag that ends outside the list must not leave a stale marker
 		document.addEventListener('drop', clearDropUi);
+
+		// Whatever way a handle-gesture ends, no card may stay draggable —
+		// otherwise a later text-selection drag inside the card would move it
+		document.addEventListener('mouseup', function () {
+			list.querySelectorAll('.rf-field[draggable]').forEach(function (card) {
+				card.removeAttribute('draggable');
+			});
+		});
 	})();
 {% endjs %}
 {% endblock %}

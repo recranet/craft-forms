@@ -37,11 +37,15 @@
 	})
 }}
 
+{# Provider-dependent visibility (data-rfs-show lists the providers a block
+   applies to): an editor only sees the fields the chosen provider actually
+   uses. Everything stays in the DOM, so hidden values still post unchanged. #}
+<div data-rfs-show="recaptcha-v2 recaptcha-v3 recaptcha-enterprise turnstile">
 <h3>{{ 'Keys'|t('recranet-forms') }}</h3>
 <p class="rf-settings-hint">{{ 'settings.captcha.keys.hint'|t('recranet-forms') }}</p>
 <p class="rf-settings-hint">{{ 'settings.captcha.keys.scope'|t('recranet-forms') }}</p>
 
-<div>
+<div data-rfs-show="recaptcha-v2 recaptcha-v3 recaptcha-enterprise">
 	{{
 		forms.autosuggestField({
 			label: 'reCAPTCHA site key'|t('recranet-forms'),
@@ -51,11 +55,12 @@
 			errors: settings.getErrors('recaptchaSiteKey')
 		})
 	}}
+</div>
 
+<div data-rfs-show="recaptcha-v2 recaptcha-v3">
 	{{
 		forms.autosuggestField({
 			label: 'reCAPTCHA secret key'|t('recranet-forms'),
-			instructions: 'Used by v2 and v3 (Enterprise uses the API key below).'|t('recranet-forms'),
 			name: 'recaptchaSecretKey',
 			suggestEnvVars: true,
 			value: settings.recaptchaSecretKey,
@@ -64,7 +69,7 @@
 	}}
 </div>
 
-<div>
+<div data-rfs-show="recaptcha-enterprise">
 	{{
 		forms.autosuggestField({
 			label: 'Google Cloud project ID'|t('recranet-forms'),
@@ -86,7 +91,7 @@
 	}}
 </div>
 
-<div>
+<div data-rfs-show="turnstile">
 	{{
 		forms.autosuggestField({
 			label: 'Turnstile site key'|t('recranet-forms'),
@@ -107,7 +112,9 @@
 		})
 	}}
 </div>
+</div>
 
+<div data-rfs-show="recaptcha-v3 recaptcha-enterprise">
 <h3>{{ 'Scoring'|t('recranet-forms') }}</h3>
 <p class="rf-settings-hint">{{ 'settings.captcha.scoring.hint'|t('recranet-forms') }}</p>
 
@@ -143,7 +150,9 @@
 		})
 	}}
 </div>
+</div>
 
+<div data-rfs-show="recaptcha-v2 recaptcha-v3 recaptcha-enterprise turnstile">
 <h3>{{ 'Failure handling'|t('recranet-forms') }}</h3>
 <p class="rf-settings-hint">{{ 'settings.captcha.failure.hint'|t('recranet-forms') }}</p>
 
@@ -175,6 +184,7 @@
 		errors: settings.getErrors('captchaAllowedHostnames')
 	})
 }}
+</div>
 </div>
 
 {# ------------------------------------------------------------ Spam checks #}
@@ -381,5 +391,22 @@
 				});
 			});
 		});
+
+		// Provider-dependent visibility: each data-rfs-show block lists the
+		// providers it applies to. Hidden inputs stay in the DOM and post
+		// unchanged, so switching providers never wipes stored keys.
+		// Craft namespaces the settings form, so the name is settings[captchaProvider].
+		var providerSelect = document.querySelector('select[name$="[captchaProvider]"], select[name="captchaProvider"]');
+		if (!providerSelect) return;
+
+		function applyProviderVisibility() {
+			var provider = providerSelect.value;
+			document.querySelectorAll('[data-rfs-show]').forEach(function (block) {
+				block.hidden = block.dataset.rfsShow.split(' ').indexOf(provider) === -1;
+			});
+		}
+
+		providerSelect.addEventListener('change', applyProviderVisibility);
+		applyProviderVisibility();
 	})();
 {% endjs %}

@@ -1,0 +1,33 @@
+[     234ms] [INFO] 
+IFRAME-RESIZER
+
+Iframe-Resizer 5 is now available via the following two packages:
+
+ * @iframe-resizer/parent
+ * @iframe-resizer/child
+
+Additionally their are also new versions of iframe-resizer for React, Vue, and jQuery.
+
+Version 5 of iframe-resizer has been extensively rewritten to use modern browser APIs, which has enabled significantly better performance and greater accuracy in the detection of content resizing events.
+
+Please see https://iframe-resizer.com/upgrade for more details.
+ @ https://craft-boilerplate.ddev.site/cpresources/d21bd46/iframeResizer.js?v=1786020630:0
+[   19291ms] [INFO] 
+IFRAME-RESIZER
+
+Iframe-Resizer 5 is now available via the following two packages:
+
+ * @iframe-resizer/parent
+ * @iframe-resizer/child
+
+Additionally their are also new versions of iframe-resizer for React, Vue, and jQuery.
+
+Version 5 of iframe-resizer has been extensively rewritten to use modern browser APIs, which has enabled significantly better performance and greater accuracy in the detection of content resizing events.
+
+Please see https://iframe-resizer.com/upgrade for more details.
+ @ https://craft-boilerplate.ddev.site/cpresources/d21bd46/iframeResizer.js?v=1786020630:0
+[   19638ms] [WARNING] An import map rule for specifier '@craftcms/ckeditor-config' was removed, as it conflicted with an existing rule. @ https://craft-boilerplate.ddev.site/cpresources/1c7592b8/cp.js?v=1786020630:1
+[   19638ms] [WARNING] An import map rule for specifier 'ckeditor5/' was removed, as it conflicted with an existing rule. @ https://craft-boilerplate.ddev.site/cpresources/1c7592b8/cp.js?v=1786020630:1
+[   19638ms] [WARNING] An import map rule for specifier 'ckeditor5/translations/' was removed, as it conflicted with an existing rule. @ https://craft-boilerplate.ddev.site/cpresources/1c7592b8/cp.js?v=1786020630:1
+[   19638ms] [WARNING] An import map rule for specifier 'ckeditor5' was removed, as it conflicted with an existing rule. @ https://craft-boilerplate.ddev.site/cpresources/1c7592b8/cp.js?v=1786020630:1
+[   19638ms] [WARNING] An import map rule for specifier '@craftcms/ckeditor' was removed, as it conflicted with an existing rule. @ https://craft-boilerplate.ddev.site/cpresources/1c7592b8/cp.js?v=1786020630:1

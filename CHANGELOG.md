@@ -3,6 +3,10 @@
 ## Unreleased
 
 - **Drag field types straight into the form.** Palette tiles can now be dragged into the builder: dropping in the middle of a card inserts a new row above or below it (with an insertion marker), dropping on a card's left or right edge places the new field next to it and automatically switches both to half width — the same side-by-side layout visitors get. Clicking a tile still appends, so keyboard flows are unchanged.
+- **Moving existing fields creates columns too.** Dragging a card by its handle now uses the same drop zones as the palette: drop it on another card's edge and the pair goes side by side. While hovering an edge, the target card slides aside to preview the pair; the palette fades out of the way during any drag.
+- **No more stranded half-width fields.** Deleting or moving one field of a side-by-side pair automatically returns the leftover field to full width, so nothing sits alone on half a row.
+- **The captcha settings show only the chosen provider's fields.** Switching the provider live-toggles its key fields, and score thresholds appear only for scoring providers (reCAPTCHA v3/Enterprise); with "None" the whole pane reduces to the provider choice. Everything stays in the DOM, so stored keys survive switching. The settings screen drops from ~10 always-visible captcha fields to 1–7.
+- Touch devices: drag & drop is a mouse affordance; adding via the palette click path keeps working everywhere.
 
 ## 2.8.0 - 2026-08-07
 

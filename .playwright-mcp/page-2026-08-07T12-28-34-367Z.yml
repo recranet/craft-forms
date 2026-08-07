@@ -1,0 +1,234 @@
+- generic [active] [ref=f29e1]:
+  - status [ref=f29e2]
+  - list:
+    - listitem:
+      - link "Doorgaan naar hoofdsectie" [ref=f29e3] [cursor=pointer]:
+        - /url: "#main"
+    - listitem
+    - listitem:
+      - link "Doorgaan naar inhoud" [ref=f29e4] [cursor=pointer]:
+        - /url: "#content-container"
+    - listitem
+  - generic [ref=f29e5]:
+    - banner [ref=f29e7]:
+      - link "Craft Boilerplate" [ref=f29e9] [cursor=pointer]:
+        - /url: https://craft-boilerplate.ddev.site/nl/
+      - navigation "Primair" [ref=f29e17]:
+        - list [ref=f29e18]:
+          - listitem [ref=f29e19]:
+            - link "Dashboard" [ref=f29e21] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/dashboard?site=nl
+          - listitem [ref=f29e27]:
+            - link "Pagina's" [ref=f29e29] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/paginas?site=nl
+          - listitem [ref=f29e35]:
+            - link "Faciliteiten" [ref=f29e37] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/faciliteiten?site=nl
+          - listitem [ref=f29e43]:
+            - link "Activiteiten" [ref=f29e45] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/activiteiten?site=nl
+          - listitem [ref=f29e51]:
+            - link "FAQ" [ref=f29e53] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/faq?site=nl
+          - listitem [ref=f29e59]:
+            - link "Menu's" [ref=f29e61] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/content/menus?site=nl
+          - listitem [ref=f29e67]:
+            - link "Algemeen" [ref=f29e69] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/globals?site=nl
+          - listitem [ref=f29e75]:
+            - link "Bestanden" [ref=f29e77] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/assets?site=nl
+          - listitem [ref=f29e83]:
+            - link "Gebruikers" [ref=f29e85] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/users?site=nl
+          - listitem [ref=f29e91]:
+            - link "Formulieren Subnavigatie openen" [ref=f29e93] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/recranet-forms?site=nl
+              - generic [ref=f29e98]: Formulieren
+              - button "Subnavigatie openen" [ref=f29e101]
+          - listitem [ref=f29e103]:
+            - link "Recranet Booking Subnavigatie openen" [ref=f29e105] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/recranet-booking?site=nl
+              - generic [ref=f29e112]: Recranet Booking
+              - button "Subnavigatie openen" [ref=f29e115]
+          - listitem [ref=f29e117]:
+            - link "Redirects Subnavigatie openen" [ref=f29e119] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/redirects?site=nl
+              - generic [ref=f29e127]: Redirects
+              - button "Subnavigatie openen" [ref=f29e130]
+          - listitem [ref=f29e132]:
+            - link "Sprig" [ref=f29e134] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/sprig?site=nl
+          - listitem [ref=f29e140]:
+            - link "GraphQL Subnavigatie openen" [ref=f29e142] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/graphql?site=nl
+              - generic [ref=f29e147]: GraphQL
+              - button "Subnavigatie openen" [ref=f29e150]
+          - listitem [ref=f29e152]:
+            - link "Hulpprogramma's" [ref=f29e154] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/utilities?site=nl
+          - listitem [ref=f29e160]:
+            - link "Instellingen" [ref=f29e162]:
+              - /url: https://craft-boilerplate.ddev.site/admin/settings?site=nl
+          - listitem [ref=f29e168]:
+            - link "Plugin Store" [ref=f29e170] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/plugin-store?site=nl
+          - listitem [ref=f29e176]:
+            - link "Gefaald" [ref=f29e178] [cursor=pointer]:
+              - /url: https://craft-boilerplate.ddev.site/admin/utilities/queue-manager?site=nl
+      - generic [ref=f29e183]:
+        - button "Zijbalk schakelen" [expanded] [ref=f29e186] [cursor=pointer]
+        - generic [ref=f29e192]: Craft CMS werkt in ontwikkelaarsmodus.
+    - generic [ref=f29e194]:
+      - region "Mijn account" [ref=f29e195]:
+        - generic [ref=f29e197]:
+          - text: menu
+          - navigation "Broodkruimels" [ref=f29e198]:
+            - list [ref=f29e199]:
+              - listitem [ref=f29e200]:
+                - link "Instellingen" [ref=f29e201] [cursor=pointer]:
+                  - /url: https://craft-boilerplate.ddev.site/admin/settings?site=nl
+              - listitem [ref=f29e203]:
+                - link "Invoegtoepassingen" [ref=f29e204] [cursor=pointer]:
+                  - /url: https://craft-boilerplate.ddev.site/admin/settings/plugins?site=nl
+        - button "Mijn account" [ref=f29e207] [cursor=pointer]:
+          - img "Admin" [ref=f29e210]:
+            - generic [ref=f29e212]: A
+      - main [ref=f29e214]:
+        - generic [ref=f29e215]:
+          - generic [ref=f29e217]:
+            - heading "Forms" [level=1] [ref=f29e219]
+            - generic [ref=f29e222]:
+              - button "Bewaren" [ref=f29e223] [cursor=pointer]
+              - button "Meer acties" [ref=f29e224] [cursor=pointer]
+          - generic [ref=f29e229]:
+            - navigation "Instellingensecties" [ref=f29e230]:
+              - button "Captcha" [ref=f29e231] [cursor=pointer]
+              - button "Spamcontroles" [ref=f29e232] [cursor=pointer]
+              - button "Opslag" [ref=f29e233] [cursor=pointer]
+              - button "Bewaartermijn" [ref=f29e234] [cursor=pointer]
+              - button "Uploads" [ref=f29e235] [cursor=pointer]
+            - generic [ref=f29e236]:
+              - paragraph [ref=f29e237]: "Kies welke provider inzendingen verifieert voordat ze worden geaccepteerd. Een configuratieprobleem — verkeerde sleutels, provider onbereikbaar — wordt nooit als spam behandeld: het wordt gelogd en afgehandeld via de foutinstellingen hieronder."
+              - heading "Provider" [level=3] [ref=f29e238]
+              - paragraph [ref=f29e239]: “Geen” schakelt captchaverificatie volledig uit; de honeypot- en tijdscontroles blijven wel actief.
+              - generic [ref=f29e240]:
+                - generic [ref=f29e241]: Provider
+                - paragraph [ref=f29e244]: Welke captcha inzendingen verifieert. "Geen" schakelt captchaverificatie uit (honeypot- en tijdscontroles blijven actief).
+                - combobox "Provider" [ref=f29e247]:
+                  - option "Geen"
+                  - option "Google reCAPTCHA v2 (checkbox)"
+                  - option "Google reCAPTCHA v3 (onzichtbaar, met score)" [selected]
+                  - option "Google reCAPTCHA Enterprise"
+                  - option "Cloudflare Turnstile (experimenteel)"
+              - heading "Sleutels" [level=3] [ref=f29e248]
+              - paragraph [ref=f29e249]: Inloggegevens voor de gekozen provider. Elk veld accepteert een omgevingsvariabele zoals $RECAPTCHA_SITE_KEY, zodat er geen geheim in de database belandt.
+              - paragraph [ref=f29e250]: Het Google Cloud-project-ID en de API-sleutel worden alleen door reCAPTCHA Enterprise gebruikt; de Turnstile-sleutels alleen door Turnstile.
+              - generic [ref=f29e251]:
+                - generic [ref=f29e252]:
+                  - generic [ref=f29e253]: reCAPTCHA-sitesleutel
+                  - combobox [ref=f29e258]:
+                    - textbox "reCAPTCHA-sitesleutel" [ref=f29e259]: $RECAPTCHA_SITE_KEY
+                - generic [ref=f29e260]:
+                  - generic [ref=f29e261]: reCAPTCHA-geheime sleutel
+                  - paragraph [ref=f29e264]: Gebruikt door v2 en v3 (Enterprise gebruikt de API-sleutel hieronder).
+                  - combobox [ref=f29e268]:
+                    - textbox "reCAPTCHA-geheime sleutel" [ref=f29e269]: $RECAPTCHA_SECRET_KEY
+              - generic [ref=f29e270]:
+                - generic [ref=f29e271]:
+                  - generic [ref=f29e272]: Google Cloud-project-ID
+                  - combobox [ref=f29e277]:
+                    - textbox "Google Cloud-project-ID" [ref=f29e278]
+                  - paragraph [ref=f29e279]:
+                    - generic [ref=f29e280]: lightbulb
+                    - generic [ref=f29e281]: "Tip:"
+                    - generic [ref=f29e282]:
+                      - text: Deze kan beginnen met een omgevingsvariabele.
+                      - link "Meer informatie" [ref=f29e283] [cursor=pointer]:
+                        - /url: https://craftcms.com/docs/5.x/configure.html#control-panel-settings
+                - generic [ref=f29e284]:
+                  - generic [ref=f29e285]: Google Cloud-API-sleutel
+                  - combobox [ref=f29e290]:
+                    - textbox "Google Cloud-API-sleutel" [ref=f29e291]
+                  - paragraph [ref=f29e292]:
+                    - generic [ref=f29e293]: lightbulb
+                    - generic [ref=f29e294]: "Tip:"
+                    - generic [ref=f29e295]:
+                      - text: Deze kan beginnen met een omgevingsvariabele.
+                      - link "Meer informatie" [ref=f29e296] [cursor=pointer]:
+                        - /url: https://craftcms.com/docs/5.x/configure.html#control-panel-settings
+              - generic [ref=f29e297]:
+                - generic [ref=f29e298]:
+                  - generic [ref=f29e299]: Turnstile-sitesleutel
+                  - combobox [ref=f29e304]:
+                    - textbox "Turnstile-sitesleutel" [ref=f29e305]
+                  - paragraph [ref=f29e306]:
+                    - generic [ref=f29e307]: lightbulb
+                    - generic [ref=f29e308]: "Tip:"
+                    - generic [ref=f29e309]:
+                      - text: Deze kan beginnen met een omgevingsvariabele.
+                      - link "Meer informatie" [ref=f29e310] [cursor=pointer]:
+                        - /url: https://craftcms.com/docs/5.x/configure.html#control-panel-settings
+                - generic [ref=f29e311]:
+                  - generic [ref=f29e312]: Turnstile-geheime sleutel
+                  - combobox [ref=f29e317]:
+                    - textbox "Turnstile-geheime sleutel" [ref=f29e318]
+                  - paragraph [ref=f29e319]:
+                    - generic [ref=f29e320]: lightbulb
+                    - generic [ref=f29e321]: "Tip:"
+                    - generic [ref=f29e322]:
+                      - text: Deze kan beginnen met een omgevingsvariabele.
+                      - link "Meer informatie" [ref=f29e323] [cursor=pointer]:
+                        - /url: https://craftcms.com/docs/5.x/configure.html#control-panel-settings
+              - heading "Scores" [level=3] [ref=f29e324]
+              - paragraph [ref=f29e325]: Providers met een score (v3 en Enterprise) geven een waarde tussen 0 en 1 terug. Boven de scoredrempel gaat een inzending door, tussen de twee drempels wordt die opgeslagen als te beoordelen spam, en onder de afwijsdrempel wordt die geweigerd en helemaal niet opgeslagen.
+              - generic [ref=f29e326]:
+                - generic [ref=f29e327]:
+                  - generic [ref=f29e328]: Scoredrempel
+                  - paragraph [ref=f29e331]: Inzendingen met een score onder deze waarde (0–1) worden als spam gemarkeerd. Standaard 0.5.
+                  - textbox "Scoredrempel" [ref=f29e333]: "0.5"
+                - generic [ref=f29e334]:
+                  - generic [ref=f29e335]: Afwijsdrempel
+                  - paragraph [ref=f29e338]: "Onder deze score is een inzending zeker spam: direct afgewezen en niet opgeslagen. Tussen de twee drempels wordt de inzending opgeslagen als te beoordelen spam. Standaard 0.3."
+                  - textbox "Afwijsdrempel" [ref=f29e340]: "0.3"
+                - generic [ref=f29e341]:
+                  - generic [ref=f29e342]: Verberg de reCAPTCHA-badge
+                  - paragraph [ref=f29e345]: Toegestaan door Google zolang het formulier de reCAPTCHA-attributietekst toont.
+                  - switch "Verberg de reCAPTCHA-badge" [ref=f29e347] [cursor=pointer]
+              - heading "Foutafhandeling" [level=3] [ref=f29e350]
+              - paragraph [ref=f29e351]: Wat er gebeurt als de verificatie zelf mislukt, en van welke hostnamen een token afkomstig mag zijn.
+              - generic [ref=f29e352]:
+                - generic [ref=f29e353]: Fail-open bij verificatiefouten
+                - paragraph [ref=f29e356]:
+                  - text: "Wanneer de captcha zelf stuk is (foute sleutels, provider onbereikbaar):"
+                  - strong [ref=f29e357]: aan
+                  - text: accepteert en markeert inzendingen met een gelogde waarschuwing;
+                  - strong [ref=f29e358]: uit
+                  - text: "toont bezoekers een foutmelding. Een kapotte captcha wordt nooit als spam behandeld. Tip: draai"
+                  - code [ref=f29e359]: php craft recranet-forms/captcha/check
+                  - text: bij een deploy.
+                - switch "Fail-open bij verificatiefouten" [checked] [ref=f29e361] [cursor=pointer]
+              - generic [ref=f29e364]:
+                - generic [ref=f29e365]: Controleer token-hostnaam
+                - paragraph [ref=f29e368]: Wijs v3/Enterprise-tokens af die op een andere hostnaam zijn aangemaakt, zodat elders verzamelde tokens hier niet opnieuw gebruikt kunnen worden.
+                - switch "Controleer token-hostnaam" [checked] [ref=f29e370] [cursor=pointer]
+              - generic [ref=f29e373]:
+                - generic [ref=f29e374]: Toegestane token-hostnamen
+                - paragraph [ref=f29e377]: Kommagescheiden. Leeg = de hostnaam van het verzoek.
+                - combobox [ref=f29e381]:
+                  - textbox "Toegestane token-hostnamen" [ref=f29e382]
+                - paragraph [ref=f29e383]:
+                  - generic [ref=f29e384]: lightbulb
+                  - generic [ref=f29e385]: "Tip:"
+                  - generic [ref=f29e386]:
+                    - text: Deze kan beginnen met een omgevingsvariabele.
+                    - link "Meer informatie" [ref=f29e387] [cursor=pointer]:
+                      - /url: https://craftcms.com/docs/5.x/configure.html#control-panel-settings
+      - contentinfo [ref=f29e388]:
+        - generic [ref=f29e390]:
+          - generic [ref=f29e391]:
+            - text: Craft CMS
+            - generic "Team-editie" [ref=f29e392]: Team
+          - text: 5.10.13.2
+  - status

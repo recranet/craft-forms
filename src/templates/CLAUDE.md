@@ -7,7 +7,7 @@ CP templates (builder, indexes, settings) and the overridable defaults for the f
 - `forms/_edit.twig` — the builder (biggest file; see below)
 - `forms/index.twig`, `forms/_import.twig` — form list, JSON import screen
 - `submissions/index.twig`, `submissions/view.twig` — element index + detail view
-- `settings.twig` — plugin settings, five tab panes (captcha / spam checks / storage / retention / uploads; `rfs-` prefix, all inputs stay in the DOM so one form posts everything)
+- `settings.twig` — plugin settings, five tab panes (captcha / spam checks / storage / retention / uploads; `rfs-` prefix, all inputs stay in the DOM so one form posts everything). Captcha pane blocks carry `data-rfs-show="<provider values>"` — only the chosen provider's fields are visible; hidden inputs still post, so switching providers never wipes stored keys. Craft namespaces the form: the select is `settings[captchaProvider]`
 - `_render/form.twig` — default front-end form; `_render/submission.twig` — tokenized self-service view
 - `_emails/notification.twig` (owner), `_emails/confirmation.twig` (submitter)
 - `_preview.twig` — iframe wrapper for the split-view previews; bundles a small neutral stylesheet for the Bootstrap classes `_render/form.twig` emits (no CDN — works offline; extend it when the render template gains classes). Preview shows structure/wording, not site design
@@ -38,7 +38,7 @@ Variables: `form`, `submission`, `intro` (notification) and `bodyText` (confirma
 Inline CSS + JS, `rf-` prefix on classes/ids/data attributes. Key parts:
 
 - `fieldCard` macro renders a card per field row; `#rf-field-template` is the `<template>` JS clones for new cards — **change both** when the card changes
-- Palette tiles add on click (appends) AND via native HTML5 drag into the form: middle of a card = row insert (drop marker line), left/right quarter = side-by-side drop that sets **both** cards to half width. Card reordering is separate (Garnish DragSort). Clean-room GF-inspired behavior — never copy their code/naming
+- ONE native HTML5 drag system for palette tiles AND existing cards (cards drag from their `.rf-field__move` handle): middle of a card = row insert (drop marker line), left/right quarter = side-by-side drop that sets **both** cards to half width, with a slide-aside preview on hover. The palette popover fades out during a drag. After every structural change `fixLonelyHalves()` returns a half card without a half neighbour to full — never on page load. Keyboard fallback: click-to-add + Alt+arrows (HTML5 DnD does nothing on touch; click path covers it). Clean-room GF-inspired behavior — never copy their code/naming
 - Every card carries a hidden `uid` input — the field's stable identity; it must survive reorder, tab switches and re-render (submissions key by uid)
 - Card tabs: General / Appearance / Advanced (`data-rf-tab`); conditions builder serializes to JSON in a hidden `conditions` input (decoded defensively in `FormsController::normalizeFieldRows()`)
 - JS reindexes `fields[N][…]` names after reorder/delete; `#rf-known-fields` JSON feeds the conditions rule dropdowns
