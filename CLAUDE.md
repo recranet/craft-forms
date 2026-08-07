@@ -36,6 +36,10 @@ Craft CMS 5 form-builder plugin (`recranet/craft-forms`, handle `recranet-forms`
 - No hardcoded secrets ever — reCAPTCHA keys come from `.env` via `App::parseEnv` (`$RECAPTCHA_SITE_KEY` / `$RECAPTCHA_SECRET_KEY`).
 - Public repo on GitHub (`recranet/craft-forms`) + Packagist. Releasing = tagging (see `release` skill).
 
+## Testing
+
+`composer lint` (php -l sweep) and `composer test` (PHPUnit, `tests/` — pure unit tests only, no Craft app: RuleEvaluator semantics shared with the form.twig JS, and six-locale translation parity incl. placeholders). Both run in CI (`.github/workflows/ci.yml`, PHP 8.2/8.4) on every push/PR. A behavior change in `RuleEvaluator` means updating its test AND the JS half.
+
 ## Testing locally
 
 Develop inside a boilerplate clone via a composer path repository, or `composer require recranet/craft-forms` and copy changes back. Health check: `php craft recranet-forms/captcha/check`. E2E without a browser: POST to `recranet-forms/submissions/submit` with CSRF token — no reCAPTCHA token means the submission is stored as spam with reason "No reCAPTCHA token submitted" (that's correct behavior, not a bug).

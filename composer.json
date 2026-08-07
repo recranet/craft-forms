@@ -15,6 +15,15 @@
 			"recranet\\forms\\": "src/"
 		}
 	},
+	"autoload-dev": {
+		"psr-4": {
+			"recranet\\forms\\tests\\": "tests/"
+		}
+	},
+	"scripts": {
+		"test": "phpunit",
+		"lint": "find src tests -name '*.php' -print0 | xargs -0 -n1 php -l | (! grep -v 'No syntax errors')"
+	},
 	"extra": {
 		"handle": "recranet-forms",
 		"name": "Forms",
@@ -23,5 +32,14 @@
 	},
 	"suggest": {
 		"recranet/craft-ai-translator": "Adds a \"Translate with AI\" button to per-site form translations, using the project glossary and tone of voice"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^11.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"yiisoft/yii2-composer": true,
+			"craftcms/plugin-installer": true
+		}
 	}
 }

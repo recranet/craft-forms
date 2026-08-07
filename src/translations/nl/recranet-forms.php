@@ -307,8 +307,7 @@ return [
 	'Translate with AI' => 'Vertaal met AI',
 	'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.' => 'Je vertaalt dit formulier naar het {language}. De structuur — veldtypes, handles, breedtes en regels — is gedeeld met het bronformulier en wordt daar bewerkt. Laat een veld leeg om terug te vallen op de brontekst.',
 	'Translations saved.' => 'Vertalingen opgeslagen.',
-	'{count} strings translated.' => '{count} teksten vertaald.',
 	'Nothing left to translate.' => 'Niets meer te vertalen.',
-	'Translating failed — check the logs.' => 'Vertalen mislukt — bekijk de logs.',
+	'Translation queued — the missing strings appear once the queue has run.' => 'Vertaling in de wachtrij gezet — de ontbrekende teksten verschijnen zodra de wachtrij heeft gedraaid.',
 	'source' => 'bron',
 ];

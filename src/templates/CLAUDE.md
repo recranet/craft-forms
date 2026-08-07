@@ -10,7 +10,7 @@ CP templates (builder, indexes, settings) and the overridable defaults for the f
 - `settings.twig` — plugin settings, five tab panes (captcha / spam checks / storage / retention / uploads; `rfs-` prefix, all inputs stay in the DOM so one form posts everything)
 - `_render/form.twig` — default front-end form; `_render/submission.twig` — tokenized self-service view
 - `_emails/notification.twig` (owner), `_emails/confirmation.twig` (submitter)
-- `_preview.twig` — iframe wrapper for the split-view previews (neutral Bootstrap CDN CSS: preview shows structure/wording, not site design)
+- `_preview.twig` — iframe wrapper for the split-view previews; bundles a small neutral stylesheet for the Bootstrap classes `_render/form.twig` emits (no CDN — works offline; extend it when the render template gains classes). Preview shows structure/wording, not site design
 - `utilities/email-test.twig` — SMTP test utility
 
 ## Override resolution (keep intact everywhere)

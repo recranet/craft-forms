@@ -1,5 +1,13 @@
 # Release Notes for Recranet Forms
 
+## Unreleased
+
+- "Translate with AI" now runs through the queue instead of inline in the CP request — a large form no longer risks a browser timeout, and a failed translation stays visible (and retryable) in the queue. When nothing is missing the button still answers instantly.
+- The form preview no longer loads Bootstrap from a CDN: a small bundled stylesheet covers the default template's markup, so the preview also renders on control panels without internet access.
+- Unit tests (rule evaluator PHP/JS contract, six-locale translation parity) and a GitHub Actions CI workflow (lint + tests on PHP 8.2/8.4). `composer lint` / `composer test`.
+- The `en` translation file carries the six front-end keys it was missing (identity mappings; rendering was already correct via fallback).
+- Directory-scoped CLAUDE.md files and three new skills for plugin development.
+
 ## 2.7.0 - 2026-08-06
 
 - **Form text is translatable per site, from the control panel.** Labels, placeholders, descriptions and consent text, option labels, custom validation messages, the form name and the email subjects/bodies now have per-site translations stored in the database — editors change wording on production without a developer or a deploy. Pick a site from the breadcrumb site menu, the same switcher entries use. Structure (field types, handles, widths, rules) stays shared with the source form, and an empty translation falls back to the source text.

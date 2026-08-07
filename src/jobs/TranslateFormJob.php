@@ -36,11 +36,6 @@ class TranslateFormJob extends BaseJob
 		// "started" and "done" — this only keeps the queue widget honest.
 		$this->setProgress($queue, 0);
 
-		// NOTE: formTranslations::translateWithAi() is owned by the storage
-		// layer (it reads the form's translatable strings, calls the
-		// AiTranslate service and persists the result). It is being built
-		// alongside this job; until it lands, this job will fail with an
-		// unknown-method error.
 		Plugin::getInstance()->formTranslations->translateWithAi($this->formId, $this->targetSiteId);
 
 		$this->setProgress($queue, 1);

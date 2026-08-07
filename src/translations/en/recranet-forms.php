@@ -3,6 +3,12 @@
 // English translations for front-end plugin strings (source strings are English;
 // identity mappings below are listed so every locale file carries the same keys)
 return [
+	'Thank you! Your message has been sent.' => 'Thank you! Your message has been sent.',
+	'Something went wrong. Please try again later.' => 'Something went wrong. Please try again later.',
+	'Something went wrong verifying your submission. Please try again later.' => 'Something went wrong verifying your submission. Please try again later.',
+	'{label} is required.' => '{label} is required.',
+	'{label} must be a valid email address.' => '{label} must be a valid email address.',
+	'{label} has an invalid value.' => '{label} has an invalid value.',
 	'{label} must be a number.' => '{label} must be a number.',
 	'{label} must be a valid date.' => '{label} must be a valid date.',
 	'{label} must be a valid URL.' => '{label} must be a valid URL.',
@@ -302,8 +308,7 @@ return [
 	'Translate with AI' => 'Translate with AI',
 	'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.' => 'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.',
 	'Translations saved.' => 'Translations saved.',
-	'{count} strings translated.' => '{count} strings translated.',
 	'Nothing left to translate.' => 'Nothing left to translate.',
-	'Translating failed — check the logs.' => 'Translating failed — check the logs.',
+	'Translation queued — the missing strings appear once the queue has run.' => 'Translation queued — the missing strings appear once the queue has run.',
 	'source' => 'source',
 ];

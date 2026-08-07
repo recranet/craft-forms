@@ -29,11 +29,12 @@ The shared foundation is **one rule shape** used everywhere: `{field: <uid>, ope
 
 ## Phase 2 — editor workflow
 
-- **Confirmations per form:** text / redirect (merge tags in query string), with a non-deletable default as guaranteed fallback.
-- **Multiple notifications per form**, each toggleable, Send To = fixed address / a form field / routing rules (`if onderwerp is X → x@…`) — reuses the Phase 1 rule shape.
-- **Resend notification** element action (+ queue job).
-- **CSV export** via `craft\base\ElementExporter` — mostly free from the element index, don't build custom.
-- **Embed snippet + preview** in the form edit screen.
+**Mostly shipped:** resend notification + "Not spam" element actions (v2.5.0), expanded CSV export (v2.1.0), embed snippet + split-view previews (v2.5.0), per-form mail settings with template picker, editable intro/confirmation body and merge-tag routing in recipients (v2.2.0–2.3.0), per-site translations with AI fill (v2.7.0).
+
+Still open:
+
+- **Confirmations per form:** success text / redirect choice (merge tags in query string), with a non-deletable default as guaranteed fallback. Today: one flash message + optional redirect in the template.
+- **Multiple notifications per form**, each toggleable, Send To = fixed address / a form field / routing rules (`if onderwerp is X → x@…`) — reuses the rule shape. Today: one notification; routing only via merge tags in the recipients string.
 - **Notes on a submission** (optionally emailed) — later, only if editors ask.
 
 ## Phase 0.5 — secure-forms absorption
@@ -42,13 +43,13 @@ The shared foundation is **one rule shape** used everywhere: `{field: <uid>, ope
 
 ## Phase 3 — spam & GDPR
 
-- **Min-submit-time** check (store render timestamp, reject < N seconds): free, no third party, catches most bots.
-- **One-time submit token** (replay/double-submit guard).
-- **Throttle** per form+IP (cache counter, ~20 lines — none of the three do this well).
-- **Blocked keywords/emails** simple list — skip expression languages.
-- **Spam behaviour setting:** simulate-success (current, default) vs show-errors (debug); spam retention cap pruned by GC.
-- **Data retention per form** (delete/anonymize after N days) via Craft GC hook + console command — the AVG question comes up on every client.
-- **Consent field** that snapshots the consent text with the submission.
+**Mostly shipped:** min-submit-time (v2.1.0), throttle per form+IP (v2.5.0), sender blocklist (v2.1.0), per-form retention with delete/anonymize modes (v2.5.0), consent field with snapshotted text (v2.3.0), double-submit dedupe via idempotency key (v2.0.0), tokenized self-service view/erase (v2.3.0).
+
+Still open:
+
+- **One-time submit token** (true replay guard — the idempotency key dedupes identical content but doesn't stop replays with varied content).
+- **Spam behaviour setting:** simulate-success (current, default) vs show-errors (debug).
+- **Spam retention cap:** prune stored spam faster than regular submissions.
 
 ## Explicitly skipped (bloat for our use case)
 

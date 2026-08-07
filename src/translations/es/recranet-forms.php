@@ -307,8 +307,7 @@ return [
 	'Translate with AI' => 'Traducir con IA',
 	'You are translating this form into {language}. Structure — field types, handles, widths and rules — is shared with the source form and is edited there. Leave a field empty to fall back to the source text.' => 'Estás traduciendo este formulario al {language}. La estructura — tipos de campo, handles, anchos y reglas — se comparte con el formulario de origen y se edita allí. Deja un campo vacío para usar el texto de origen.',
 	'Translations saved.' => 'Traducciones guardadas.',
-	'{count} strings translated.' => '{count} textos traducidos.',
 	'Nothing left to translate.' => 'No queda nada por traducir.',
-	'Translating failed — check the logs.' => 'La traducción falló — revisa los registros.',
+	'Translation queued — the missing strings appear once the queue has run.' => 'Traducción puesta en cola — los textos que faltan aparecerán cuando la cola se haya ejecutado.',
 	'source' => 'origen',
 ];

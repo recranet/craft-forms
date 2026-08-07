@@ -4,6 +4,7 @@ namespace recranet\forms\controllers;
 
 use Craft;
 use craft\web\Controller;
+use recranet\forms\jobs\TranslateFormJob;
 use recranet\forms\models\Form;
 use recranet\forms\Plugin;
 use yii\web\NotFoundHttpException;
@@ -181,20 +182,18 @@ class FormsController extends Controller
 		$view = Craft::$app->getView();
 
 		if ($type === 'form') {
-			// Render the front-end template exactly as the site would
+			// Render the front-end template exactly as the site would. The
+			// preview page brings its own neutral stylesheet: the project's
+			// compiled CSS isn't reachable from the CP, and the point of this
+			// preview is the structure and wording, not the site's design
 			$body = (string)Plugin::getInstance()->forms->renderFormPreview($form);
 			$title = Craft::t('recranet-forms', 'Form preview');
-			// A neutral stylesheet: the project's own compiled CSS isn't
-			// reachable from the CP, and the point of this preview is the
-			// structure and wording, not the site's visual design
-			$head = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">';
 			$note = Craft::t('recranet-forms', 'Shown with neutral styling, without your site’s own design — this preview is about the fields, order and wording.');
 		} else {
 			$submission = Plugin::getInstance()->forms->sampleSubmission($form);
 			$body = Plugin::getInstance()->notifications->previewEmail($form, $submission, $type);
 			$subject = Plugin::getInstance()->notifications->previewSubject($form, $submission, $type);
 			$title = Craft::t('recranet-forms', 'Email preview');
-			$head = '';
 			$note = Craft::t('recranet-forms', 'Subject: {subject}', ['subject' => $subject])
 				. ' — ' . Craft::t('recranet-forms', 'Sample values, nothing was sent or stored.');
 		}
@@ -202,7 +201,7 @@ class FormsController extends Controller
 		$html = $view->renderTemplate('recranet-forms/_preview', [
 			'title' => $title,
 			'note' => $note,
-			'head' => $head,
+			'withFormCss' => $type === 'form',
 			'body' => $body,
 		]);
 
@@ -273,9 +272,14 @@ class FormsController extends Controller
 	}
 
 	/**
-	 * Machine-translate a form's missing strings for one site, using the AI
-	 * Translator plugin's provider (so the project's glossary and tone-of-
-	 * voice apply). Existing translations are never overwritten.
+	 * Queue machine translation of a form's missing strings for one site,
+	 * using the AI Translator plugin's provider (so the project's glossary
+	 * and tone-of-voice apply). Existing translations are never overwritten.
+	 *
+	 * Queued rather than run inline: a form's translation is a real LLM round
+	 * trip, too slow for a CP request. Whether anything is missing is checked
+	 * here first — that's a local DB lookup, and "nothing to do" as instant
+	 * feedback beats a no-op job in the queue.
 	 */
 	public function actionTranslate(): Response
 	{
@@ -285,18 +289,26 @@ class FormsController extends Controller
 		$formId = (int)$request->getRequiredBodyParam('formId');
 		$siteId = (int)$request->getRequiredBodyParam('siteId');
 
-		try {
-			$count = Plugin::getInstance()->formTranslations->translateWithAi($formId, $siteId);
-		} catch (\Throwable $e) {
-			Plugin::error("AI translation failed for form {$formId}: {$e->getMessage()}");
-			Craft::$app->getSession()->setError(Craft::t('recranet-forms', 'Translating failed — check the logs.'));
+		$form = Plugin::getInstance()->forms->getFormById($formId);
+
+		if (!$form) {
+			throw new NotFoundHttpException('Form not found.');
+		}
+
+		$progress = Plugin::getInstance()->formTranslations->progress($form, $siteId);
+
+		if ($progress['translated'] >= $progress['total']) {
+			Craft::$app->getSession()->setNotice(Craft::t('recranet-forms', 'Nothing left to translate.'));
 
 			return $this->redirectToPostedUrl();
 		}
 
-		Craft::$app->getSession()->setNotice($count > 0
-			? Craft::t('recranet-forms', '{count} strings translated.', ['count' => $count])
-			: Craft::t('recranet-forms', 'Nothing left to translate.'));
+		Craft::$app->getQueue()->push(new TranslateFormJob([
+			'formId' => $formId,
+			'targetSiteId' => $siteId,
+		]));
+
+		Craft::$app->getSession()->setNotice(Craft::t('recranet-forms', 'Translation queued — the missing strings appear once the queue has run.'));
 
 		return $this->redirectToPostedUrl();
 	}
