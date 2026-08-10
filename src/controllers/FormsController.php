@@ -145,6 +145,7 @@ class FormsController extends Controller
 		$form->subject = (string)$request->getBodyParam('subject', '');
 		$form->notificationTemplate = (string)$request->getBodyParam('notificationTemplate', '');
 		$form->notificationIntro = (string)$request->getBodyParam('notificationIntro', '');
+		$form->extraNotifications = Plugin::getInstance()->forms->normalizeExtraNotifications((array)$request->getBodyParam('extraNotifications', []));
 		$form->sendConfirmation = (bool)$request->getBodyParam('sendConfirmation', false);
 		$form->confirmationSubject = (string)$request->getBodyParam('confirmationSubject', '');
 		$form->confirmationTemplate = (string)$request->getBodyParam('confirmationTemplate', '');

@@ -82,6 +82,22 @@ class Form extends Model
 	 */
 	public string $notificationIntro = '';
 
+	/**
+	 * Extra owner notifications on top of the main one. Ordered rows:
+	 *
+	 *   ['enabled' => bool, 'name' => string, 'recipients' => string,
+	 *    'subject' => string, 'conditions' => ?array]
+	 *
+	 * Recipients support the same merge tags as the main recipients string
+	 * (so "a form field" is just `{email}`); subject '' inherits the main
+	 * subject. `conditions` reuses the conditional-fields rule shape and
+	 * decides WHETHER the notification is sent for a submission (empty =
+	 * always) — that is the routing: "if onderwerp is X, also mail x@…".
+	 * Evaluation fails open: a broken rule sends rather than silently
+	 * dropping a route.
+	 */
+	public array $extraNotifications = [];
+
 	/** Whether to send a confirmation email to the submitter (requires an email field) */
 	public bool $sendConfirmation = false;
 
@@ -249,6 +265,37 @@ class Form extends Model
 				// A field must not depend on itself — the evaluator would treat its own (possibly hidden) value as input
 				if (($rule['field'] ?? null) === ($field['uid'] ?? '')) {
 					Craft::warning("Form \"{$this->handle}\", field row {$row}: condition references the field itself.", __METHOD__);
+				}
+			}
+		}
+
+		// Extra notifications route on the same rule shape — same lenient
+		// checks (the evaluator fails open, so a broken rule still sends)
+		foreach ($this->extraNotifications as $i => $extra) {
+			$conditions = $extra['conditions'] ?? null;
+
+			if (!is_array($conditions)) {
+				continue;
+			}
+
+			$row = $i + 1;
+			$mode = $conditions['mode'] ?? null;
+
+			if ($mode !== null && !in_array($mode, ['all', 'any'], true)) {
+				Craft::warning("Form \"{$this->handle}\", extra notification {$row}: unknown conditions mode \"{$mode}\" (treated as \"all\").", __METHOD__);
+			}
+
+			foreach ((array)($conditions['rules'] ?? []) as $rule) {
+				if (!is_array($rule)) {
+					continue;
+				}
+
+				if (!empty($rule['operator']) && !in_array($rule['operator'], RuleEvaluator::OPERATORS, true)) {
+					Craft::warning("Form \"{$this->handle}\", extra notification {$row}: unknown condition operator \"{$rule['operator']}\" (rule ignored).", __METHOD__);
+				}
+
+				if (!empty($rule['field']) && !in_array($rule['field'], $uids, true)) {
+					Craft::warning("Form \"{$this->handle}\", extra notification {$row}: condition references unknown field uid \"{$rule['field']}\" (rule ignored).", __METHOD__);
 				}
 			}
 		}

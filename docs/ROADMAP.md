@@ -31,9 +31,10 @@ The shared foundation is **one rule shape** used everywhere: `{field: <uid>, ope
 
 **Mostly shipped:** resend notification + "Not spam" element actions (v2.5.0), expanded CSV export (v2.1.0), embed snippet + split-view previews (v2.5.0), per-form mail settings with template picker, editable intro/confirmation body and merge-tag routing in recipients (v2.2.0–2.3.0), per-site translations with AI fill (v2.7.0).
 
+**✅ Multiple notifications per form shipped (2026-08-10):** extra notifications on the form's Notification tab, each toggleable, own recipients (merge tags cover "send to a form field") and optional subject, gated per submission by routing rules in the conditional-fields rule shape.
+
 Still open:
 
-- **Multiple notifications per form**, each toggleable, Send To = fixed address / a form field / routing rules (`if onderwerp is X → x@…`) — reuses the rule shape. Today: one notification; routing only via merge tags in the recipients string.
 - **Notes on a submission** (optionally emailed) — later, only if editors ask.
 
 *(Shipped since: per-form success message/redirect + Ajax submit + stencils, 2.10.0.)*

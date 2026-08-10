@@ -7,6 +7,7 @@ use craft\web\View;
 use recranet\forms\elements\Submission;
 use recranet\forms\models\Form;
 use recranet\forms\Plugin;
+use recranet\forms\rules\RuleEvaluator;
 use yii\base\Component;
 
 /**
@@ -19,6 +20,13 @@ use yii\base\Component;
  * syntax: submitted values by field handle ({onderwerp}) plus {formName},
  * {ref}, {sourceUrl} and {date}. A broken tag never breaks the mail — the
  * raw string is used instead and a warning is logged.
+ *
+ * A form may carry extra notifications (Form::$extraNotifications): same
+ * rendered body, own recipients and optional subject, each gated by the
+ * conditional-fields rule shape (routing). They ride along with every main
+ * send — including CP resends and "Not spam" — and their failures are
+ * logged but never affect the main send's result: the "failed" status
+ * tracks the owner notification only.
  */
 class Notifications extends Component
 {
@@ -42,13 +50,26 @@ class Notifications extends Component
 			? Craft::$app->getSites()->getPrimarySite()->id
 			: $submission->siteId;
 
-		[$subject, $html] = $this->inSiteContext($siteId, function () use ($form, $submission, $siteId) {
+		[$subject, $html, $extraSubjects] = $this->inSiteContext($siteId, function () use ($form, $submission, $siteId) {
 			$form = Plugin::getInstance()->formTranslations->applyTo($form, $siteId);
 
-			return [
 			// Subject supports merge tags, e.g. "Aanvraag {onderwerp} — #{ref}"
-				$this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission),
+			$subject = $this->renderTemplateString($form->subject ?: "New submission: {$form->name}", $form, $submission);
+
+			// Extra-notification subjects render in the same site context;
+			// an empty subject inherits the main one
+			$extraSubjects = [];
+
+			foreach ($form->extraNotifications as $i => $extra) {
+				$extraSubjects[$i] = ($extra['subject'] ?? '') !== ''
+					? $this->renderTemplateString($extra['subject'], $form, $submission)
+					: $subject;
+			}
+
+			return [
+				$subject,
 				$this->renderEmail('recranet-forms/_emails/notification', $form, $submission, $form->notificationTemplate),
+				$extraSubjects,
 			];
 		});
 
@@ -68,13 +89,61 @@ class Notifications extends Component
 			$message->setReplyTo($submitterEmail);
 		}
 
-		if (!$message->send()) {
-			Craft::error("Form \"{$form->handle}\": notification email failed to send.", __METHOD__);
+		$sent = $message->send();
 
-			return false;
+		if (!$sent) {
+			Craft::error("Form \"{$form->handle}\": notification email failed to send.", __METHOD__);
 		}
 
-		return true;
+		// Extra notifications ride along even when the main send failed —
+		// a routed copy reaching sales is worth more than none at all
+		$this->sendExtraNotifications($form, $submission, $extraSubjects, $html, $siteId, $submitterEmail);
+
+		return $sent;
+	}
+
+	/**
+	 * Send each enabled extra notification whose routing rules match this
+	 * submission. The body is the main notification's rendered HTML — an
+	 * extra differs in who gets it and under which subject, not in content.
+	 * The rules reuse the conditional-fields shape ("visible" = this route
+	 * applies) and fail open, so a broken rule sends rather than silently
+	 * dropping a route. Failures are logged per notification.
+	 */
+	private function sendExtraNotifications(Form $form, Submission $submission, array $subjects, string $html, ?int $siteId, ?string $submitterEmail): void
+	{
+		foreach ($form->extraNotifications as $i => $extra) {
+			if (empty($extra['enabled'])) {
+				continue;
+			}
+
+			// Routing: formData is uid-keyed, exactly what the evaluator wants
+			if (!RuleEvaluator::isVisible($extra['conditions'] ?? null, $submission->formData)) {
+				continue;
+			}
+
+			$label = ($extra['name'] ?? '') !== '' ? "\"{$extra['name']}\"" : '#' . ($i + 1);
+			$recipients = $this->resolveRecipientString((string)($extra['recipients'] ?? ''), $form, $submission);
+
+			if (!$recipients) {
+				Plugin::error("Form \"{$form->handle}\": extra notification {$label} has no valid recipients — skipped.");
+				continue;
+			}
+
+			$message = Craft::$app->getMailer()->compose()
+				->setTo($recipients)
+				->setSubject($subjects[$i] ?? '')
+				->setHtmlBody($html);
+			$message->siteId = $siteId;
+
+			if ($submitterEmail) {
+				$message->setReplyTo($submitterEmail);
+			}
+
+			if (!$message->send()) {
+				Plugin::error("Form \"{$form->handle}\": extra notification {$label} failed to send.");
+			}
+		}
 	}
 
 	/**
@@ -289,17 +358,35 @@ class Notifications extends Component
 	 */
 	private function resolveRecipients(Form $form, Submission $submission): array
 	{
-		$rendered = $this->renderTemplateString($form->recipients, $form, $submission);
-		$recipients = array_filter(array_map('trim', explode(',', $rendered)));
+		$recipients = $this->resolveRecipientString($form->recipients, $form, $submission);
 
 		// Nothing configured (or everything rendered away): fall back to
 		// the model's list, which resolves the system email
 		if (!$recipients) {
-			$recipients = $form->getRecipientList();
+			$recipients = $this->validRecipients($form->getRecipientList(), $form);
 		}
 
-		// Drop anything that didn't render into a valid address — one bad
-		// merge tag must not make the whole mail fail at transport level
+		return $recipients;
+	}
+
+	/**
+	 * Render merge tags in a recipients string, split it and keep the valid
+	 * addresses. Rendering happens BEFORE the split — a single tag may
+	 * expand to several comma-separated addresses.
+	 */
+	private function resolveRecipientString(string $recipients, Form $form, Submission $submission): array
+	{
+		$rendered = $this->renderTemplateString($recipients, $form, $submission);
+
+		return $this->validRecipients(array_filter(array_map('trim', explode(',', $rendered))), $form);
+	}
+
+	/**
+	 * Drop anything that isn't a valid address — one bad merge tag must not
+	 * make the whole mail fail at transport level.
+	 */
+	private function validRecipients(array $recipients, Form $form): array
+	{
 		return array_values(array_filter($recipients, function (string $recipient) use ($form): bool {
 			if (filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
 				return true;

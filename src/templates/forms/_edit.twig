@@ -58,6 +58,35 @@
 
 {# A single field card. Used for saved fields; the JS <template> clone uses the
    same markup with a fresh index. #}
+{# One extra-notification row: name + enabled toggle, recipients, subject
+   override and a routing-rules editor (same conditions component as the
+   field cards — the hidden JSON input + .rf-conditions-ui pair the JS
+   picks up). Also cloned by JS from #rf-extra-template with __XN__ as
+   the index placeholder. #}
+{% macro extraNotification(extra, index) %}
+	<div class="rf-extra" data-rf-extra>
+		<div class="rf-extra__head">
+			<input type="text" class="text" name="extraNotifications[{{ index }}][name]" value="{{ extra.name ?? '' }}"
+				placeholder="{{ 'Name (e.g. “Sales”)'|t('recranet-forms') }}" aria-label="{{ 'Notification name'|t('recranet-forms') }}" />
+			<label class="rf-extra__enabled">
+				<input type="hidden" name="extraNotifications[{{ index }}][enabled]" value="" />
+				<input type="checkbox" name="extraNotifications[{{ index }}][enabled]" value="1" {{ (extra.enabled ?? true) ? 'checked' }} />
+				{{ 'Enabled'|t('recranet-forms') }}
+			</label>
+			<button type="button" class="delete icon" data-rf-extra-delete title="{{ 'Remove notification'|t('recranet-forms') }}"></button>
+		</div>
+		<input type="text" class="text fullwidth" name="extraNotifications[{{ index }}][recipients]" value="{{ extra.recipients ?? '' }}"
+			placeholder="{{ 'Recipients (comma-separated, merge tags supported)'|t('recranet-forms') }}" aria-label="{{ 'Recipients'|t('recranet-forms') }}" />
+		<input type="text" class="text fullwidth" name="extraNotifications[{{ index }}][subject]" value="{{ extra.subject ?? '' }}"
+			placeholder="{{ 'Subject (empty = the main subject)'|t('recranet-forms') }}" aria-label="{{ 'Subject'|t('recranet-forms') }}" />
+		<div data-rf-conditions-editor>
+			<div class="rf-extra__rules-label">{{ 'Only send when'|t('recranet-forms') }}</div>
+			<input type="hidden" name="extraNotifications[{{ index }}][conditions]" value="{{ extra.conditions is defined and extra.conditions ? extra.conditions|json_encode }}" class="rf-conditions-json" />
+			<div class="rf-conditions-ui"></div>
+		</div>
+	</div>
+{% endmacro %}
+
 {% macro fieldCard(field, index, fieldTypes, allFields, paymentEnabled = false) %}
 	{# data-width drives the builder's two-column grid (mirrors the site layout);
 	   the card starts collapsed — the bar is the toggle #}
@@ -546,6 +575,18 @@
 			})
 		}}
 
+		<hr>
+		<h2>{{ 'Extra notifications'|t('recranet-forms') }}</h2>
+		<p class="rf-settings-hint">{{ 'extraNotifications.hint'|t('recranet-forms') }}</p>
+
+		<div id="rf-extra-notifications">
+			{% for extra in form.extraNotifications %}
+				{{ _self.extraNotification(extra, loop.index0) }}
+			{% endfor %}
+		</div>
+		<template id="rf-extra-template">{{ _self.extraNotification({}, '__XN__') }}</template>
+		<button type="button" class="btn add icon" data-rf-extra-add>{{ 'Add notification'|t('recranet-forms') }}</button>
+
 		{% if form.id %}
 			{{ _self.previewPanel(form.id, 'notification', 'Preview notification email'|t('recranet-forms')) }}
 		{% endif %}
@@ -724,6 +765,15 @@
 	.rf-rule { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 	.rf-rule select, .rf-rule input { min-width: 0; }
 	.rf-conditions-mode { margin-top: 8px; }
+
+	/* Extra notifications (Notification tab): one bordered row per route */
+	.rf-extra { border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); padding: 12px 16px; margin-bottom: 12px; }
+	.rf-extra__head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+	.rf-extra__head .text { flex: 1; }
+	.rf-extra__enabled { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+	.rf-extra > .text { margin-bottom: 8px; }
+	.rf-extra__rules-label { font-size: 12px; font-weight: 600; margin-top: 4px; }
+	#rf-extra-notifications + template + [data-rf-extra-add] { margin-bottom: 16px; }
 	@media (max-width: 900px) { .rf-field__grid { grid-template-columns: 1fr 1fr; } .rf-builder__fields { grid-template-columns: 1fr; } .rf-field[data-width='half'] { grid-column: 1 / -1; } }
 
 	/* Drop feedback (palette tiles and card moves share it): a full-width
@@ -847,8 +897,10 @@
 
 			function serialize() {
 				jsonInput.value = state.rules.length ? JSON.stringify(state) : '';
-				// The "conditional" chip on the bar mirrors this input
-				updateChips(editor.closest('.rf-field'));
+				// The "conditional" chip on the bar mirrors this input (extra-
+				// notification editors sit outside a field card — no chip there)
+				var card = editor.closest('.rf-field');
+				if (card) updateChips(card);
 			}
 
 			function fieldOptions(selected) {
@@ -1006,6 +1058,31 @@
 		}
 
 		list.querySelectorAll('.rf-field').forEach(initCard);
+
+		// Extra notifications (Notification tab): add/remove rows; every row
+		// gets the same conditions editor the field cards use, here serving
+		// as the routing-rules UI. New rows get an 'nN' index so their posted
+		// keys never collide with the Twig-rendered 0..n rows.
+		var extraList = document.getElementById('rf-extra-notifications');
+
+		if (extraList) {
+			var extraIndex = 0;
+			extraList.querySelectorAll('[data-rf-conditions-editor]').forEach(conditionsUI);
+
+			document.querySelector('[data-rf-extra-add]').addEventListener('click', function () {
+				var wrap = document.createElement('div');
+				wrap.innerHTML = document.getElementById('rf-extra-template').innerHTML.replace(/__XN__/g, 'n' + (extraIndex++));
+				var row = wrap.firstElementChild;
+				extraList.appendChild(row);
+				conditionsUI(row.querySelector('[data-rf-conditions-editor]'));
+				row.querySelector('input[type="text"]').focus();
+			});
+
+			extraList.addEventListener('click', function (e) {
+				var del = e.target.closest('[data-rf-extra-delete]');
+				if (del) del.closest('[data-rf-extra]').remove();
+			});
+		}
 
 		// Card reordering and palette drops share ONE native HTML5 drag system
 		// (see the handlers further down): the drop position decides row insert

@@ -79,6 +79,7 @@ class Forms extends Component
 			'subject' => $form->subject,
 			'notificationTemplate' => $form->notificationTemplate,
 			'notificationIntro' => $form->notificationIntro,
+			'extraNotifications' => $form->extraNotifications,
 			'sendConfirmation' => $form->sendConfirmation,
 			'confirmationSubject' => $form->confirmationSubject,
 			'confirmationTemplate' => $form->confirmationTemplate,
@@ -172,6 +173,7 @@ class Forms extends Component
 				'subject' => $form->subject,
 				'notificationTemplate' => $form->notificationTemplate,
 				'notificationIntro' => $form->notificationIntro,
+				'extraNotifications' => $form->extraNotifications,
 				'sendConfirmation' => $form->sendConfirmation,
 				'confirmationSubject' => $form->confirmationSubject,
 				'confirmationTemplate' => $form->confirmationTemplate,
@@ -203,6 +205,7 @@ class Forms extends Component
 			'subject' => (string)($settings['subject'] ?? ''),
 			'notificationTemplate' => (string)($settings['notificationTemplate'] ?? ''),
 			'notificationIntro' => (string)($settings['notificationIntro'] ?? ''),
+			'extraNotifications' => $this->normalizeExtraNotifications((array)($settings['extraNotifications'] ?? [])),
 			'sendConfirmation' => (bool)($settings['sendConfirmation'] ?? false),
 			'confirmationSubject' => (string)($settings['confirmationSubject'] ?? ''),
 			'confirmationTemplate' => (string)($settings['confirmationTemplate'] ?? ''),
@@ -251,14 +254,74 @@ class Forms extends Component
 		}
 		unset($field);
 
+		// Extra notifications route on field uids too — remap those rules as well
+		$extras = $source->extraNotifications;
+
+		foreach ($extras as &$extra) {
+			foreach ((array)($extra['conditions']['rules'] ?? []) as $i => $rule) {
+				if (isset($uidMap[$rule['field'] ?? ''])) {
+					$extra['conditions']['rules'][$i]['field'] = $uidMap[$rule['field']];
+				}
+			}
+		}
+		unset($extra);
+
 		$copy = clone $source;
 		$copy->id = null;
 		$copy->uid = null;
 		$copy->name = $source->name . ' copy';
 		$copy->handle = $this->uniqueHandle($source->handle . 'Copy');
 		$copy->fields = $fields;
+		$copy->extraNotifications = $extras;
 
 		return $this->saveForm($copy) ? $copy : null;
+	}
+
+	/**
+	 * Normalize extra-notification rows from any source (builder post, JSON
+	 * import, stored settings): the builder serializes `conditions` as a JSON
+	 * string in a hidden input, exports carry it as an array — both come out
+	 * as ?array. Fully empty rows are dropped, everything else is trimmed to
+	 * the known shape.
+	 */
+	public function normalizeExtraNotifications(array $rows): array
+	{
+		$normalized = [];
+
+		foreach ($rows as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+
+			$conditions = $row['conditions'] ?? null;
+
+			if (is_string($conditions)) {
+				$conditions = $conditions !== '' ? Json::decodeIfJson($conditions) : null;
+			}
+
+			if (!is_array($conditions) || empty($conditions['rules'])) {
+				$conditions = null;
+			}
+
+			$name = trim((string)($row['name'] ?? ''));
+			$recipients = trim((string)($row['recipients'] ?? ''));
+			$subject = trim((string)($row['subject'] ?? ''));
+
+			// An untouched blank row from the builder is not a notification
+			if ($name === '' && $recipients === '' && $subject === '' && $conditions === null) {
+				continue;
+			}
+
+			$normalized[] = [
+				'enabled' => (bool)($row['enabled'] ?? false),
+				'name' => $name,
+				'recipients' => $recipients,
+				'subject' => $subject,
+				'conditions' => $conditions,
+			];
+		}
+
+		return $normalized;
 	}
 
 	/**
@@ -302,6 +365,7 @@ class Forms extends Component
 			'subject' => $settings['subject'] ?? '',
 			'notificationTemplate' => $settings['notificationTemplate'] ?? '',
 			'notificationIntro' => $settings['notificationIntro'] ?? '',
+			'extraNotifications' => $this->normalizeExtraNotifications((array)($settings['extraNotifications'] ?? [])),
 			'sendConfirmation' => (bool)($settings['sendConfirmation'] ?? false),
 			'confirmationSubject' => $settings['confirmationSubject'] ?? '',
 			'confirmationTemplate' => $settings['confirmationTemplate'] ?? '',
