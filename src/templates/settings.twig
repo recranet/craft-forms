@@ -117,8 +117,11 @@
 </div>
 </div>
 
-<div data-rfs-show="recaptcha-v3 recaptcha-enterprise">
-<h3>{{ 'Scoring'|t('recranet-forms') }}</h3>
+{# The sections below are collapsible (native <details>): the defaults are
+   sane, so a fresh install only needs the provider + keys above. Closed
+   details still post — the inputs never leave the DOM. #}
+<details class="rfs-group" data-rfs-show="recaptcha-v3 recaptcha-enterprise">
+<summary><strong>{{ 'Scoring'|t('recranet-forms') }}</strong><span class="rfs-group__hint">{{ '0.5 / 0.3 by default — tune only when real submissions get flagged'|t('recranet-forms') }}</span></summary>
 <p class="rf-settings-hint">{{ 'settings.captcha.scoring.hint'|t('recranet-forms') }}</p>
 
 <div>
@@ -153,10 +156,10 @@
 		})
 	}}
 </div>
-</div>
+</details>
 
-<div data-rfs-show="recaptcha-v2 recaptcha-v3 recaptcha-enterprise turnstile">
-<h3>{{ 'Failure handling'|t('recranet-forms') }}</h3>
+<details class="rfs-group" data-rfs-show="recaptcha-v2 recaptcha-v3 recaptcha-enterprise turnstile">
+<summary><strong>{{ 'Failure handling'|t('recranet-forms') }}</strong><span class="rfs-group__hint">{{ 'What happens when the captcha itself breaks — never treated as spam'|t('recranet-forms') }}</span></summary>
 <p class="rf-settings-hint">{{ 'settings.captcha.failure.hint'|t('recranet-forms') }}</p>
 
 {{
@@ -187,12 +190,13 @@
 		errors: settings.getErrors('captchaAllowedHostnames')
 	})
 }}
-</div>
+</details>
 
 {# Local checks: always on, whatever the captcha choice — they run BEFORE
    the captcha in the pipeline, so bots never cost a verification #}
-<hr />
-<p class="rf-settings-intro">{{ 'settings.spam.intro'|t('recranet-forms') }}</p>
+<details class="rfs-group">
+<summary><strong>{{ 'Automatic bot checks'|t('recranet-forms') }}</strong><span class="rfs-group__hint">{{ 'Honeypot, submit timing and throttle — on by default, invisible to visitors'|t('recranet-forms') }}</span></summary>
+<p class="rf-settings-hint">{{ 'settings.spam.intro'|t('recranet-forms') }}</p>
 
 <h3>{{ 'Honeypot'|t('recranet-forms') }}</h3>
 <p class="rf-settings-hint">{{ 'settings.spam.honeypot.hint'|t('recranet-forms') }}</p>
@@ -254,8 +258,10 @@
 		errors: settings.getErrors('throttleWindow')
 	})
 }}
+</details>
 
-<h3>{{ 'Blocklist'|t('recranet-forms') }}</h3>
+<details class="rfs-group">
+<summary><strong>{{ 'Blocklist'|t('recranet-forms') }}</strong><span class="rfs-group__hint">{{ 'Block known senders by address, domain or IP — for human spam a captcha can’t catch'|t('recranet-forms') }}</span></summary>
 <p class="rf-settings-hint">{{ 'settings.spam.blocklist.hint'|t('recranet-forms') }}</p>
 
 {{
@@ -268,6 +274,7 @@
 		errors: settings.getErrors('blocklist')
 	})
 }}
+</details>
 </div>
 
 {# ----------------------------------------------------------------- Emails #}
@@ -430,6 +437,19 @@
 	.rf-settings-hint { max-width: 65ch; margin: 0 0 16px; font-size: 12px; line-height: 1.4; color: var(--medium-text-color); }
 	/* Two stacked hints (e.g. the keys scope note) read as one block */
 	.rf-settings-hint + .rf-settings-hint { margin-top: -12px; }
+
+	/* Collapsible setting groups: summary = title + one-line hint. Closed
+	   by default — the defaults are sane; open automatically on errors (JS) */
+	.rfs-group { margin: 16px 0; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); }
+	.rfs-group > summary { display: flex; align-items: baseline; gap: 10px; padding: 12px 16px; cursor: pointer; list-style: none; }
+	.rfs-group > summary::-webkit-details-marker { display: none; }
+	.rfs-group > summary::before { content: '\25B8'; color: var(--medium-text-color); transition: transform 0.12s ease; }
+	.rfs-group[open] > summary::before { transform: rotate(90deg); }
+	.rfs-group[open] > summary { border-bottom: 1px solid var(--hairline-color); margin-bottom: 12px; }
+	.rfs-group__hint { font-size: 12px; font-weight: 400; color: var(--medium-text-color); }
+	.rfs-group > :not(summary) { margin-left: 16px; margin-right: 16px; }
+	.rfs-group > :last-child:not(summary) { padding-bottom: 16px; }
+	.rfs-group h3:first-of-type { margin-top: 0; }
 {% endcss %}
 
 {% js %}
@@ -473,5 +493,11 @@
 
 		paymentSelect.addEventListener('change', applyPaymentVisibility);
 		applyPaymentVisibility();
+
+		// A validation error inside a collapsed group must never hide from
+		// the editor — open every group that contains one
+		document.querySelectorAll('details.rfs-group').forEach(function (group) {
+			if (group.querySelector('ul.errors, .error')) group.open = true;
+		});
 	})();
 {% endjs %}

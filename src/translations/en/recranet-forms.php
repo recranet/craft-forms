@@ -369,4 +369,9 @@ return [
 	'Emails' => 'Emails',
 	'Storage & retention' => 'Storage & retention',
 	'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.' => 'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.',
+	'0.5 / 0.3 by default — tune only when real submissions get flagged' => '0.5 / 0.3 by default — tune only when real submissions get flagged',
+	'What happens when the captcha itself breaks — never treated as spam' => 'What happens when the captcha itself breaks — never treated as spam',
+	'Automatic bot checks' => 'Automatic bot checks',
+	'Honeypot, submit timing and throttle — on by default, invisible to visitors' => 'Honeypot, submit timing and throttle — on by default, invisible to visitors',
+	'Block known senders by address, domain or IP — for human spam a captcha can’t catch' => 'Block known senders by address, domain or IP — for human spam a captcha can’t catch',
 ];

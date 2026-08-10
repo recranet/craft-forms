@@ -368,4 +368,9 @@ return [
 	'Emails' => 'E-mails',
 	'Storage & retention' => 'Stockage & rétention',
 	'Recipients, subjects, texts and templates are configured per form (on the form’s Notification and Confirmation tabs). This tab holds the plugin-wide email behavior.' => 'Les destinataires, objets, textes et templates se configurent par formulaire (dans les onglets Notification et Confirmation du formulaire). Cet onglet contient le comportement e-mail global du plugin.',
+	'0.5 / 0.3 by default — tune only when real submissions get flagged' => '0.5 / 0.3 par défaut — à ajuster seulement si de vrais envois sont signalés',
+	'What happens when the captcha itself breaks — never treated as spam' => 'Ce qui se passe quand le captcha lui-même tombe en panne — jamais traité comme spam',
+	'Automatic bot checks' => 'Vérifications anti-bot automatiques',
+	'Honeypot, submit timing and throttle — on by default, invisible to visitors' => 'Honeypot, temps de saisie et limitation — actifs par défaut, invisibles pour les visiteurs',
+	'Block known senders by address, domain or IP — for human spam a captcha can’t catch' => 'Bloquez des expéditeurs connus par adresse, domaine ou IP — pour le spam humain qu’un captcha ne peut pas attraper',
 ];

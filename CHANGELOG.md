@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The **Spam protection** tab is now scannable: the provider and its keys stay in view, everything with sane defaults collapsed into four sections — Scoring, Failure handling, Automatic bot checks and Blocklist — each with a one-line summary. A validation error inside a collapsed section opens it automatically, and collapsed inputs still post.
 - Hiding the reCAPTCHA badge now automatically renders the attribution text Google requires (with links to their privacy policy and terms), so the hide-badge switch can no longer put a site out of compliance.
 - New plugin setting **Privacy page URL**: when set, every form links to the site's privacy page below the submit button. Supports env vars and relative paths.
 
