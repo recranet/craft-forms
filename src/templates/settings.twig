@@ -20,9 +20,9 @@
 <div class="rfs-pane" data-rfs-pane="captcha">
 <p class="rf-settings-intro">{{ 'settings.captcha.intro'|t('recranet-forms') }}</p>
 
-<h3>{{ 'Provider'|t('recranet-forms') }}</h3>
-<p class="rf-settings-hint">{{ 'settings.captcha.provider.hint'|t('recranet-forms') }}</p>
-
+{# The field's own label and instructions carry this section — an <h3>
+   "Provider" plus a hint above a select labelled "Provider" said the same
+   thing twice, as the first thing an installer reads. #}
 {{
 	forms.selectField({
 		label: 'Provider'|t('recranet-forms'),

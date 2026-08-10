@@ -64,23 +64,43 @@
    picks up). Also cloned by JS from #rf-extra-template with __XN__ as
    the index placeholder. #}
 {% macro extraNotification(extra, index) %}
+	{# Every input carries a visible label, not just a placeholder: a
+	   placeholder disappears the moment an editor types, and these three
+	   fields (name / recipients / subject) are indistinguishable once
+	   filled. Ids are index-based so the JS clone keeps label/input pairs
+	   intact (__XN__ becomes a unique 'nN'). #}
 	<div class="rf-extra" data-rf-extra>
 		<div class="rf-extra__head">
-			<input type="text" class="text" name="extraNotifications[{{ index }}][name]" value="{{ extra.name ?? '' }}"
-				placeholder="{{ 'Name (e.g. “Sales”)'|t('recranet-forms') }}" aria-label="{{ 'Notification name'|t('recranet-forms') }}" />
-			<label class="rf-extra__enabled">
+			<div class="rf-extra__name">
+				<label class="rf-label" for="rf-xn-name-{{ index }}">{{ 'Name'|t('recranet-forms') }}</label>
+				<input type="text" class="text fullwidth" id="rf-xn-name-{{ index }}" name="extraNotifications[{{ index }}][name]"
+					value="{{ extra.name ?? '' }}" placeholder="{{ 'e.g. “Sales”'|t('recranet-forms') }}" />
+			</div>
+			<div class="rf-extra__enabled">
+				{# The hidden input posts the "off" value, so unchecking sticks #}
 				<input type="hidden" name="extraNotifications[{{ index }}][enabled]" value="" />
-				<input type="checkbox" name="extraNotifications[{{ index }}][enabled]" value="1" {{ (extra.enabled ?? true) ? 'checked' }} />
-				{{ 'Enabled'|t('recranet-forms') }}
-			</label>
-			<button type="button" class="delete icon" data-rf-extra-delete title="{{ 'Remove notification'|t('recranet-forms') }}"></button>
+				<input type="checkbox" class="checkbox" id="rf-xn-enabled-{{ index }}" name="extraNotifications[{{ index }}][enabled]" value="1" {{ (extra.enabled ?? true) ? 'checked' }} />
+				<label for="rf-xn-enabled-{{ index }}">{{ 'Enabled'|t('recranet-forms') }}</label>
+			</div>
+			<button type="button" class="delete icon rf-extra__delete" data-rf-extra-delete
+				title="{{ 'Remove notification'|t('recranet-forms') }}" aria-label="{{ 'Remove notification'|t('recranet-forms') }}"></button>
 		</div>
-		<input type="text" class="text fullwidth" name="extraNotifications[{{ index }}][recipients]" value="{{ extra.recipients ?? '' }}"
-			placeholder="{{ 'Recipients (comma-separated, merge tags supported)'|t('recranet-forms') }}" aria-label="{{ 'Recipients'|t('recranet-forms') }}" />
-		<input type="text" class="text fullwidth" name="extraNotifications[{{ index }}][subject]" value="{{ extra.subject ?? '' }}"
-			placeholder="{{ 'Subject (empty = the main subject)'|t('recranet-forms') }}" aria-label="{{ 'Subject'|t('recranet-forms') }}" />
-		<div data-rf-conditions-editor>
-			<div class="rf-extra__rules-label">{{ 'Only send when'|t('recranet-forms') }}</div>
+		<div class="rf-extra__grid">
+			<div>
+				<label class="rf-label" for="rf-xn-to-{{ index }}">{{ 'Recipients'|t('recranet-forms') }}</label>
+				<input type="text" class="text fullwidth" id="rf-xn-to-{{ index }}" name="extraNotifications[{{ index }}][recipients]" value="{{ extra.recipients ?? '' }}" />
+				<p class="rf-hint">{{ 'Comma-separated. Merge tags work here too, so `{email}` sends to an address from the form.'|t('recranet-forms')|md(inlineOnly=true) }}</p>
+			</div>
+			<div>
+				<label class="rf-label" for="rf-xn-subject-{{ index }}">{{ 'Subject'|t('recranet-forms') }}</label>
+				<input type="text" class="text fullwidth" id="rf-xn-subject-{{ index }}" name="extraNotifications[{{ index }}][subject]" value="{{ extra.subject ?? '' }}" />
+				<p class="rf-hint">{{ 'Empty = the same subject as the main notification.'|t('recranet-forms') }}</p>
+			</div>
+		</div>
+		{# data-rf-empty-note spells out what "no rules" means — without it an
+		   empty rule list reads as unfinished instead of "always" #}
+		<div data-rf-conditions-editor data-rf-empty-note="{{ 'No rules — a copy is sent for every submission.'|t('recranet-forms') }}">
+			<label class="rf-label">{{ 'Only send when'|t('recranet-forms') }}</label>
 			<input type="hidden" name="extraNotifications[{{ index }}][conditions]" value="{{ extra.conditions is defined and extra.conditions ? extra.conditions|json_encode }}" class="rf-conditions-json" />
 			<div class="rf-conditions-ui"></div>
 		</div>
@@ -95,11 +115,21 @@
 		   by it. It must survive every re-save; new cards post an empty uid and
 		   the Forms service assigns one. #}
 		<input type="hidden" name="fields[{{ index }}][uid]" value="{{ field.uid ?? '' }}" />
-		<div class="rf-field__bar" role="button" tabindex="0" aria-expanded="false" title="{{ 'Click to edit, Alt+arrow keys to move'|t('recranet-forms') }}">
-			<a class="move icon rf-field__move" title="{{ 'Drag to reorder'|t('recranet-forms') }}" role="button" aria-label="{{ 'Drag to reorder'|t('recranet-forms') }}"></a>
+		{# aria-label carries JUST the field name (kept in sync by the JS that
+		   renders the title): without it the bar's accessible name is every
+		   child concatenated — "Drag to reorder Bericht textarea Duplicate
+		   Delete field". The drag handle is mouse-only (HTML5 DnD gives
+		   nothing to keyboard or touch, Alt+arrows is that path), so it is
+		   hidden from assistive tech instead of posing as a control. #}
+		<div class="rf-field__bar" role="button" tabindex="0" aria-expanded="false"
+			aria-label="{{ field.label ?: 'New field'|t('recranet-forms') }}"
+			title="{{ 'Click to edit, Alt+arrow keys to move'|t('recranet-forms') }}">
+			<a class="move icon rf-field__move" aria-hidden="true"></a>
 			{# Monogram icon, colored by field category (see CSS) #}
 			<span class="rf-field__icon" aria-hidden="true"></span>
-			<strong class="rf-field__title">{{ field.label ?: 'New field'|t('recranet-forms') }}</strong>
+			{# title= is the only way back to a label the two-column grid
+			   truncated to "E-mai…" without opening the card #}
+			<strong class="rf-field__title" title="{{ field.label ?: 'New field'|t('recranet-forms') }}">{{ field.label ?: 'New field'|t('recranet-forms') }}</strong>
 			{# Status chips are (re)rendered by JS from the card's inputs #}
 			<span class="rf-field__chips" aria-hidden="true"></span>
 			<span class="rf-field__badge">{{ field.type }}</span>
@@ -222,7 +252,8 @@
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][errorMessage]" value="{{ field.errorMessage ?? '' }}" />
 					<p class="rf-hint">{{ 'Shown instead of the default "… is required." message.'|t('recranet-forms') }}</p>
 				</div>
-				<div class="rf-cell--wide rf-cell--full rf-conditions" data-rf-conditions-editor>
+				<div class="rf-cell--wide rf-cell--full rf-conditions" data-rf-conditions-editor
+					data-rf-empty-note="{{ 'No rules — this field is always visible.'|t('recranet-forms') }}">
 					<label class="rf-label">{{ 'Conditional visibility'|t('recranet-forms') }}</label>
 					<p class="rf-hint">{{ 'Show this field only when rules match. Fields added in this session can be referenced after saving.'|t('recranet-forms') }}</p>
 					{# Serialized to JSON by JS on every change; PHP decodes it in normalizeFieldRows() #}
@@ -345,7 +376,7 @@
 			})
 		}}
 
-		<p class="rf-settings-hint">{{ 'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.'|t('recranet-forms') }}</p>
+		<p class="rf-hint">{{ 'Tip: render the form with `{ ajax: true }` and it submits without a page reload — errors and the success message appear in place.'|t('recranet-forms')|md(inlineOnly=true) }}</p>
 	</div>
 
 	{# ----------------------------------------------------------- Payment #}
@@ -467,7 +498,7 @@
 
 	<div class="rfs-pane rf-split" data-rfs-pane="fields" {{ startTab != 'fields' ? 'hidden' }}>
 	<div class="field rf-split__builder">
-		<div class="instructions"><p>{{ 'Drag the cards to reorder. Half-width fields sit side by side on the site.'|t('recranet-forms') }} {{ 'Drag a type from the palette straight into the form — drop it on the left or right edge of a field to place them side by side.'|t('recranet-forms') }}</p></div>
+		<div class="instructions rf-builder__intro"><p>{{ 'Drag the cards to reorder. Half-width fields sit side by side on the site.'|t('recranet-forms') }} {{ 'Drag a type from the palette straight into the form — drop it on the left or right edge of a field to place them side by side.'|t('recranet-forms') }}</p></div>
 		{% if form.getErrors('fields') %}
 			<ul class="errors">
 				{% for error in form.getErrors('fields') %}<li>{{ error }}</li>{% endfor %}
@@ -515,7 +546,12 @@
 		   value, so a rule on them evaluates as "fail open" on both the server
 		   and the front end — offering them would only create dead rules #}
 		<script type="application/json" id="rf-known-fields">
-			{{ form.fields|filter(f => f.uid is defined and f.uid and f.type not in layoutTypes)|map(f => { uid: f.uid, label: f.label, handle: f.handle })|json_encode|raw }}
+			{# |values is load-bearing: filter/map PRESERVE keys, so dropping a
+			   layout field from the middle leaves gaps and json_encode emits a
+			   JSON *object*. The rule editors then read .length as undefined
+			   and silently disable "Add rule" — conditions and notification
+			   routing die with no error. Keep this a real array. #}
+			{{ form.fields|filter(f => f.uid is defined and f.uid and f.type not in layoutTypes)|map(f => { uid: f.uid, label: f.label, handle: f.handle })|values|json_encode|raw }}
 		</script>
 
 		{# Blank card cloned by JS when adding a field; __INDEX__/__TYPE__ are replaced #}
@@ -577,7 +613,7 @@
 
 		<hr>
 		<h2>{{ 'Extra notifications'|t('recranet-forms') }}</h2>
-		<p class="rf-settings-hint">{{ 'extraNotifications.hint'|t('recranet-forms') }}</p>
+		<p class="rf-hint">{{ 'extraNotifications.hint'|t('recranet-forms') }}</p>
 
 		<div id="rf-extra-notifications">
 			{% for extra in form.extraNotifications %}
@@ -676,14 +712,17 @@
 	.rf-field.rf-open { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); border-color: var(--link-color, #1f5fea); }
 	.rf-field.draghelper { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.25); transform: rotate(1.5deg) scale(1.02); opacity: 0.97; cursor: grabbing; }
 	/* While dragging, the other cards glide to their new spots instead of snapping */
-	.rf-builder__fields.rf-dragging .rf-field:not(.draghelper) { transition: transform 0.18s ease, margin 0.18s ease; }
+	/* transform only — animating margin relayouts the whole list every frame */
+	.rf-builder__fields.rf-dragging .rf-field:not(.draghelper) { transition: transform 0.18s cubic-bezier(0.25, 1, 0.5, 1); }
 	body.rf-grabbing, body.rf-grabbing * { cursor: grabbing !important; }
 	/* Garnish marks the drop position with .draginsertion — pulse it */
 	@keyframes rf-pulse { 0%, 100% { background: rgba(31, 95, 234, 0.05); border-color: rgba(31, 95, 234, 0.55); } 50% { background: rgba(31, 95, 234, 0.12); border-color: rgba(31, 95, 234, 0.95); } }
 	.rf-field.draginsertion, .draginsertion { border: 2px dashed var(--link-color, #1f5fea); border-radius: var(--large-border-radius); min-height: 44px; animation: rf-pulse 1.1s ease-in-out infinite; }
 	/* Landing flash + settle bounce for freshly added/duplicated/moved cards */
-	@keyframes rf-flash { 0% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0.45); transform: scale(1.015); } 60% { transform: scale(0.998); } 100% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0); transform: scale(1); } }
-	.rf-field.rf-just-added { animation: rf-flash 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) 1; }
+	/* Landing flash: a settling highlight, no overshoot past the resting
+	   size — the card should arrive, not bounce */
+	@keyframes rf-flash { 0% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0.45); transform: scale(1.012); } 100% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0); transform: scale(1); } }
+	.rf-field.rf-just-added { animation: rf-flash 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1; }
 
 	/* Collapsed-by-default bar: the whole bar toggles the body */
 	.rf-field__bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; user-select: none; min-width: 0; }
@@ -702,7 +741,12 @@
 	.rf-field__badge { font-size: 11px; text-transform: uppercase; color: var(--medium-text-color); background: var(--gray-100); border-radius: 3px; padding: 2px 6px; }
 
 	/* Monogram icon, colored by field category */
-	.rf-field__icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; background: #4a7de2; flex-shrink: 0; }
+	/* Base monogram, shared by the card bars and the palette tiles. The
+	   category colors below must come AFTER this rule: [data-icon-type] and
+	   [data-icon-type='select'] have equal specificity, so source order is
+	   what decides — declaring the base last silently painted every palette
+	   tile the default blue. */
+	.rf-field__icon, [data-icon-type] { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; background: #4a7de2; flex-shrink: 0; }
 	.rf-field__icon::before { content: 'T'; }
 	[data-type='text'] .rf-field__icon::before, [data-icon-type='text']::before { content: 'T'; }
 	[data-type='email'] .rf-field__icon::before, [data-icon-type='email']::before { content: '@'; }
@@ -734,7 +778,6 @@
 	[data-type='file'] .rf-field__icon, [data-icon-type='file'] { background: #14a06d; }
 	[data-type='hidden'] .rf-field__icon, [data-icon-type='hidden'] { background: #d98014; }
 	/* The palette tile icon is a standalone span, give it the same box */
-	.rf-palette__tile .rf-field__icon, [data-icon-type] { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; background: #4a7de2; flex-shrink: 0; }
 
 	/* Status chips on the collapsed bar */
 	.rf-field__chips { display: inline-flex; gap: 4px; flex-shrink: 0; }
@@ -761,18 +804,24 @@
 	.rf-cell--full { grid-column: 1 / -1; }
 	.rf-field__required { display: flex; align-items: center; gap: 6px; align-self: end; padding-bottom: 4px; }
 	.rf-label { display: block; font-size: 12px; font-weight: 600; color: var(--medium-text-color); margin-bottom: 4px; }
-	.rf-hint { margin: 4px 0 0; font-size: 12px; color: var(--light-text-color); }
+	/* max-width caps the measure: these hints sit in panes up to ~900px wide,
+	   where an uncapped paragraph runs to ~160 characters per line */
+	.rf-hint { margin: 4px 0 0; font-size: 12px; color: var(--light-text-color); max-width: 75ch; }
+	.rf-builder__intro { max-width: 75ch; }
 	.rf-rule { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 	.rf-rule select, .rf-rule input { min-width: 0; }
 	.rf-conditions-mode { margin-top: 8px; }
 
 	/* Extra notifications (Notification tab): one bordered row per route */
 	.rf-extra { border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); padding: 12px 16px; margin-bottom: 12px; }
-	.rf-extra__head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
-	.rf-extra__head .text { flex: 1; }
-	.rf-extra__enabled { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
-	.rf-extra > .text { margin-bottom: 8px; }
-	.rf-extra__rules-label { font-size: 12px; font-weight: 600; margin-top: 4px; }
+	/* Name grows; the toggle and the destructive delete sit at the end with
+	   real space between them, so the × is never a mis-aim from the toggle */
+	.rf-extra__head { display: flex; gap: 16px; align-items: flex-end; margin-bottom: 12px; }
+	.rf-extra__name { flex: 1; min-width: 0; }
+	.rf-extra__enabled { display: flex; gap: 6px; align-items: center; white-space: nowrap; padding-bottom: 5px; }
+	.rf-extra__delete { margin-left: 8px; margin-bottom: 3px; }
+	/* Recipients + subject pair up on a wide pane, stack on a narrow one */
+	.rf-extra__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 16px; margin-bottom: 12px; }
 	#rf-extra-notifications + template + [data-rf-extra-add] { margin-bottom: 16px; }
 	@media (max-width: 900px) { .rf-field__grid { grid-template-columns: 1fr 1fr; } .rf-builder__fields { grid-template-columns: 1fr; } .rf-field[data-width='half'] { grid-column: 1 / -1; } }
 
@@ -792,6 +841,19 @@
 
 	/* Payment test-mode badge on the form settings pane */
 	.rf-test-badge { display: inline-block; margin-bottom: 16px; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #fdf1d9; color: #8a6116; }
+
+	/* Every signal above stays readable without movement: the drop target
+	   keeps its dashed outline, the landing highlight still flashes, the
+	   side-by-side preview still shifts — they just stop animating. The
+	   infinitely pulsing insertion marker is the one that matters most. */
+	@media (prefers-reduced-motion: reduce) {
+		.rf-field,
+		.rf-builder__fields.rf-dragging .rf-field:not(.draghelper),
+		.rfs-group > summary::before { transition: none; }
+		.rf-field.draginsertion, .draginsertion { animation: none; background: rgba(31, 95, 234, 0.12); border-color: rgba(31, 95, 234, 0.95); }
+		@keyframes rf-flash { 0% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0.45); } 100% { box-shadow: 0 0 0 3px rgba(31, 95, 234, 0); } }
+		.rf-field.rf-just-added { animation-duration: 0.4s; animation-timing-function: ease; }
+	}
 {% endcss %}
 
 {% js %}
@@ -801,6 +863,7 @@
 			{
 				newField: 'New field'|t('recranet-forms'),
 				addRule: 'Add rule'|t('recranet-forms'),
+				noFieldsForRules: 'Add an input field and save the form first — a rule compares against another field.'|t('recranet-forms'),
 				removeRule: 'Remove rule'|t('recranet-forms'),
 				matchAllRules: 'Match all rules'|t('recranet-forms'),
 				matchAnyRule: 'Match any rule'|t('recranet-forms'),
@@ -857,7 +920,11 @@
 
 		var list = document.querySelector('#rf-builder .rf-builder__fields');
 		var template = document.getElementById('rf-field-template');
-		var knownFields = JSON.parse(document.getElementById('rf-known-fields').textContent || '[]');
+		// Belt and braces for the Twig side's |values: a keyed JSON object here
+		// has no .length, which silently disables every rule editor rather
+		// than erroring. Normalize instead of trusting the shape.
+		var knownFieldsRaw = JSON.parse(document.getElementById('rf-known-fields').textContent || '[]');
+		var knownFields = Array.isArray(knownFieldsRaw) ? knownFieldsRaw : Object.values(knownFieldsRaw || {});
 		var uid = 1000; // fresh index seed for added cards; renumber() makes them sequential
 
 		var OPERATORS = [
@@ -885,6 +952,9 @@
 
 		// ---- Conditions rule editor: renders rows from the hidden JSON input,
 		// serializes back on every change. Kept dependency-free on purpose. ----
+		// Unique ids for the aria-describedby on disabled "Add rule" buttons
+		var ruleNoteSeq = 0;
+
 		function conditionsUI(editor) {
 			var jsonInput = editor.querySelector('.rf-conditions-json');
 			var ui = editor.querySelector('.rf-conditions-ui');
@@ -914,6 +984,13 @@
 
 			function render() {
 				var html = '';
+
+				// "No rules" is a valid, meaningful state — say what it does
+				// instead of leaving an empty area that reads as unfinished
+				if (!state.rules.length && editor.dataset.rfEmptyNote) {
+					html += '<p class="rf-hint">' + Craft.escapeHtml(editor.dataset.rfEmptyNote) + '</p>';
+				}
+
 				state.rules.forEach(function (rule, i) {
 					var needsValue = rule.operator !== 'isEmpty' && rule.operator !== 'isNotEmpty';
 					html += '<div class="rf-rule" data-i="' + i + '">' +
@@ -935,8 +1012,15 @@
 						'</select></div>';
 				}
 
+				// A disabled control must say why it is disabled, or it reads
+				// as broken (there is nothing to write a rule against yet)
+				var canAdd = knownFields.length > 0;
+				var noteId = 'rf-rules-note-' + (ruleNoteSeq++);
+
 				html += '<div style="margin-top: 8px;"><button type="button" class="btn small add icon" data-rf-rule-add' +
-					(knownFields.length ? '' : ' disabled') + '>' + Craft.escapeHtml(i18n.addRule) + '</button></div>';
+					(canAdd ? '' : ' disabled aria-describedby="' + noteId + '"') + '>' + Craft.escapeHtml(i18n.addRule) + '</button>' +
+					(canAdd ? '' : '<p class="rf-hint" id="' + noteId + '">' + Craft.escapeHtml(i18n.noFieldsForRules) + '</p>') +
+					'</div>';
 				ui.innerHTML = html;
 			}
 
@@ -1009,7 +1093,9 @@
 		function landCard(card) {
 			card.classList.add('rf-just-added');
 			card.addEventListener('animationend', function () { card.classList.remove('rf-just-added'); }, { once: true });
-			card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			// Smooth scrolling is motion too — jump instead when asked to
+			var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
 		}
 
 		function initCard(card) {
@@ -1131,7 +1217,13 @@
 			var card = event.target.closest('.rf-field');
 			if (!card) return;
 			if (event.target.classList.contains('rf-input-label')) {
-				card.querySelector('.rf-field__title').textContent = event.target.value || i18n.newField;
+				var title = event.target.value || i18n.newField;
+				var titleEl = card.querySelector('.rf-field__title');
+				titleEl.textContent = title;
+				// The bar is truncated and screen-reader-named by these two —
+				// keep both in sync, or a renamed field keeps its old name
+				titleEl.title = title;
+				card.querySelector('.rf-field__bar').setAttribute('aria-label', title);
 				var handle = card.querySelector('.rf-input-handle');
 				if (handle.dataset.auto) handle.value = toHandle(event.target.value);
 			}
