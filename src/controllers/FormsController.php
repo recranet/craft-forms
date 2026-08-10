@@ -154,6 +154,7 @@ class FormsController extends Controller
 		$form->retentionMode = (string)$request->getBodyParam('retentionMode', Form::RETENTION_MODE_DELETE);
 		$form->paymentEnabled = (bool)$request->getBodyParam('paymentEnabled', false);
 		$form->paymentBase = trim((string)$request->getBodyParam('paymentBase', ''));
+		$form->submitLabel = trim((string)$request->getBodyParam('submitLabel', ''));
 		$form->successBehavior = (string)$request->getBodyParam('successBehavior', Form::SUCCESS_MESSAGE);
 		$form->successMessage = trim((string)$request->getBodyParam('successMessage', ''));
 		$form->successRedirect = trim((string)$request->getBodyParam('successRedirect', ''));

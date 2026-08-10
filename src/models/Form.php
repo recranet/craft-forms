@@ -141,6 +141,15 @@ class Form extends Model
 	 */
 	public string $paymentBase = '';
 
+	/**
+	 * Label on the submit button. A contact form sends, a shop form orders,
+	 * a course form signs you up — one word decides whether the button
+	 * matches what the form is for. Empty = the plugin's translated default
+	 * ("Send"). Translatable per site, so it is editor content, not
+	 * structure.
+	 */
+	public string $submitLabel = '';
+
 	/** After a successful submit: show a message, or redirect */
 	public const SUCCESS_MESSAGE = 'message';
 	public const SUCCESS_REDIRECT = 'redirect';

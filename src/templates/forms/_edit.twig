@@ -354,6 +354,16 @@
 	{# ------------------------------------------------------ After submit #}
 	<div class="rfs-pane" data-rfs-pane="behavior" hidden>
 		{{
+			forms.textField({
+				label: 'Submit button label'|t('recranet-forms'),
+				instructions: 'What the button says: “Bestellen”, “Inschrijven”, “Aanvragen”. Empty = “Send”. Translatable per site.'|t('recranet-forms'),
+				name: 'submitLabel',
+				value: form.submitLabel,
+				placeholder: 'Send'|t('recranet-forms')
+			})
+		}}
+
+		{{
 			forms.selectField({
 				label: 'After a successful submission'|t('recranet-forms'),
 				name: 'successBehavior',

@@ -18,6 +18,9 @@ return [
 	'{label} may be at most {max} MB.' => '{label} darf höchstens {max} MB groß sein.',
 	'Yes' => 'Ja',
 	'Total' => 'Gesamt',
+	'Send' => 'Senden',
+	'Submit button label' => 'Text auf dem Senden-Button',
+	'What the button says: “Bestellen”, “Inschrijven”, “Aanvragen”. Empty = “Send”. Translatable per site.' => 'Was auf dem Button steht: „Bestellen“, „Anmelden“, „Anfragen“. Leer = „Senden“. Pro Site übersetzbar.',
 	'No' => 'Nein',
 	'confirmation.body' => 'Vielen Dank für Ihre Nachricht. Unten finden Sie eine Kopie Ihrer Einsendung. Wir melden uns so schnell wie möglich bei Ihnen.',
 

@@ -18,6 +18,9 @@ return [
 	'{label} may be at most {max} MB.' => '{label} ne doit pas dépasser {max} Mo.',
 	'Yes' => 'Oui',
 	'Total' => 'Total',
+	'Send' => 'Envoyer',
+	'Submit button label' => 'Libellé du bouton d’envoi',
+	'What the button says: “Bestellen”, “Inschrijven”, “Aanvragen”. Empty = “Send”. Translatable per site.' => 'Ce qu’indique le bouton : « Commander », « S’inscrire », « Demander ». Vide = « Envoyer ». Traduisible par site.',
 	'No' => 'Non',
 	'confirmation.body' => 'Merci pour votre message. Vous trouverez ci-dessous une copie de votre envoi. Nous vous répondrons dans les plus brefs délais.',
 

@@ -19,6 +19,9 @@ return [
 	'{label} may be at most {max} MB.' => '{label} may be at most {max} MB.',
 	'Yes' => 'Yes',
 	'Total' => 'Total',
+	'Send' => 'Send',
+	'Submit button label' => 'Submit button label',
+	'What the button says: “Bestellen”, “Inschrijven”, “Aanvragen”. Empty = “Send”. Translatable per site.' => 'What the button says: “Order”, “Sign up”, “Request”. Empty = “Send”. Translatable per site.',
 	'No' => 'No',
 	'confirmation.body' => 'Thank you for your message. Below is a copy of your submission. We will get back to you as soon as possible.',
 

@@ -88,6 +88,7 @@ class Forms extends Component
 			'retentionMode' => $form->retentionMode,
 			'paymentEnabled' => $form->paymentEnabled,
 			'paymentBase' => $form->paymentBase,
+			'submitLabel' => $form->submitLabel,
 			'successBehavior' => $form->successBehavior,
 			'successMessage' => $form->successMessage,
 			'successRedirect' => $form->successRedirect,
@@ -182,6 +183,7 @@ class Forms extends Component
 				'retentionMode' => $form->retentionMode,
 				'paymentEnabled' => $form->paymentEnabled,
 				'paymentBase' => $form->paymentBase,
+				'submitLabel' => $form->submitLabel,
 				'successBehavior' => $form->successBehavior,
 				'successMessage' => $form->successMessage,
 				'successRedirect' => $form->successRedirect,
@@ -217,6 +219,7 @@ class Forms extends Component
 				: Form::RETENTION_MODE_DELETE,
 			'paymentEnabled' => (bool)($settings['paymentEnabled'] ?? false),
 			'paymentBase' => (string)($settings['paymentBase'] ?? ''),
+			'submitLabel' => (string)($settings['submitLabel'] ?? ''),
 			'successBehavior' => in_array($settings['successBehavior'] ?? '', [Form::SUCCESS_MESSAGE, Form::SUCCESS_REDIRECT], true)
 				? $settings['successBehavior']
 				: Form::SUCCESS_MESSAGE,
@@ -376,6 +379,7 @@ class Forms extends Component
 			'retentionMode' => $settings['retentionMode'] ?? Form::RETENTION_MODE_DELETE,
 			'paymentEnabled' => (bool)($settings['paymentEnabled'] ?? false),
 			'paymentBase' => (string)($settings['paymentBase'] ?? ''),
+			'submitLabel' => (string)($settings['submitLabel'] ?? ''),
 			'successBehavior' => $settings['successBehavior'] ?? Form::SUCCESS_MESSAGE,
 			'successMessage' => (string)($settings['successMessage'] ?? ''),
 			'successRedirect' => (string)($settings['successRedirect'] ?? ''),

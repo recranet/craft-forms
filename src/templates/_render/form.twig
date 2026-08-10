@@ -311,7 +311,15 @@
 		{% endif %}
 
 		<div class="col-12">
-			<button type="submit" class="btn btn-primary">{{ options.buttonLabel ?? 'Send' }}</button>
+			{# Label precedence, most specific first: the form's own label (editor
+			   content, translated per site — "Bestellen", "Inschrijven"), then a
+			   template-provided buttonLabel, then the plugin's translated
+			   default. The |t on that default is load-bearing: without it every
+			   non-English site showed an English "Send". #}
+			{% set submitLabel = form.submitLabel|default('') %}
+			<button type="submit" class="btn btn-primary">
+				{{- submitLabel != '' ? submitLabel|t('site') : (options.buttonLabel ?? 'Send'|t('recranet-forms')) -}}
+			</button>
 		</div>
 
 		{# Privacy agreement (plugin setting). With a privacy URL configured,
