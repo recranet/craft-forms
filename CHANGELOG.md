@@ -1,5 +1,12 @@
 # Release Notes for Recranet Forms
 
+## 2.11.2 - 2026-08-10
+
+- Expanding a field card is now a real button with its own accessible name, and Duplicate/Delete sit beside it rather than inside it. Screen readers announced the whole row as a single control called "Drag to reorder Message textarea Duplicate Delete field"; they now read just the field name. Keyboard behaviour is unchanged (Enter/Space to open, Alt+arrows to move).
+- An empty submissions list now explains which situation you are in — nothing submitted yet, or no forms exist at all (with a button to create one) — instead of Craft's bare "Nothing yet", which reads the same whether the form works or was never embedded.
+- reCAPTCHA v3 is marked as the recommended provider in the plugin settings.
+- Clearer wording: the notification routing hint no longer leans on the "fail open" idiom, and the Dutch label for the captcha failure switch explains itself instead of repeating the jargon.
+
 ## 2.11.1 - 2026-08-10
 
 - **Fixed: conditional field visibility and notification routing did nothing** on any form where a heading, paragraph or divider sat anywhere but last. The list of referenceable fields was serialized as a JSON object instead of an array, so the rule editor's "Add rule" button stayed permanently disabled — with no error to explain it. If you tried to add a condition and nothing happened, this was why.

@@ -150,7 +150,7 @@ return [
 	'Google Cloud API key' => 'Google Cloud-API-sleutel',
 	'Turnstile site key' => 'Turnstile-sitesleutel',
 	'Turnstile secret key' => 'Turnstile-geheime sleutel',
-	'Fail open on verification errors' => 'Fail-open bij verificatiefouten',
+	'Fail open on verification errors' => 'Doorlaten bij verificatiefouten (fail-open)',
 	'When the captcha itself breaks (bad keys, provider unreachable): **on** accepts and flags submissions with a logged warning; **off** shows visitors an error. A broken captcha is never treated as spam. Tip: run `php craft recranet-forms/captcha/check` on deploy.' => 'Wanneer de captcha zelf stuk is (foute sleutels, provider onbereikbaar): **aan** accepteert en markeert inzendingen met een gelogde waarschuwing; **uit** toont bezoekers een foutmelding. Een kapotte captcha wordt nooit als spam behandeld. Tip: draai `php craft recranet-forms/captcha/check` bij een deploy.',
 	'Verify token hostname' => 'Controleer token-hostnaam',
 	'Reject v3/Enterprise tokens minted on another hostname, so tokens farmed elsewhere cannot be replayed here.' => 'Wijs v3/Enterprise-tokens af die op een andere hostnaam zijn aangemaakt, zodat elders verzamelde tokens hier niet opnieuw gebruikt kunnen worden.',
