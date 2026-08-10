@@ -1,5 +1,9 @@
 # Release Notes for Recranet Forms
 
+## Unreleased
+
+- **Fixed: a Form field printed escaped markup instead of the form.** `{{ entry.myFormField }}` — the documented way to use the field — output a page full of `&lt;form&gt;` rather than a working form, so dropping a form into page content never worked. The field value now extends Twig's `Markup`, which the escaper passes through untouched. Rendering stays lazy, and `is empty` still reports whether a form is actually attached.
+
 ## 2.11.2 - 2026-08-10
 
 - Expanding a field card is now a real button with its own accessible name, and Duplicate/Delete sit beside it rather than inside it. Screen readers announced the whole row as a single control called "Drag to reorder Message textarea Duplicate Delete field"; they now read just the field name. Keyboard behaviour is unchanged (Enter/Space to open, Alt+arrows to move).
