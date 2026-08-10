@@ -3,4 +3,5 @@ composer.lock
 .DS_Store
 .phpunit.cache/
 .playwright-mcp/
+.impeccable/
 rf-demo-*.png
