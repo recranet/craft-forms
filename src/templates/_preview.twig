@@ -43,9 +43,16 @@
 			.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 		</style>
 		{% endif %}
+		{{ head() }}
 	</head>
 	<body>
+		{{ beginBody() }}
 		<p class="rf-preview-note">{{ note }}</p>
 		<div class="rf-preview-body">{{ body|raw }}</div>
+		{# endBody() emits the JS the rendered template registered. Without it
+		   the preview silently dropped every {% js %} block, so conditional
+		   fields never showed their behaviour and a payment form's running
+		   total sat on its server-rendered starting value. #}
+		{{ endBody() }}
 	</body>
 </html>

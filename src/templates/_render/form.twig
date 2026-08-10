@@ -19,7 +19,12 @@
 	{{ actionInput('recranet-forms/submissions/submit') }}
 	{# Parenthesized: Twig's ?? binds tighter than ~, so without them the
 	   suffix would be appended to a caller-provided redirect too #}
-	{{ redirectInput(options.redirect ?? (craft.app.request.pathInfo ~ '?submitted=true')) }}
+	{# The fragment lands the visitor back AT the form after the reload. A form
+	   halfway down a page otherwise reloads to the top, where the success
+	   message is off screen and the submit looks like it did nothing. Works
+	   without JS; the block at the bottom of this template covers the
+	   validation-error path, which re-renders instead of redirecting. #}
+	{{ redirectInput(options.redirect ?? (craft.app.request.pathInfo ~ '?submitted=true#' ~ formId)) }}
 	{{ hiddenInput('formHandle', form.handle|hash) }}
 
 	{% if settings.honeypotEnabled %}
@@ -29,10 +34,12 @@
 		</div>
 	{% endif %}
 
+	{# tabindex="-1" so the JS at the bottom can move focus here after a submit:
+	   that both announces the outcome and brings it into view #}
 	{% if craft.app.session.hasFlash('success') %}
-		<div class="alert alert-success" role="status">{{ craft.app.session.getFlash('success') }}</div>
+		<div class="alert alert-success" role="status" tabindex="-1" data-rf-feedback>{{ craft.app.session.getFlash('success') }}</div>
 	{% elseif craft.app.session.hasFlash('error') %}
-		<div class="alert alert-danger" role="alert">{{ craft.app.session.getFlash('error') }}</div>
+		<div class="alert alert-danger" role="alert" tabindex="-1" data-rf-feedback>{{ craft.app.session.getFlash('error') }}</div>
 	{% endif %}
 
 	{# Error summary: announced immediately by screen readers on re-render #}
@@ -251,6 +258,56 @@
 					<div class="alert alert-warning mb-0">{{ 'Test mode — this payment is not real.'|t('recranet-forms') }}</div>
 				</div>
 			{% endif %}
+
+			{# Running total, so nobody is sent to a checkout without knowing the
+			   amount. DISPLAY ONLY: the charge is recomputed server-side by
+			   PaymentCalculator from the form definition, so a tampered figure
+			   here changes nothing about what is billed. The price table below
+			   mirrors that calculator's rules — option label → price, number
+			   field → price per unit, plus the form's base amount — and any
+			   change to the money math there must land in the JS block at the
+			   bottom of this template too. #}
+			{% set rfBaseCents = ((form.paymentBase|default('0'))|replace({',': '.'})|default(0)) * 100 %}
+			{% set rfPriced = [] %}
+			{% for field in form.fields %}
+				{% set rfOptionPrices = {} %}
+				{% if field.type in ['select', 'radio', 'checkboxes'] and (field.prices ?? '') != '' %}
+					{% set rfLabels = field.options|split(',')|map(o => o|trim)|filter(o => o) %}
+					{% set rfAmounts = field.prices|split(',')|map(p => p|trim) %}
+					{% for i, label in rfLabels %}
+						{% set rfCents = ((rfAmounts[i] ?? '0')|replace({',': '.'})|default(0)) * 100 %}
+						{% if rfCents > 0 %}
+							{% set rfOptionPrices = rfOptionPrices|merge({ (label): rfCents|round }) %}
+						{% endif %}
+					{% endfor %}
+				{% endif %}
+				{% set rfUnitCents = field.type == 'number' and (field.price ?? '') != ''
+					? (((field.price)|replace({',': '.'})|default(0)) * 100)|round
+					: 0 %}
+				{% if rfOptionPrices|length or rfUnitCents > 0 %}
+					{% set rfPriced = rfPriced|merge([{
+						handle: field.handle,
+						type: field.type,
+						options: rfOptionPrices,
+						unit: rfUnitCents,
+					}]) %}
+				{% endif %}
+			{% endfor %}
+
+			{% if rfBaseCents > 0 or rfPriced|length %}
+				<div class="col-12">
+					<div class="rf-total d-flex justify-content-between align-items-baseline" data-rf-total>
+						<span>{{ 'Total'|t('recranet-forms') }}</span>
+						{# Rendered server-side so the amount is right before any JS
+						   runs (and stays right when there is none): the base
+						   amount is what an untouched form owes. #}
+						<strong data-rf-total-amount aria-live="polite">{{ (rfBaseCents / 100)|currency('EUR') }}</strong>
+					</div>
+				</div>
+				<script type="application/json" id="{{ formId }}-prices">
+					{{ { base: rfBaseCents|round, fields: rfPriced }|json_encode|raw }}
+				</script>
+			{% endif %}
 		{% endif %}
 
 		<div class="col-12">
@@ -313,6 +370,10 @@
 	var form = document.getElementById({{ formId|json_encode|raw }});
 	if (!form || !form.hasAttribute('data-rf-ajax')) return;
 
+	function rfReduceMotion() {
+		return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	}
+
 	form.addEventListener('submit', function (e) {
 		// A captcha handler is still fetching its token — it re-submits when done
 		if (e.defaultPrevented) return;
@@ -345,7 +406,10 @@
 				alert.setAttribute('tabindex', '-1');
 				alert.textContent = data.message || '';
 				form.replaceWith(alert);
-				alert.focus();
+				// preventScroll + scrollIntoView so the jump is centered and
+				// smooth, matching the non-ajax path
+				alert.focus({ preventScroll: true });
+				alert.scrollIntoView({ behavior: rfReduceMotion() ? 'auto' : 'smooth', block: 'center' });
 				return;
 			}
 			if (button) button.disabled = false;
@@ -370,7 +434,12 @@
 				errorAlert.textContent = data.message;
 				form.prepend(errorAlert);
 			}
-			if (firstInvalid) firstInvalid.focus();
+			// The first bad field, not the top of the form: that is where
+			// the visitor has to type
+			if (firstInvalid) {
+				firstInvalid.focus({ preventScroll: true });
+				firstInvalid.scrollIntoView({ behavior: rfReduceMotion() ? 'auto' : 'smooth', block: 'center' });
+			}
 		}).catch(function () {
 			// Network/parse trouble: fall back to a normal POST — submit()
 			// bypasses this listener, so no loop
@@ -391,11 +460,96 @@
    Without JS nothing is ever hidden — the server discards hidden-field
    values on submit either way. #}
 {% js %}
-// After a server-side validation error, move focus to the error summary so
-// keyboard and screen-reader users land on it (it has tabindex="-1")
+// Running payment total. DISPLAY ONLY — PaymentCalculator.php recomputes the
+// charge from the form definition on submit, so this figure can never change
+// what is billed. It mirrors that calculator's rules, and reads the live DOM
+// rather than the field definitions, which means fields hidden by their
+// conditions (inputs disabled by the conditional-visibility block below) drop
+// out of the total for free.
 (function () {
-	var summary = document.getElementById({{ (formId ~ '-errors')|json_encode|raw }});
-	if (summary) summary.focus();
+	var form = document.getElementById({{ formId|json_encode|raw }});
+	var data = document.getElementById({{ (formId ~ '-prices')|json_encode|raw }});
+	var output = form && form.querySelector('[data-rf-total-amount]');
+
+	if (!form || !data || !output) return;
+
+	var table;
+	try {
+		table = JSON.parse(data.textContent);
+	} catch (e) {
+		return;
+	}
+
+	var money = new Intl.NumberFormat({{ craft.app.locale.id|json_encode|raw }}, {
+		style: 'currency',
+		currency: 'EUR',
+	});
+
+	function inputsFor(handle) {
+		return Array.prototype.slice.call(
+			form.querySelectorAll('[name="fields[' + handle + ']"], [name="fields[' + handle + '][]"]'),
+		);
+	}
+
+	function total() {
+		var cents = table.base || 0;
+
+		(table.fields || []).forEach(function (field) {
+			inputsFor(field.handle).forEach(function (input) {
+				// Disabled = hidden by a condition, so it posts nothing and owes nothing
+				if (input.disabled) return;
+
+				if (input.type === 'checkbox' || input.type === 'radio') {
+					if (input.checked && field.options[input.value]) {
+						cents += field.options[input.value];
+					}
+					return;
+				}
+
+				if (input.tagName === 'SELECT') {
+					Array.prototype.slice.call(input.selectedOptions).forEach(function (option) {
+						if (field.options[option.value]) cents += field.options[option.value];
+					});
+					return;
+				}
+
+				if (field.unit > 0 && input.value !== '') {
+					// Whole units, and a negative quantity is never a discount
+					var quantity = Math.max(0, parseInt(input.value, 10) || 0);
+					cents += quantity * field.unit;
+				}
+			});
+		});
+
+		return cents;
+	}
+
+	function refresh() {
+		output.textContent = money.format(total() / 100);
+	}
+
+	form.addEventListener('change', refresh);
+	form.addEventListener('input', refresh);
+	refresh();
+})();
+{% endjs %}
+
+{% js %}
+// Land the visitor on the outcome of their submit. The error summary wins
+// (that is what they must act on), otherwise the success/error flash.
+// focus() moves the screen reader AND scrolls, so one call does both jobs;
+// the explicit scroll adds smooth centering where motion is welcome.
+(function () {
+	var form = document.getElementById({{ formId|json_encode|raw }});
+	var target = document.getElementById({{ (formId ~ '-errors')|json_encode|raw }})
+		|| (form && form.querySelector('[data-rf-feedback]'));
+
+	if (!target) return;
+
+	target.focus({ preventScroll: true });
+
+	var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
 })();
 {% endjs %}
 

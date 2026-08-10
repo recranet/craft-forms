@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Payment forms show a running total.** A visitor was sent to the checkout without ever seeing the amount. The form now shows the total, starting at the base amount and updating as options and quantities change — including options that disappear behind conditional rules. Display only: the charge is still computed server-side from the form definition, and a unit test pins the displayed figures to what `PaymentCalculator` bills.
+- **After submitting, the page lands on the result.** A form halfway down a page reloaded to the top, where the success message sat off screen and the submit looked like it had done nothing. Success and error messages are now scrolled into view and focused, on the normal, Ajax and validation-error paths alike, honouring `prefers-reduced-motion`.
+- **Fixed: the form preview in the control panel never ran its JavaScript.** `head()`/`endBody()` only emit placeholders that Craft substitutes during a page render, and the preview used a plain template render — so conditional field logic (and now the payment total) sat dead in the preview while working fine on the site.
 - **Fixed: a Form field printed escaped markup instead of the form.** `{{ entry.myFormField }}` — the documented way to use the field — output a page full of `&lt;form&gt;` rather than a working form, so dropping a form into page content never worked. The field value now extends Twig's `Markup`, which the escaper passes through untouched. Rendering stays lazy, and `is empty` still reports whether a form is actually attached.
 
 ## 2.11.2 - 2026-08-10

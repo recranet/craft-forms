@@ -17,6 +17,7 @@ return [
 	'{label} must be one of the following file types: {extensions}.' => '{label} deve essere uno dei seguenti tipi di file: {extensions}.',
 	'{label} may be at most {max} MB.' => '{label} può essere al massimo di {max} MB.',
 	'Yes' => 'Sì',
+	'Total' => 'Totale',
 	'No' => 'No',
 	'confirmation.body' => 'Grazie per il tuo messaggio. Di seguito trovi una copia del tuo invio. Ti ricontatteremo il prima possibile.',
 

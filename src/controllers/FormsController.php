@@ -214,7 +214,12 @@ class FormsController extends Controller
 				. ' — ' . Craft::t('recranet-forms', 'Sample values, nothing was sent or stored.');
 		}
 
-		$html = $view->renderTemplate('recranet-forms/_preview', [
+		// renderPageTemplate, not renderTemplate: head()/endBody() only emit
+		// placeholders that Yii substitutes during a PAGE render. With a plain
+		// renderTemplate the placeholders were never replaced, so every {% js %}
+		// block the form template registers was silently dropped — conditional
+		// fields and the running payment total did nothing in the preview.
+		$html = $view->renderPageTemplate('recranet-forms/_preview', [
 			'title' => $title,
 			'note' => $note,
 			'withFormCss' => $type === 'form',

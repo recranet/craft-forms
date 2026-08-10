@@ -67,6 +67,30 @@ class PaymentCalculatorTest extends TestCase
 		$this->assertSame(9500, PaymentCalculator::totalCents(self::form('12.50'), $fields, $data));
 	}
 
+	/**
+	 * The running total in _render/form.twig is a JS mirror of this
+	 * calculator, and a total that disagrees with the charge is worse than no
+	 * total at all. These are the exact figures that inline block is verified
+	 * against in the browser: base 5.00, a select priced "4.50, 6, 7.50" over
+	 * options "Gezond oude kaas, bitterbal" (prices align by index, so the
+	 * third price has no option and never applies).
+	 *
+	 * If the numbers here change, re-check the `data-rf-total-amount` block.
+	 */
+	public function testRunningTotalMatchesTheDisplayedFigures(): void
+	{
+		$fields = [
+			['uid' => 'lunch', 'type' => 'select', 'options' => 'Gezond oude kaas, bitterbal', 'prices' => '4.50, 6, 7.50'],
+		];
+
+		// Nothing chosen: only the base is owed
+		$this->assertSame(500, PaymentCalculator::totalCents(self::form('5'), $fields, ['lunch' => '']));
+		// 5.00 + 4.50
+		$this->assertSame(950, PaymentCalculator::totalCents(self::form('5'), $fields, ['lunch' => 'Gezond oude kaas']));
+		// 5.00 + 6.00
+		$this->assertSame(1100, PaymentCalculator::totalCents(self::form('5'), $fields, ['lunch' => 'bitterbal']));
+	}
+
 	public function testVisitorInputCannotChangePrices(): void
 	{
 		$fields = [['uid' => 'pkg', 'type' => 'radio', 'options' => 'Luxe', 'prices' => '500']];
