@@ -373,4 +373,7 @@ return [
 	'Automatic bot checks' => 'Vérifications anti-bot automatiques',
 	'Honeypot, submit timing and throttle — on by default, invisible to visitors' => 'Honeypot, temps de saisie et limitation — actifs par défaut, invisibles pour les visiteurs',
 	'Block known senders by address, domain or IP — for human spam a captcha can’t catch' => 'Bloquez des expéditeurs connus par adresse, domaine ou IP — pour le spam humain qu’un captcha ne peut pas attraper',
+	'I agree to the {privacyStatement}.' => 'J’accepte la {privacyStatement}.',
+	'privacy statement' => 'déclaration de confidentialité',
+	'Please agree to the privacy statement.' => 'Veuillez accepter la déclaration de confidentialité.',
 ];

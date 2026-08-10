@@ -55,16 +55,29 @@ class SubmissionsController extends Controller
 		$submission->sourceUrl = '/' . ltrim($request->getPathInfo(), '/');
 		$content = $submission->applyPost($form, (array)$request->getBodyParam('fields', []));
 
-		if (!$submission->validate()) {
+		$fieldErrors = $submission->validate() ? [] : $submission->getFieldErrors();
+
+		// A configured privacy page makes agreement mandatory on every form:
+		// the template renders a required checkbox (unless the form carries
+		// its own consent field — then THAT is the agreement), and this is
+		// the server half a hostile client can't skip.
+		if ($settings->getPrivacyPolicyUrl() !== ''
+			&& !$form->hasConsentField()
+			&& !$request->getBodyParam('rfPrivacyConsent')
+		) {
+			$fieldErrors['rfPrivacyConsent'] = [Craft::t('recranet-forms', 'Please agree to the privacy statement.')];
+		}
+
+		if ($fieldErrors) {
 			// Ajax: field errors as JSON, keyed by handle — same shape the
 			// template renders server-side
 			if ($request->getAcceptsJson()) {
-				return $this->asJson(['success' => false, 'errors' => $submission->getFieldErrors()]);
+				return $this->asJson(['success' => false, 'errors' => $fieldErrors]);
 			}
 
 			// Re-render the page with errors and the submitted values
 			Craft::$app->getUrlManager()->setRouteParams([
-				'formErrors' => $submission->getFieldErrors(),
+				'formErrors' => $fieldErrors,
 				'formContent' => $content,
 				'formHandle' => $form->handle,
 			]);

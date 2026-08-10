@@ -374,4 +374,7 @@ return [
 	'Automatic bot checks' => 'Automatic bot checks',
 	'Honeypot, submit timing and throttle — on by default, invisible to visitors' => 'Honeypot, submit timing and throttle — on by default, invisible to visitors',
 	'Block known senders by address, domain or IP — for human spam a captcha can’t catch' => 'Block known senders by address, domain or IP — for human spam a captcha can’t catch',
+	'I agree to the {privacyStatement}.' => 'I agree to the {privacyStatement}.',
+	'privacy statement' => 'privacy statement',
+	'Please agree to the privacy statement.' => 'Please agree to the privacy statement.',
 ];

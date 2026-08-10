@@ -284,6 +284,22 @@ class Form extends Model
 	}
 
 	/**
+	 * Whether the form carries its own consent field. If it does, that field
+	 * IS the privacy agreement (editor-managed text, snapshotted per
+	 * submission) and the automatic privacy checkbox stays away.
+	 */
+	public function hasConsentField(): bool
+	{
+		foreach ($this->fields as $field) {
+			if (($field['type'] ?? null) === 'consent') {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Look up a field row by its uid.
 	 */
 	public function getFieldByUid(string $uid): ?array

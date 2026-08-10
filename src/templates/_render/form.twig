@@ -257,15 +257,45 @@
 			<button type="submit" class="btn btn-primary">{{ options.buttonLabel ?? 'Send' }}</button>
 		</div>
 
-		{# Global privacy-page link (plugin setting). Opens in a new tab so a
-		   mid-form click never loses what the visitor already typed. #}
+		{# Privacy agreement (plugin setting). With a privacy URL configured,
+		   agreeing is mandatory on every form: a required checkbox with the
+		   link in its label, enforced server-side too. Forms with their own
+		   consent field already carry the agreement — those only get the
+		   link. Opens in a new tab so a mid-form click never loses input. #}
 		{% set privacyUrl = settings.getPrivacyPolicyUrl() %}
 		{% if privacyUrl %}
-			<div class="col-12">
-				<div class="form-text rf-privacy-link">
-					<a href="{{ privacyUrl }}" target="_blank" rel="noopener">{{ 'Privacy statement'|t('recranet-forms') }}</a>
+			{% set hasConsentField = form.fields|filter(f => f.type == 'consent')|length > 0 %}
+			{% if hasConsentField %}
+				<div class="col-12">
+					<div class="form-text rf-privacy-link">
+						<a href="{{ privacyUrl }}" target="_blank" rel="noopener">{{ 'Privacy statement'|t('recranet-forms') }}</a>
+					</div>
 				</div>
-			</div>
+			{% else %}
+				{% set privacyErrors = errors['rfPrivacyConsent'] ?? [] %}
+				<div class="col-12">
+					<div class="form-check rf-privacy-consent">
+						<input
+							type="checkbox"
+							class="form-check-input {{ privacyErrors ? 'is-invalid' }}"
+							name="rfPrivacyConsent"
+							value="1"
+							id="{{ formId }}-privacy"
+							required
+							{% if privacyErrors %}aria-invalid="true" aria-describedby="{{ formId }}-privacy-error"{% endif %}
+						/>
+						<label class="form-check-label" for="{{ formId }}-privacy">
+							{{ 'I agree to the {privacyStatement}.'|t('recranet-forms', {
+								privacyStatement: '<a href="' ~ privacyUrl|e('html_attr') ~ '" target="_blank" rel="noopener">' ~ 'privacy statement'|t('recranet-forms') ~ '</a>',
+							})|raw }}
+							<sup aria-hidden="true">*</sup><span class="visually-hidden">({{ 'required'|t('recranet-forms') }})</span>
+						</label>
+						{% if privacyErrors %}
+							<div class="invalid-feedback d-block" id="{{ formId }}-privacy-error">{{ privacyErrors|join(' ') }}</div>
+						{% endif %}
+					</div>
+				</div>
+			{% endif %}
 		{% endif %}
 	</div>
 
@@ -322,7 +352,9 @@
 			// Field errors, same markup as the server-side render
 			var firstInvalid = null;
 			Object.keys(data.errors || {}).forEach(function (handle) {
-				var input = form.querySelector('[name="fields[' + handle + ']"], [name="fields[' + handle + '][]"]');
+				// Regular fields post as fields[handle]; the privacy-consent
+				// checkbox (rfPrivacyConsent) posts under its own name
+				var input = form.querySelector('[name="fields[' + handle + ']"], [name="fields[' + handle + '][]"], [name="' + handle + '"]');
 				if (!input) return;
 				input.classList.add('is-invalid');
 				if (!firstInvalid) firstInvalid = input;

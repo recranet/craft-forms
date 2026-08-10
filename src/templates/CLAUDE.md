@@ -26,6 +26,7 @@ Variables: `form` (translations already applied), `options` (class, buttonLabel,
 - `craft.recranetForms.captchaTag(form.handle)` inside the `<form>` — timestamp field + captcha widget, action = form handle
 - Hidden fields may seed from query params — sanitized (scalar, 255 cap)
 - The inline `{% js %}` block implements conditional visibility and MUST stay in parity with `src/rules/RuleEvaluator.php` (hidden attribute + disabled inputs + `required` lifted; malformed rules fail open)
+- Privacy agreement: with `privacyPolicyUrl` set, forms WITHOUT a consent field render a required `rfPrivacyConsent` checkbox (server half in `SubmissionsController::actionSubmit` — keep both); forms WITH one only get the link. Custom form templates must render the checkbox themselves or the submit will fail
 
 Projects override this template wholesale — keep the default accessible and framework-light.
 
