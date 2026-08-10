@@ -121,18 +121,27 @@
 		   Delete field". The drag handle is mouse-only (HTML5 DnD gives
 		   nothing to keyboard or touch, Alt+arrows is that path), so it is
 		   hidden from assistive tech instead of posing as a control. #}
-		<div class="rf-field__bar" role="button" tabindex="0" aria-expanded="false"
-			aria-label="{{ field.label ?: 'New field'|t('recranet-forms') }}"
-			title="{{ 'Click to edit, Alt+arrow keys to move'|t('recranet-forms') }}">
+		{# The expand/collapse control is a real <button>, and Duplicate and
+		   Delete are its SIBLINGS: a role="button" wrapper around other
+		   buttons is invalid, and it made the row announce as one control
+		   named by concatenation. Its aria-label carries just the field name
+		   (the JS keeps it in sync). The drag handle is mouse-only — HTML5
+		   drag gives keyboard and touch nothing, Alt+arrows is that path —
+		   so it is hidden from assistive tech instead of posing as a control. #}
+		<div class="rf-field__bar">
 			<a class="move icon rf-field__move" aria-hidden="true"></a>
-			{# Monogram icon, colored by field category (see CSS) #}
-			<span class="rf-field__icon" aria-hidden="true"></span>
-			{# title= is the only way back to a label the two-column grid
-			   truncated to "E-mai…" without opening the card #}
-			<strong class="rf-field__title" title="{{ field.label ?: 'New field'|t('recranet-forms') }}">{{ field.label ?: 'New field'|t('recranet-forms') }}</strong>
-			{# Status chips are (re)rendered by JS from the card's inputs #}
-			<span class="rf-field__chips" aria-hidden="true"></span>
-			<span class="rf-field__badge">{{ field.type }}</span>
+			<button type="button" class="rf-field__toggle" aria-expanded="false"
+				aria-label="{{ field.label ?: 'New field'|t('recranet-forms') }}"
+				title="{{ 'Click to edit, Alt+arrow keys to move'|t('recranet-forms') }}">
+				{# Monogram icon, colored by field category (see CSS) #}
+				<span class="rf-field__icon" aria-hidden="true"></span>
+				{# title= is the only way back to a label the two-column grid
+				   truncated to "E-mai…" without opening the card #}
+				<strong class="rf-field__title" title="{{ field.label ?: 'New field'|t('recranet-forms') }}">{{ field.label ?: 'New field'|t('recranet-forms') }}</strong>
+				{# Status chips are (re)rendered by JS from the card's inputs #}
+				<span class="rf-field__chips" aria-hidden="true"></span>
+				<span class="rf-field__badge">{{ field.type }}</span>
+			</button>
 			<button type="button" class="btn small rf-field__duplicate" title="{{ 'Duplicate field'|t('recranet-forms') }}">{{ 'Duplicate'|t('recranet-forms') }}</button>
 			<button type="button" class="delete icon rf-field__delete" title="{{ 'Delete field'|t('recranet-forms') }}" aria-label="{{ 'Delete field'|t('recranet-forms') }}"></button>
 		</div>
@@ -725,7 +734,10 @@
 	.rf-field.rf-just-added { animation: rf-flash 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1; }
 
 	/* Collapsed-by-default bar: the whole bar toggles the body */
-	.rf-field__bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; user-select: none; min-width: 0; }
+	.rf-field__bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; user-select: none; min-width: 0; }
+	/* The toggle fills the row so the whole bar still feels clickable, while
+	   Duplicate and Delete stay separate controls beside it */
+	.rf-field__toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0; border: 0; margin: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 	/* In a narrow card (half width, or the split view) the type badge and the
 	   Duplicate label go first — title, drag handle and delete always stay */
 	@container (max-width: 470px) {
@@ -734,7 +746,7 @@
 		.btn.rf-field__duplicate { font-size: 0; padding-left: 8px; padding-right: 8px; }
 		.btn.rf-field__duplicate::before { content: '⧉'; font-size: 13px; }
 	}
-	.rf-field__bar:focus-visible { outline: 2px solid var(--link-color, #1f5fea); outline-offset: -2px; border-radius: var(--large-border-radius); }
+	.rf-field__toggle:focus-visible { outline: 2px solid var(--link-color, #1f5fea); outline-offset: 2px; border-radius: 4px; }
 	.rf-field.rf-open .rf-field__bar { border-bottom: 1px solid var(--hairline-color); }
 	.rf-field__move { cursor: grab; }
 	.rf-field__title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1079,7 +1091,7 @@
 		function setOpen(card, open) {
 			card.classList.toggle('rf-open', open);
 			card.querySelector('.rf-field__body').hidden = !open;
-			card.querySelector('.rf-field__bar').setAttribute('aria-expanded', open ? 'true' : 'false');
+			card.querySelector('.rf-field__toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
 		}
 
 		function openCard(card) {
@@ -1109,21 +1121,14 @@
 				});
 			});
 
-			var bar = card.querySelector('.rf-field__bar');
+			var toggle = card.querySelector('.rf-field__toggle');
 
-			// Clicks on the bar toggle, except on its buttons/handle
-			bar.addEventListener('click', function (e) {
-				if (e.target.closest('button, a, input, select')) return;
+			toggle.addEventListener('click', function () {
 				card.classList.contains('rf-open') ? setOpen(card, false) : openCard(card);
 			});
 
-			// Keyboard: Enter/Space toggles, Alt+arrows move the card
-			bar.addEventListener('keydown', function (e) {
-				if (e.target !== bar) return;
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					card.classList.contains('rf-open') ? setOpen(card, false) : openCard(card);
-				}
+			// Enter/Space come free with <button>; only Alt+arrows need wiring
+			toggle.addEventListener('keydown', function (e) {
 				if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
 					e.preventDefault();
 					var sibling = e.key === 'ArrowUp' ? card.previousElementSibling : card.nextElementSibling;
@@ -1132,7 +1137,7 @@
 					renumber();
 					fixLonelyHalves();
 					landCard(card);
-					bar.focus();
+					toggle.focus();
 					var position = Array.prototype.indexOf.call(list.children, card) + 1;
 					live.textContent = i18n.movedTo.replace('{position}', position);
 				}
@@ -1223,7 +1228,7 @@
 				// The bar is truncated and screen-reader-named by these two —
 				// keep both in sync, or a renamed field keeps its old name
 				titleEl.title = title;
-				card.querySelector('.rf-field__bar').setAttribute('aria-label', title);
+				card.querySelector('.rf-field__toggle').setAttribute('aria-label', title);
 				var handle = card.querySelector('.rf-input-handle');
 				if (handle.dataset.auto) handle.value = toHandle(event.target.value);
 			}

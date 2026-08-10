@@ -3,3 +3,29 @@
 {% set title = 'Submissions'|t('recranet-forms') %}
 {% set selectedSubnavItem = 'submissions' %}
 {% set elementType = 'recranet\\forms\\elements\\Submission' %}
+
+{# First run: Craft's index says only "Nothing yet", which reads the same
+   whether no one has submitted or the form was never embedded. Sits above
+   the (empty) list and disappears the moment a first submission exists. #}
+{% block content %}
+	{% if hasSubmissions is defined and not hasSubmissions %}
+		<div class="pane rf-zilch">
+			{% if formCount %}
+				<h2>{{ 'No submissions yet'|t('recranet-forms') }}</h2>
+				<p>{{ 'submissions.zilch.hasForms'|t('recranet-forms') }}</p>
+			{% else %}
+				<h2>{{ 'No submissions yet'|t('recranet-forms') }}</h2>
+				<p>{{ 'submissions.zilch.noForms'|t('recranet-forms') }}</p>
+				<a class="btn submit" href="{{ url('recranet-forms/forms/new') }}">{{ 'New form'|t('recranet-forms') }}</a>
+			{% endif %}
+		</div>
+	{% endif %}
+	{{ parent() }}
+{% endblock %}
+
+{% css %}
+	.rf-zilch { max-width: 65ch; margin-bottom: 24px; }
+	.rf-zilch h2 { margin: 0 0 8px; }
+	.rf-zilch p { margin: 0 0 12px; color: var(--medium-text-color); }
+	.rf-zilch p:last-child { margin-bottom: 0; }
+{% endcss %}

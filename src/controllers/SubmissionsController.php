@@ -379,7 +379,16 @@ class SubmissionsController extends Controller
 		$this->requireCpRequest();
 		$this->requirePermission('recranetForms-viewSubmissions');
 
-		return $this->renderTemplate('recranet-forms/submissions/index');
+		// An editor opening an empty list can't tell "nothing arrived yet" from
+		// "something is broken". Craft's element index only says "Nothing yet",
+		// so the template adds context — but only while there is genuinely
+		// nothing, and it needs to know whether any form even exists.
+		$hasSubmissions = Submission::find()->siteId('*')->status(null)->exists();
+
+		return $this->renderTemplate('recranet-forms/submissions/index', [
+			'hasSubmissions' => $hasSubmissions,
+			'formCount' => $hasSubmissions ? null : count(Plugin::getInstance()->forms->getAllForms()),
+		]);
 	}
 
 	/**
