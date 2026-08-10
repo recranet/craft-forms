@@ -256,6 +256,17 @@
 		<div class="col-12">
 			<button type="submit" class="btn btn-primary">{{ options.buttonLabel ?? 'Send' }}</button>
 		</div>
+
+		{# Global privacy-page link (plugin setting). Opens in a new tab so a
+		   mid-form click never loses what the visitor already typed. #}
+		{% set privacyUrl = settings.getPrivacyPolicyUrl() %}
+		{% if privacyUrl %}
+			<div class="col-12">
+				<div class="form-text rf-privacy-link">
+					<a href="{{ privacyUrl }}" target="_blank" rel="noopener">{{ 'Privacy statement'|t('recranet-forms') }}</a>
+				</div>
+			</div>
+		{% endif %}
 	</div>
 
 	{{ craft.recranetForms.captchaTag(form.handle) }}

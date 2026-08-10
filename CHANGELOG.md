@@ -1,5 +1,10 @@
 # Release Notes for Recranet Forms
 
+## Unreleased
+
+- Hiding the reCAPTCHA badge now automatically renders the attribution text Google requires (with links to their privacy policy and terms), so the hide-badge switch can no longer put a site out of compliance.
+- New plugin setting **Privacy page URL**: when set, every form links to the site's privacy page below the submit button. Supports env vars and relative paths.
+
 ## 2.10.0 - 2026-08-07
 
 - **Per-form submit behavior.** New "After submit" tab: show an editor-managed success message (translatable per site, with a sensible default) or redirect to a page. The per-form redirect wins over the template `redirect` option, so editors control it on production.

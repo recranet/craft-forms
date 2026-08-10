@@ -138,6 +138,13 @@ class Settings extends Model
 	public int|string $retentionDays = 0;
 
 	/**
+	 * URL of the site's privacy page (supports $ENV_VAR syntax; a relative
+	 * path like /privacy works too). When set, the default form template
+	 * links to it below the submit button. Empty = no link.
+	 */
+	public string $privacyPolicyUrl = '';
+
+	/**
 	 * Handle of the asset volume file-field uploads are stored in (in a
 	 * subfolder named after the form handle). Empty = file fields are not
 	 * usable: an uploaded file becomes a validation error on that field.
@@ -227,6 +234,11 @@ class Settings extends Model
 	public function getThrottleWindow(): int
 	{
 		return (int)$this->throttleWindow;
+	}
+
+	public function getPrivacyPolicyUrl(): string
+	{
+		return trim((string)App::parseEnv($this->privacyPolicyUrl));
 	}
 
 	public function getUploadVolume(): string

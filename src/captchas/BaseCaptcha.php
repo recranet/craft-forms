@@ -113,4 +113,29 @@ abstract class BaseCaptcha implements CaptchaInterface
 			Craft::$app->getSecurity()->hashData($action)
 		);
 	}
+
+	/**
+	 * Badge-hiding CSS plus the visible attribution text. Google only allows
+	 * hiding the reCAPTCHA badge when the form itself credits reCAPTCHA and
+	 * links Google's policies — so the CSS and the notice are one unit, never
+	 * rendered apart.
+	 */
+	protected function renderHiddenBadgeNotice(): string
+	{
+		$notice = Craft::t('recranet-forms', 'This site is protected by reCAPTCHA and the Google {privacyPolicy} and {termsOfService} apply.', [
+			'privacyPolicy' => Html::a(
+				Craft::t('recranet-forms', 'Privacy Policy'),
+				'https://policies.google.com/privacy',
+				['target' => '_blank', 'rel' => 'noopener']
+			),
+			'termsOfService' => Html::a(
+				Craft::t('recranet-forms', 'Terms of Service'),
+				'https://policies.google.com/terms',
+				['target' => '_blank', 'rel' => 'noopener']
+			),
+		]);
+
+		return Html::style('.grecaptcha-badge{visibility:hidden}')
+			. Html::tag('div', $notice, ['class' => 'rf-captcha-notice form-text']);
+	}
 }

@@ -147,7 +147,7 @@
 	{{
 		forms.lightswitchField({
 			label: 'Hide the reCAPTCHA badge'|t('recranet-forms'),
-			instructions: 'Allowed by Google as long as the form shows the reCAPTCHA attribution text.'|t('recranet-forms'),
+			instructions: 'Allowed by Google; the form then shows the required reCAPTCHA attribution text automatically.'|t('recranet-forms'),
 			name: 'recaptchaHideBadge',
 			on: settings.recaptchaHideBadge
 		})
@@ -326,6 +326,19 @@
 		size: 5,
 		value: settings.retentionDays,
 		errors: settings.getErrors('retentionDays')
+	})
+}}
+
+<h3>{{ 'Privacy'|t('recranet-forms') }}</h3>
+
+{{
+	forms.autosuggestField({
+		label: 'Privacy page URL'|t('recranet-forms'),
+		instructions: 'Link to the site’s privacy page, shown below every form. May be a relative path like `/privacy`. Empty = no link.'|t('recranet-forms'),
+		name: 'privacyPolicyUrl',
+		suggestEnvVars: true,
+		value: settings.privacyPolicyUrl,
+		errors: settings.getErrors('privacyPolicyUrl')
 	})
 }}
 </div>

@@ -106,10 +106,10 @@ JS;
 			. Html::jsFile("https://www.google.com/recaptcha/api.js?render=$siteKey", ['async' => true, 'defer' => true])
 			. Html::script($js);
 
-		// Hiding the badge is allowed by Google as long as the form shows the
-		// reCAPTCHA attribution text
+		// Hiding the badge is only allowed by Google when the form shows the
+		// reCAPTCHA attribution text — the helper renders both together
 		if ($this->settings->recaptchaHideBadge) {
-			$html .= Html::style('.grecaptcha-badge{visibility:hidden}');
+			$html .= $this->renderHiddenBadgeNotice();
 		}
 
 		return Template::raw($html);
