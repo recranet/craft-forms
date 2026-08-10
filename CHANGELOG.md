@@ -1,5 +1,14 @@
 # Release Notes for Recranet Forms
 
+## 2.11.1 - 2026-08-10
+
+- **Fixed: conditional field visibility and notification routing did nothing** on any form where a heading, paragraph or divider sat anywhere but last. The list of referenceable fields was serialized as a JSON object instead of an array, so the rule editor's "Add rule" button stayed permanently disabled — with no error to explain it. If you tried to add a condition and nothing happened, this was why.
+- Fixed: field types all showed the same blue icon in the field palette, instead of the category colors the field cards use.
+- Fixed: a field's label is now readable when the two-column layout truncates it ("E-mai…") — hover shows the full text. Screen readers announce the collapsed card by its field name instead of reciting every button on the row.
+- Extra notifications: every input has a visible label (a placeholder disappears as soon as you type), recipients and subject sit side by side, and the remove button is no longer a mis-aim away from the enabled toggle. An empty rule list now says what it means, and "Add rule" explains itself when there is nothing to write a rule against yet.
+- The plugin's Spam protection settings no longer open with the word "Provider" twice.
+- Animations respect `prefers-reduced-motion`, including the pulsing drop marker; dragging no longer animates layout properties.
+
 ## 2.11.0 - 2026-08-10
 
 - **Extra notifications per form.** The Notification tab can now send extra copies of the notification, each toggleable, with its own recipients and optional subject. Routing rules — the same rule editor conditional fields use — decide per submission whether a copy goes out (*if onderwerp is "Sales" → sales@…*), and merge tags in the recipients cover "send to an address from the form". Rules fail open (a broken rule sends rather than silently dropping a route), and a failing extra route is logged but never marks the submission as failed — that status keeps tracking the main notification.
