@@ -40,7 +40,7 @@ Still open:
 
 ## Phase 0.5 — secure-forms absorption
 
-**✅ Shipped in v2.1.0 (2026-08-06).** Ported from `recranet/craft-secure-forms` (own IP): the captcha provider layer (reCAPTCHA v2/v3/Enterprise + Turnstile behind `CaptchaInterface`), token binding to form action + hostname, minimum fill time, sender blocklist, reject-vs-review spam split, storage switches (`saveSubmissions`, `saveSpamSubmissions`), retention (`retentionDays` + GC hook + `gc/prune`), the Email/SMTP test utility, and the expanded-fields CSV exporter. **Still open:** a `MigrateController` porting secure-forms submissions into recranet-forms, and the decision to archive secure-forms once that path exists.
+**✅ Shipped in v2.1.0 (2026-08-06).** Ported from `recranet/craft-secure-forms` (own IP): the captcha provider layer (reCAPTCHA v2/v3/Enterprise + Turnstile behind `CaptchaInterface`), token binding to form action + hostname, minimum fill time, sender blocklist, reject-vs-review spam split, storage switches (`saveSubmissions`, `saveSpamSubmissions`), retention (`retentionDays` + GC hook + `gc/prune`), the Email/SMTP test utility, and the expanded-fields CSV exporter. **Still open:** a `MigrateController` porting secure-forms submissions into recranet-forms (blocked on having the secure-forms schema at hand — the repo is not checked out alongside this one), and the decision to archive secure-forms once that path exists.
 
 ## Phase 3 — spam & GDPR
 
@@ -54,4 +54,6 @@ Still open:
 
 ## Explicitly skipped (bloat for our use case)
 
-Multi-page forms, save & continue/partial entries, payments/products, CRM & email-marketing integrations, quizzes/surveys/polls, GraphQL, stencils/import-export profiles, input masks (a11y-hostile — use `type`/`inputmode`/`pattern`), composite name/address fields, per-form content tables (Freeform's runtime-DDL anti-pattern), user-editable status tables, notification templates as CP-managed elements (overridable Twig in git is better).
+Multi-page forms, save & continue/partial entries, CRM & email-marketing integrations, quizzes/surveys/polls, GraphQL, input masks (a11y-hostile — use `type`/`inputmode`/`pattern`), composite name/address fields, per-form content tables (Freeform's runtime-DDL anti-pattern), user-editable status tables, notification templates as CP-managed elements (overridable Twig in git is better).
+
+Two items originally on this list were reversed once real demand showed up: **payments** (hosted checkout per form, Mollie behind `PaymentProviderInterface`) and **stencils** (bundled JSON starters on the import screen, v2.10.0).
