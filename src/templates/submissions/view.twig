@@ -52,6 +52,36 @@
 				<button type="submit" class="btn">{{ 'Resend notification'|t('recranet-forms') }}</button>
 			</form>
 		{% endif %}
+
+		{# Block the sender straight from the message that prompted it. Two
+		   scopes, because "this one mailbox" and "this whole domain" are
+		   genuinely different decisions. Already-blocked senders show state
+		   instead of a second button that would do nothing. #}
+		{% if sender %}
+			{% if senderBlocked or domainBlocked %}
+				<span class="rf-blocked-note">
+					{{ (domainBlocked and not senderBlocked ? 'Domain is on the blocklist.' : 'Sender is on the blocklist.')|t('recranet-forms') }}
+					<a href="{{ url('recranet-forms/blocklist') }}">{{ 'Manage blocklist'|t('recranet-forms') }}</a>
+				</span>
+			{% else %}
+				<form method="post" accept-charset="UTF-8">
+					{{ csrfInput() }}
+					{{ actionInput('recranet-forms/blocklist/add') }}
+					{{ hiddenInput('submissionId', submission.id) }}
+					{{ hiddenInput('pattern', sender) }}
+					<button type="submit" class="btn">{{ 'Block {sender}'|t('recranet-forms', { sender: sender }) }}</button>
+				</form>
+				{% if senderDomain %}
+					<form method="post" accept-charset="UTF-8">
+						{{ csrfInput() }}
+						{{ actionInput('recranet-forms/blocklist/add') }}
+						{{ hiddenInput('submissionId', submission.id) }}
+						{{ hiddenInput('pattern', senderDomain) }}
+						<button type="submit" class="btn">{{ 'Block all of {domain}'|t('recranet-forms', { domain: senderDomain }) }}</button>
+					</form>
+				{% endif %}
+			{% endif %}
+		{% endif %}
 	</div>
 
 	<table class="data fullwidth">
@@ -140,3 +170,8 @@
 		</div>
 	</form>
 {% endblock %}
+
+{% css %}
+	/* Sits in the same flex row as the action buttons */
+	.rf-blocked-note { align-self: center; font-size: 13px; color: var(--medium-text-color); }
+{% endcss %}

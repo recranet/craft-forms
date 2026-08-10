@@ -213,6 +213,28 @@ return [
 	'View submissions' => 'Inzendingen bekijken',
 	'Delete submissions' => 'Inzendingen verwijderen',
 
+	// Editor-managed sender blocklist
+	'blocklist.intro' => 'Afzenders op deze lijst worden op elk formulier als spam gemarkeerd. Redacteuren beheren dit hier, op elke omgeving — anders dan de bloklijst in de plugin-instellingen, die project config is en op productie niet te wijzigen. Beide lijsten worden gecontroleerd.',
+	'blocklist.shapes' => 'Vormen: een volledig adres (`iemand@example.com`), een domein (`@spamdomein.ru`), het begin van het deel vóór de @ (`iemand`, vangt genummerde varianten) of het begin van een IP (`198.51.100.`).',
+	'blocklist.zilch' => 'Nog niets geblokkeerd. Voeg hierboven een regel toe, of gebruik “Blokkeer afzender” bij een spam-inzending.',
+	'blocklist.fromConfig' => 'Beheerd in de plugin-instellingen of een omgevingsvariabele, dus alleen te wijzigen met een deploy.',
+	'Entry' => 'Regel',
+	'Note' => 'Notitie',
+	'Added' => 'Toegevoegd',
+	'Block' => 'Blokkeren',
+	'Remove entry' => 'Regel verwijderen',
+	'View submission' => 'Inzending bekijken',
+	'From configuration' => 'Uit de configuratie',
+	'Manage blocklist' => 'Bloklijst beheren',
+	'Sender is on the blocklist.' => 'Afzender staat op de bloklijst.',
+	'Domain is on the blocklist.' => 'Domein staat op de bloklijst.',
+	'Block {sender}' => 'Blokkeer {sender}',
+	'Block all of {domain}' => 'Blokkeer heel {domain}',
+	'Sender blocked: {pattern}' => 'Afzender geblokkeerd: {pattern}',
+	'That sender could not be blocked.' => 'Die afzender kon niet worden geblokkeerd.',
+	'Entry removed. This sender can submit again.' => 'Regel verwijderd. Deze afzender kan weer inzenden.',
+	'someone@example.com' => 'iemand@example.com',
+
 	// Editor notes on a submission
 	'Notes' => 'Notities',
 	'No notes yet.' => 'Nog geen notities.',

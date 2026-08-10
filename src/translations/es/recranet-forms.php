@@ -213,6 +213,28 @@ return [
 	'View submissions' => 'Ver envíos',
 	'Delete submissions' => 'Eliminar envíos',
 
+	// Editor-managed sender blocklist
+	'blocklist.intro' => 'Los remitentes de esta lista se marcan como spam en todos los formularios. Los editores la gestionan aquí, en cualquier entorno — a diferencia de la lista de los ajustes del plugin, que es project config y no se puede cambiar en producción. Se comprueban ambas listas.',
+	'blocklist.shapes' => 'Formas admitidas: una dirección completa (`alguien@example.com`), un dominio (`@spamdomain.ru`), el principio de la parte anterior a la @ (`alguien`, que capta variantes numeradas) o el principio de una IP (`198.51.100.`).',
+	'blocklist.zilch' => 'Nada bloqueado todavía. Añade una entrada arriba, o usa «Bloquear remitente» en un envío de spam.',
+	'blocklist.fromConfig' => 'Gestionada en los ajustes del plugin o en una variable de entorno, así que solo se cambia con un despliegue.',
+	'Entry' => 'Entrada',
+	'Note' => 'Nota',
+	'Added' => 'Añadida',
+	'Block' => 'Bloquear',
+	'Remove entry' => 'Eliminar entrada',
+	'View submission' => 'Ver envío',
+	'From configuration' => 'Desde la configuración',
+	'Manage blocklist' => 'Gestionar lista de bloqueo',
+	'Sender is on the blocklist.' => 'El remitente está en la lista de bloqueo.',
+	'Domain is on the blocklist.' => 'El dominio está en la lista de bloqueo.',
+	'Block {sender}' => 'Bloquear {sender}',
+	'Block all of {domain}' => 'Bloquear todo {domain}',
+	'Sender blocked: {pattern}' => 'Remitente bloqueado: {pattern}',
+	'That sender could not be blocked.' => 'No se pudo bloquear ese remitente.',
+	'Entry removed. This sender can submit again.' => 'Entrada eliminada. Este remitente puede volver a enviar.',
+	'someone@example.com' => 'alguien@example.com',
+
 	// Editor notes on a submission
 	'Notes' => 'Notas',
 	'No notes yet.' => 'Aún no hay notas.',

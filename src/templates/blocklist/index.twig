@@ -1,0 +1,91 @@
+{# Editor-managed sender blocklist. Deliberately NOT under Settings: the
+   plugin setting of the same name is project config and read-only wherever
+   allowAdminChanges is off, which is every environment where editors
+   actually triage spam. Both lists are matched at submit time. #}
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+{% set title = 'Blocklist'|t('recranet-forms') %}
+{% set selectedSubnavItem = 'blocklist' %}
+
+{% block content %}
+	<p class="rf-intro">{{ 'blocklist.intro'|t('recranet-forms') }}</p>
+
+	<form method="post" accept-charset="UTF-8" class="rf-add">
+		{{ csrfInput() }}
+		{{ actionInput('recranet-forms/blocklist/add') }}
+		<div class="rf-add__row">
+			<div class="rf-add__field">
+				<label class="rf-label" for="rf-bl-pattern">{{ 'Entry'|t('recranet-forms') }}</label>
+				<input type="text" class="text fullwidth" id="rf-bl-pattern" name="pattern" required
+					placeholder="{{ 'someone@example.com'|t('recranet-forms') }}" />
+			</div>
+			<div class="rf-add__field">
+				<label class="rf-label" for="rf-bl-note">{{ 'Note'|t('recranet-forms') }}</label>
+				<input type="text" class="text fullwidth" id="rf-bl-note" name="note" />
+			</div>
+			<button type="submit" class="btn submit">{{ 'Block'|t('recranet-forms') }}</button>
+		</div>
+		<p class="rf-hint">{{ 'blocklist.shapes'|t('recranet-forms')|md(inlineOnly=true) }}</p>
+	</form>
+
+	{% if entries %}
+		<table class="data fullwidth">
+			<thead>
+				<tr>
+					<th>{{ 'Entry'|t('recranet-forms') }}</th>
+					<th>{{ 'Note'|t('recranet-forms') }}</th>
+					<th>{{ 'Added'|t('recranet-forms') }}</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for entry in entries %}
+					<tr>
+						<td><code>{{ entry.pattern }}</code></td>
+						<td>
+							{{ entry.note }}
+							{% if entry.submissionId %}
+								<a href="{{ url('recranet-forms/submissions/' ~ entry.submissionId) }}">{{ 'View submission'|t('recranet-forms') }}</a>
+							{% endif %}
+						</td>
+						<td>
+							{{ entry.dateCreated|datetime('short') }}
+							{% set author = entry.addedBy ? craft.users.id(entry.addedBy).one() : null %}
+							{% if author %}— {{ author.friendlyName }}{% endif %}
+						</td>
+						<td class="thin">
+							<form method="post" accept-charset="UTF-8">
+								{{ csrfInput() }}
+								{{ actionInput('recranet-forms/blocklist/remove') }}
+								{{ hiddenInput('id', entry.id) }}
+								<button type="submit" class="delete icon" title="{{ 'Remove entry'|t('recranet-forms') }}" aria-label="{{ 'Remove entry'|t('recranet-forms') }}"></button>
+							</form>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p class="light">{{ 'blocklist.zilch'|t('recranet-forms') }}</p>
+	{% endif %}
+
+	{# The config half, read-only: without it a sender blocked in .env or
+	   project config looks unblocked here #}
+	{% if configPatterns %}
+		<h2>{{ 'From configuration'|t('recranet-forms') }}</h2>
+		<p class="rf-hint">{{ 'blocklist.fromConfig'|t('recranet-forms')|md(inlineOnly=true) }}</p>
+		<p>
+			{% for pattern in configPatterns %}<code>{{ pattern }}</code>{{ not loop.last ? ' ' }}{% endfor %}
+		</p>
+	{% endif %}
+{% endblock %}
+
+{% css %}
+	.rf-intro { max-width: 75ch; color: var(--medium-text-color); margin: 0 0 24px; }
+	.rf-add { margin-bottom: 28px; }
+	.rf-add__row { display: flex; gap: 16px; align-items: flex-end; max-width: 900px; }
+	.rf-add__field { flex: 1; min-width: 0; }
+	.rf-label { display: block; font-size: 12px; font-weight: 600; color: var(--medium-text-color); margin-bottom: 4px; }
+	.rf-hint { margin: 8px 0 0; font-size: 12px; color: var(--light-text-color); max-width: 75ch; }
+	td form { margin: 0; }
+{% endcss %}

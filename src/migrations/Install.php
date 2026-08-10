@@ -83,6 +83,24 @@ class Install extends Migration
 		$this->addForeignKey(null, '{{%recranetforms_form_translations}}', ['formId'], '{{%recranetforms_forms}}', ['id'], 'CASCADE');
 		$this->addForeignKey(null, '{{%recranetforms_form_translations}}', ['siteId'], '{{%sites}}', ['id'], 'CASCADE');
 
+		// Editor-managed sender blocklist (mirrors m260810_200000): the
+		// production-editable half of Settings::$blocklist, which is project
+		// config and therefore read-only where allowAdminChanges is off
+		$this->createTable('{{%recranetforms_blocklist}}', [
+			'id' => $this->primaryKey(),
+			'pattern' => $this->string()->notNull(),
+			'note' => $this->string(),
+			'addedBy' => $this->integer(),
+			'submissionId' => $this->integer(),
+			'dateCreated' => $this->dateTime()->notNull(),
+			'dateUpdated' => $this->dateTime()->notNull(),
+			'uid' => $this->uid(),
+		]);
+
+		$this->createIndex(null, '{{%recranetforms_blocklist}}', ['pattern'], true);
+		$this->addForeignKey(null, '{{%recranetforms_blocklist}}', ['addedBy'], '{{%users}}', ['id'], 'SET NULL');
+		$this->addForeignKey(null, '{{%recranetforms_blocklist}}', ['submissionId'], '{{%elements}}', ['id'], 'SET NULL');
+
 		return true;
 	}
 
@@ -90,6 +108,7 @@ class Install extends Migration
 	{
 		// Remove submission elements before dropping their data table
 		$this->delete('{{%elements}}', ['type' => Submission::class]);
+		$this->dropTableIfExists('{{%recranetforms_blocklist}}');
 		$this->dropTableIfExists('{{%recranetforms_form_translations}}');
 		$this->dropTableIfExists('{{%recranetforms_submissions}}');
 		$this->dropTableIfExists('{{%recranetforms_forms}}');

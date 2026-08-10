@@ -214,6 +214,28 @@ return [
 	'View submissions' => 'View submissions',
 	'Delete submissions' => 'Delete submissions',
 
+	// Editor-managed sender blocklist
+	'blocklist.intro' => 'Senders on this list are flagged as spam on every form. Editors can manage it here, on any environment — unlike the blocklist in the plugin settings, which is project config and read-only on production. Both lists are checked.',
+	'blocklist.shapes' => 'Entry shapes: a full address (`someone@example.com`), a domain (`@spamdomain.ru`), the start of a local part (`someone`, catching numbered variants) or the start of an IP (`198.51.100.`).',
+	'blocklist.zilch' => 'Nothing blocked yet. Add an entry above, or use “Block sender” on a spam submission.',
+	'blocklist.fromConfig' => 'Managed in the plugin settings or an environment variable, so it can only be changed with a deploy.',
+	'Entry' => 'Entry',
+	'Note' => 'Note',
+	'Added' => 'Added',
+	'Block' => 'Block',
+	'Remove entry' => 'Remove entry',
+	'View submission' => 'View submission',
+	'From configuration' => 'From configuration',
+	'Manage blocklist' => 'Manage blocklist',
+	'Sender is on the blocklist.' => 'Sender is on the blocklist.',
+	'Domain is on the blocklist.' => 'Domain is on the blocklist.',
+	'Block {sender}' => 'Block {sender}',
+	'Block all of {domain}' => 'Block all of {domain}',
+	'Sender blocked: {pattern}' => 'Sender blocked: {pattern}',
+	'That sender could not be blocked.' => 'That sender could not be blocked.',
+	'Entry removed. This sender can submit again.' => 'Entry removed. This sender can submit again.',
+	'someone@example.com' => 'someone@example.com',
+
 	// Editor notes on a submission
 	'Notes' => 'Notes',
 	'No notes yet.' => 'No notes yet.',

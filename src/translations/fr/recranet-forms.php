@@ -213,6 +213,28 @@ return [
 	'View submissions' => 'Voir les envois',
 	'Delete submissions' => 'Supprimer les envois',
 
+	// Editor-managed sender blocklist
+	'blocklist.intro' => 'Les expéditeurs de cette liste sont signalés comme spam sur tous les formulaires. Les éditeurs la gèrent ici, sur n’importe quel environnement — contrairement à la liste des réglages du plugin, qui relève de la project config et n’est pas modifiable en production. Les deux listes sont vérifiées.',
+	'blocklist.shapes' => 'Formes acceptées : une adresse complète (`quelquun@example.com`), un domaine (`@spamdomain.ru`), le début de la partie avant le @ (`quelquun`, qui attrape les variantes numérotées) ou le début d’une IP (`198.51.100.`).',
+	'blocklist.zilch' => 'Rien de bloqué pour le moment. Ajoutez une entrée ci-dessus, ou utilisez « Bloquer l’expéditeur » sur un envoi spam.',
+	'blocklist.fromConfig' => 'Gérée dans les réglages du plugin ou une variable d’environnement, donc modifiable uniquement via un déploiement.',
+	'Entry' => 'Entrée',
+	'Note' => 'Note',
+	'Added' => 'Ajoutée',
+	'Block' => 'Bloquer',
+	'Remove entry' => 'Supprimer l’entrée',
+	'View submission' => 'Voir l’envoi',
+	'From configuration' => 'Depuis la configuration',
+	'Manage blocklist' => 'Gérer la liste de blocage',
+	'Sender is on the blocklist.' => 'L’expéditeur est sur la liste de blocage.',
+	'Domain is on the blocklist.' => 'Le domaine est sur la liste de blocage.',
+	'Block {sender}' => 'Bloquer {sender}',
+	'Block all of {domain}' => 'Bloquer tout {domain}',
+	'Sender blocked: {pattern}' => 'Expéditeur bloqué : {pattern}',
+	'That sender could not be blocked.' => 'Cet expéditeur n’a pas pu être bloqué.',
+	'Entry removed. This sender can submit again.' => 'Entrée supprimée. Cet expéditeur peut à nouveau envoyer.',
+	'someone@example.com' => 'quelquun@example.com',
+
 	// Editor notes on a submission
 	'Notes' => 'Notes',
 	'No notes yet.' => 'Pas encore de notes.',

@@ -407,9 +407,19 @@ class SubmissionsController extends Controller
 			throw new NotFoundHttpException('Submission not found.');
 		}
 
+		$form = $submission->getForm();
+		$blocklist = Plugin::getInstance()->blocklist;
+		// The sender is only offerable when the form has an email field and
+		// the value survived (an anonymized submission has none)
+		$sender = $form ? $blocklist->senderAddress($form, $submission) : null;
+
 		return $this->renderTemplate('recranet-forms/submissions/view', [
 			'submission' => $submission,
-			'form' => $submission->getForm(),
+			'form' => $form,
+			'sender' => $sender,
+			'senderDomain' => $sender ? $blocklist->senderDomain($sender) : null,
+			'senderBlocked' => $sender && $blocklist->has($sender),
+			'domainBlocked' => $sender && ($d = $blocklist->senderDomain($sender)) && $blocklist->has($d),
 		]);
 	}
 

@@ -192,7 +192,10 @@ class SpamService extends Component
 	 */
 	private function checkBlocklist(Request $request, Settings $settings, Form $form, Submission $submission): ?SpamVerdict
 	{
-		$blocklist = $settings->getBlocklist();
+		// Union of the config list (project config, deploy-managed) and the
+		// stored list an editor can add to on production — see the Blocklist
+		// service for why there are two
+		$blocklist = Plugin::getInstance()->blocklist->allPatterns();
 
 		if ($blocklist === []) {
 			return null;

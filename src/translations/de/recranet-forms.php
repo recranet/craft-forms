@@ -213,6 +213,28 @@ return [
 	'View submissions' => 'Einsendungen ansehen',
 	'Delete submissions' => 'Einsendungen löschen',
 
+	// Editor-managed sender blocklist
+	'blocklist.intro' => 'Absender auf dieser Liste werden in jedem Formular als Spam markiert. Redakteure verwalten sie hier, auf jeder Umgebung — anders als die Sperrliste in den Plugin-Einstellungen, die Project Config ist und auf Produktion nicht geändert werden kann. Beide Listen werden geprüft.',
+	'blocklist.shapes' => 'Formen: eine vollständige Adresse (`jemand@example.com`), eine Domain (`@spamdomain.ru`), der Anfang des Teils vor dem @ (`jemand`, erfasst nummerierte Varianten) oder der Anfang einer IP (`198.51.100.`).',
+	'blocklist.zilch' => 'Noch nichts gesperrt. Fügen Sie oben einen Eintrag hinzu oder nutzen Sie „Absender sperren“ bei einer Spam-Einsendung.',
+	'blocklist.fromConfig' => 'In den Plugin-Einstellungen oder einer Umgebungsvariable verwaltet, also nur mit einem Deploy änderbar.',
+	'Entry' => 'Eintrag',
+	'Note' => 'Notiz',
+	'Added' => 'Hinzugefügt',
+	'Block' => 'Sperren',
+	'Remove entry' => 'Eintrag entfernen',
+	'View submission' => 'Einsendung ansehen',
+	'From configuration' => 'Aus der Konfiguration',
+	'Manage blocklist' => 'Sperrliste verwalten',
+	'Sender is on the blocklist.' => 'Absender steht auf der Sperrliste.',
+	'Domain is on the blocklist.' => 'Domain steht auf der Sperrliste.',
+	'Block {sender}' => '{sender} sperren',
+	'Block all of {domain}' => 'Ganz {domain} sperren',
+	'Sender blocked: {pattern}' => 'Absender gesperrt: {pattern}',
+	'That sender could not be blocked.' => 'Dieser Absender konnte nicht gesperrt werden.',
+	'Entry removed. This sender can submit again.' => 'Eintrag entfernt. Dieser Absender kann wieder einsenden.',
+	'someone@example.com' => 'jemand@example.com',
+
 	// Editor notes on a submission
 	'Notes' => 'Notizen',
 	'No notes yet.' => 'Noch keine Notizen.',

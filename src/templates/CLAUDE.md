@@ -6,7 +6,8 @@ CP templates (builder, indexes, settings) and the overridable defaults for the f
 
 - `forms/_edit.twig` — the builder (biggest file; see below)
 - `forms/index.twig`, `forms/_import.twig` — form list, JSON import screen
-- `submissions/index.twig`, `submissions/view.twig` — element index + detail view
+- `submissions/index.twig`, `submissions/view.twig` — element index + detail view (the index overrides Craft's `content` block and calls `parent()` to put a first-run panel above the list; the detail view carries the notes section and the "block sender" actions)
+- `blocklist/index.twig` — editor-managed sender blocklist (add/remove + the read-only config half). Lives under the Forms section, never under Settings: plugin settings are project config
 - `settings.twig` — plugin settings, five tab panes (spam protection / emails / storage & retention / uploads / payments; `rfs-` prefix, all inputs stay in the DOM so one form posts everything). The spam pane keeps provider + keys in view (provider-dependent blocks via `data-rfs-show="<provider values>"` — hidden inputs still post, so switching providers never wipes stored keys); everything with sane defaults sits in collapsed `<details class="rfs-group">` sections (Scoring / Failure handling / Automatic bot checks / Blocklist / Spam behaviour) that auto-open on validation errors. The emails pane points editors to the per-form mail settings. Craft namespaces the form: the select is `settings[captchaProvider]`
 - `_render/form.twig` — default front-end form; `_render/submission.twig` — tokenized self-service view
 - `_emails/notification.twig` (owner), `_emails/confirmation.twig` (submitter), `_emails/note.twig` (editor note to the notification recipients; variables `form`, `submission`, `note`)
