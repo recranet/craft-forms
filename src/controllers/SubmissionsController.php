@@ -478,6 +478,87 @@ class SubmissionsController extends Controller
 	}
 
 	/**
+	 * CP: add an editor note to a submission from the detail view. With the
+	 * "email" flag set the note is also mailed to the form's notification
+	 * recipients. Saved without validation: anonymized submissions have
+	 * null values for required fields by design, and that must not block a
+	 * note.
+	 */
+	public function actionAddNote(): Response
+	{
+		$this->requireCpRequest();
+		$this->requirePostRequest();
+		$this->requirePermission('recranetForms-viewSubmissions');
+
+		$submission = $this->requireCpSubmission();
+		$session = Craft::$app->getSession();
+		$request = Craft::$app->getRequest();
+		$text = trim((string)$request->getBodyParam('text', ''));
+
+		if ($text === '') {
+			$session->setError(Craft::t('recranet-forms', 'A note needs some text.'));
+
+			return $this->redirect($submission->getCpEditUrl());
+		}
+
+		$user = Craft::$app->getUser()->getIdentity();
+
+		$note = [
+			// Name snapshot: a deleted user keeps their name on old notes
+			'author' => trim((string)($user?->fullName ?: $user?->username)),
+			'authorId' => $user?->id,
+			'date' => (new \DateTime())->format(\DateTime::ATOM),
+			'text' => $text,
+		];
+
+		$submission->notes[] = $note;
+
+		if (!Craft::$app->getElements()->saveElement($submission, runValidation: false)) {
+			$session->setError(Craft::t('recranet-forms', 'The note could not be saved.'));
+
+			return $this->redirect($submission->getCpEditUrl());
+		}
+
+		$form = $submission->getForm();
+
+		if ($request->getBodyParam('email') && $form) {
+			if (Plugin::getInstance()->notifications->sendNote($form, $submission, $note)) {
+				$session->setSuccess(Craft::t('recranet-forms', 'Note saved and emailed.'));
+			} else {
+				// The note itself is safe — only the mail failed
+				$session->setError(Craft::t('recranet-forms', 'Note saved, but the email failed to send — see the log for details.'));
+			}
+		} else {
+			$session->setSuccess(Craft::t('recranet-forms', 'Note saved.'));
+		}
+
+		return $this->redirect($submission->getCpEditUrl());
+	}
+
+	/**
+	 * CP: remove a note by its position in the list.
+	 */
+	public function actionDeleteNote(): Response
+	{
+		$this->requireCpRequest();
+		$this->requirePostRequest();
+		$this->requirePermission('recranetForms-viewSubmissions');
+
+		$submission = $this->requireCpSubmission();
+		$session = Craft::$app->getSession();
+		$index = (int)Craft::$app->getRequest()->getRequiredBodyParam('noteIndex');
+
+		// A stale tab may post an index that no longer exists — just go back
+		if (isset($submission->notes[$index])) {
+			array_splice($submission->notes, $index, 1);
+			Craft::$app->getElements()->saveElement($submission, runValidation: false);
+			$session->setSuccess(Craft::t('recranet-forms', 'Note removed.'));
+		}
+
+		return $this->redirect($submission->getCpEditUrl());
+	}
+
+	/**
 	 * Resolve the posted submissionId to a submission (any status) or 404.
 	 */
 	private function requireCpSubmission(): Submission

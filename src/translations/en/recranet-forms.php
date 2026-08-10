@@ -209,6 +209,23 @@ return [
 	'View submissions' => 'View submissions',
 	'Delete submissions' => 'Delete submissions',
 
+	// Editor notes on a submission
+	'Notes' => 'Notes',
+	'No notes yet.' => 'No notes yet.',
+	'Add a note…' => 'Add a note…',
+	'Add note' => 'Add note',
+	'Remove note' => 'Remove note',
+	'Also email this note to the notification recipients' => 'Also email this note to the notification recipients',
+	'A note needs some text.' => 'A note needs some text.',
+	'The note could not be saved.' => 'The note could not be saved.',
+	'Note saved.' => 'Note saved.',
+	'Note saved and emailed.' => 'Note saved and emailed.',
+	'Note saved, but the email failed to send — see the log for details.' => 'Note saved, but the email failed to send — see the log for details.',
+	'Note removed.' => 'Note removed.',
+	'Note on submission #{ref} — {formName}' => 'Note on submission #{ref} — {formName}',
+	'noteEmail.intro' => '{author} added a note to this submission:',
+	'View the submission' => 'View the submission',
+
 	// Builder redesign: palette, chips, keyboard hints
 	'fieldType.text' => 'Text',
 	'fieldTypeDesc.text' => 'Single line of text',

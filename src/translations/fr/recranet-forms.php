@@ -208,6 +208,23 @@ return [
 	'View submissions' => 'Voir les envois',
 	'Delete submissions' => 'Supprimer les envois',
 
+	// Editor notes on a submission
+	'Notes' => 'Notes',
+	'No notes yet.' => 'Pas encore de notes.',
+	'Add a note…' => 'Ajouter une note…',
+	'Add note' => 'Ajouter la note',
+	'Remove note' => 'Supprimer la note',
+	'Also email this note to the notification recipients' => 'Envoyer aussi cette note par e-mail aux destinataires des notifications',
+	'A note needs some text.' => 'Une note doit contenir du texte.',
+	'The note could not be saved.' => 'La note n’a pas pu être enregistrée.',
+	'Note saved.' => 'Note enregistrée.',
+	'Note saved and emailed.' => 'Note enregistrée et envoyée par e-mail.',
+	'Note saved, but the email failed to send — see the log for details.' => 'Note enregistrée, mais l’e-mail n’a pas pu être envoyé — voir le journal pour les détails.',
+	'Note removed.' => 'Note supprimée.',
+	'Note on submission #{ref} — {formName}' => 'Note sur l’envoi #{ref} — {formName}',
+	'noteEmail.intro' => '{author} a ajouté une note à cet envoi :',
+	'View the submission' => 'Voir l’envoi',
+
 	// Builder redesign: palette, chips, keyboard hints
 	'fieldType.text' => 'Texte',
 	'fieldTypeDesc.text' => 'Une seule ligne de texte',

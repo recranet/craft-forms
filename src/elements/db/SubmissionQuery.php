@@ -89,6 +89,7 @@ class SubmissionQuery extends ElementQuery
 			'recranetforms_submissions.paymentStatus',
 			'recranetforms_submissions.paymentId',
 			'recranetforms_submissions.paymentAmount',
+			'recranetforms_submissions.notes',
 		]);
 
 		if ($this->formId !== null) {
@@ -109,6 +110,7 @@ class SubmissionQuery extends ElementQuery
 	{
 		$row['formData'] = Json::decodeIfJson($row['formData'] ?? '[]') ?? [];
 		$row['snapshot'] = Json::decodeIfJson($row['snapshot'] ?? '[]') ?? [];
+		$row['notes'] = Json::decodeIfJson($row['notes'] ?? '[]') ?? [];
 		$row['isSpam'] = (bool)($row['isSpam'] ?? false);
 		$row['spamScore'] = isset($row['spamScore']) ? (float)$row['spamScore'] : null;
 		$row['incrementalId'] = isset($row['incrementalId']) ? (int)$row['incrementalId'] : null;

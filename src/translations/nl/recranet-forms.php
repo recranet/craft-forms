@@ -208,6 +208,23 @@ return [
 	'View submissions' => 'Inzendingen bekijken',
 	'Delete submissions' => 'Inzendingen verwijderen',
 
+	// Editor notes on a submission
+	'Notes' => 'Notities',
+	'No notes yet.' => 'Nog geen notities.',
+	'Add a note…' => 'Notitie toevoegen…',
+	'Add note' => 'Notitie toevoegen',
+	'Remove note' => 'Notitie verwijderen',
+	'Also email this note to the notification recipients' => 'Mail deze notitie ook naar de notificatie-ontvangers',
+	'A note needs some text.' => 'Een notitie heeft tekst nodig.',
+	'The note could not be saved.' => 'De notitie kon niet worden opgeslagen.',
+	'Note saved.' => 'Notitie opgeslagen.',
+	'Note saved and emailed.' => 'Notitie opgeslagen en gemaild.',
+	'Note saved, but the email failed to send — see the log for details.' => 'Notitie opgeslagen, maar de e-mail kon niet worden verzonden — zie het log voor details.',
+	'Note removed.' => 'Notitie verwijderd.',
+	'Note on submission #{ref} — {formName}' => 'Notitie bij inzending #{ref} — {formName}',
+	'noteEmail.intro' => '{author} heeft een notitie bij deze inzending geplaatst:',
+	'View the submission' => 'Bekijk de inzending',
+
 	// Builder redesign: palette, chips, keyboard hints
 	'fieldType.text' => 'Tekst',
 	'fieldTypeDesc.text' => 'Eén regel tekst',

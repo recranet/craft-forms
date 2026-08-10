@@ -33,9 +33,7 @@ The shared foundation is **one rule shape** used everywhere: `{field: <uid>, ope
 
 **✅ Multiple notifications per form shipped (2026-08-10):** extra notifications on the form's Notification tab, each toggleable, own recipients (merge tags cover "send to a form field") and optional subject, gated per submission by routing rules in the conditional-fields rule shape.
 
-Still open:
-
-- **Notes on a submission** (optionally emailed) — later, only if editors ask.
+**✅ Notes on a submission shipped (2026-08-10):** editor notes on the CP detail view (add/remove, author + date snapshot), optionally emailed to the notification recipients; cleared on anonymize. That empties this phase.
 
 *(Shipped since: per-form success message/redirect + Ajax submit + stencils, 2.10.0.)*
 

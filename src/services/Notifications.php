@@ -192,6 +192,70 @@ class Notifications extends Component
 	}
 
 	/**
+	 * Mail an editor's note on a submission to the form's notification
+	 * recipients (merge-tag routing in the recipients string applies, same
+	 * as the owner mail), in the language the owner notification would use.
+	 * Returns false on failure (logged) — the note itself is already saved.
+	 */
+	public function sendNote(Form $form, Submission $submission, array $note): bool
+	{
+		$recipients = $this->resolveRecipients($form, $submission);
+
+		if (!$recipients) {
+			Craft::warning("Form \"{$form->handle}\": no recipients to email the note to.", __METHOD__);
+
+			return false;
+		}
+
+		$siteId = Plugin::getInstance()->getSettings()->notificationLanguage === 'primary'
+			? Craft::$app->getSites()->getPrimarySite()->id
+			: $submission->siteId;
+
+		[$subject, $html] = $this->inSiteContext($siteId, function () use ($form, $submission, $note, $siteId) {
+			$form = Plugin::getInstance()->formTranslations->applyTo($form, $siteId);
+
+			return [
+				Craft::t('recranet-forms', 'Note on submission #{ref} — {formName}', [
+					'ref' => $submission->incrementalId,
+					'formName' => $form->name,
+				]),
+				$this->renderNoteEmail($form, $submission, $note),
+			];
+		});
+
+		$message = Craft::$app->getMailer()->compose()
+			->setTo($recipients)
+			->setSubject($subject)
+			->setHtmlBody($html);
+		$message->siteId = $siteId;
+
+		$sent = $message->send();
+
+		if (!$sent) {
+			Craft::error("Form \"{$form->handle}\": note email failed to send.", __METHOD__);
+		}
+
+		return $sent;
+	}
+
+	/**
+	 * Render the note email: site override at
+	 * templates/recranet-forms/_emails/note.twig, else the plugin default.
+	 * Receives `form`, `submission` and the `note` row.
+	 */
+	private function renderNoteEmail(Form $form, Submission $submission, array $note): string
+	{
+		$view = Craft::$app->getView();
+		$variables = ['form' => $form, 'submission' => $submission, 'note' => $note];
+
+		if ($view->doesTemplateExist('recranet-forms/_emails/note', View::TEMPLATE_MODE_SITE)) {
+			return $view->renderTemplate('recranet-forms/_emails/note', $variables, View::TEMPLATE_MODE_SITE);
+		}
+
+		return $view->renderTemplate('recranet-forms/_emails/note', $variables, View::TEMPLATE_MODE_CP);
+	}
+
+	/**
 	 * Run a render with a given site as the current site, so emails come out
 	 * in the language the visitor used — not the language of whoever happens
 	 * to trigger the send. This matters because we render our HTML ourselves,

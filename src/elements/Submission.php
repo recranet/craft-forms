@@ -92,6 +92,15 @@ class Submission extends Element
 	 */
 	public ?\DateTime $anonymizedAt = null;
 
+	/**
+	 * @var array<int, array{author: string, authorId: ?int, date: string, text: string}>
+	 * Editor notes from the CP detail view, newest last. The author name is a
+	 * snapshot (a deleted user keeps their name on old notes); `date` is an
+	 * ISO-8601 string. Cleared on anonymize — a note may quote exactly the
+	 * personal data the pruning removed.
+	 */
+	public array $notes = [];
+
 	/** Normalized payment status (PAYMENT_*), or null when no payment was involved */
 	public ?string $paymentStatus = null;
 
@@ -879,6 +888,7 @@ class Submission extends Element
 			'paymentStatus' => $this->paymentStatus,
 			'paymentId' => $this->paymentId,
 			'paymentAmount' => $this->paymentAmount,
+			'notes' => Json::encode($this->notes),
 		];
 
 		if ($isNew) {
@@ -930,6 +940,9 @@ class Submission extends Element
 		$this->token = null;
 		$this->sourceUrl = null;
 		$this->idempotencyKey = null;
+		// Notes go too: an editor's note may quote exactly the personal data
+		// this cleanup removes
+		$this->notes = [];
 		$this->anonymizedAt = new \DateTime();
 
 		// Re-save so the search index drops the old keywords too

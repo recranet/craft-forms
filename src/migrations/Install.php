@@ -48,6 +48,9 @@ class Install extends Migration
 			'paymentStatus' => $this->string(16),
 			'paymentId' => $this->string(64),
 			'paymentAmount' => $this->integer(),
+			// Editor notes (mirrors m260810_100000): JSON rows of
+			// {author, authorId, date, text}, cleared on anonymize
+			'notes' => $this->text(),
 			'formData' => $this->text(),
 			'isSpam' => $this->boolean()->notNull()->defaultValue(false),
 			'spamReason' => $this->string(),

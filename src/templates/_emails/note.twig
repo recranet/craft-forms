@@ -1,0 +1,9 @@
+{# Editor-note email: sent from the CP detail view when an editor checks
+   "also email this note". Receives `form`, `submission` and the `note` row
+   ({author, authorId, date, text}).
+   Override per project with templates/recranet-forms/_emails/note.twig. #}
+<h2>{{ form.name }}{% if submission.incrementalId %} — #{{ submission.incrementalId }}{% endif %}</h2>
+<p>{{ 'noteEmail.intro'|t('recranet-forms', { author: note.author }) }}</p>
+<blockquote style="margin: 0 0 16px; padding: 8px 16px; border-left: 3px solid #cbd5e1;">{{ note.text|nl2br }}</blockquote>
+{# Absolute CP link, so the recipient lands on the submission incl. its notes #}
+<p><a href="{{ cpUrl('recranet-forms/submissions/' ~ submission.id) }}">{{ 'View the submission'|t('recranet-forms') }}</a></p>
