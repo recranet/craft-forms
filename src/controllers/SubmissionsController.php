@@ -6,6 +6,7 @@ use Craft;
 use craft\web\Controller;
 use recranet\forms\captchas\CaptchaError;
 use recranet\forms\elements\Submission;
+use recranet\forms\models\Settings;
 use recranet\forms\Plugin;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
@@ -114,8 +115,13 @@ class SubmissionsController extends Controller
 
 			// Definite spam (honeypot, forged timestamp, score below the reject
 			// threshold): don't store it, but pretend success so the bot learns
-			// nothing about which check it tripped over
+			// nothing about which check it tripped over — unless the spam
+			// behaviour setting is in its debug mode
 			if ($verdict->reject) {
+				if ($settings->spamBehavior === Settings::SPAM_BEHAVIOR_SHOW_ERRORS) {
+					return $this->spamErrorResponse($form, $content, $verdict->reason);
+				}
+
 				return $this->successResponse($form, $submission);
 			}
 		} catch (CaptchaError $e) {
@@ -212,6 +218,12 @@ class SubmissionsController extends Controller
 			Plugin::getInstance()->notifications->sendConfirmation($form, $submission);
 		}
 
+		// Reviewable spam is stored as usual, but in debug mode the visitor is
+		// told instead of shown the simulated success
+		if ($submission->isSpam && $settings->spamBehavior === Settings::SPAM_BEHAVIOR_SHOW_ERRORS) {
+			return $this->spamErrorResponse($form, $content, $submission->spamReason);
+		}
+
 		return $this->successResponse($form, $submission);
 	}
 
@@ -248,6 +260,35 @@ class SubmissionsController extends Controller
 		Craft::$app->getSession()->setSuccess($message);
 
 		return $redirect ? $this->redirect($redirect) : $this->redirectToPostedUrl($submission);
+	}
+
+	/**
+	 * The debug half of the spam behaviour setting: tell the visitor their
+	 * submission was flagged instead of simulating success, with the reason
+	 * on display — this mode exists to diagnose false positives together
+	 * with the affected visitor. Production keeps 'simulate', so bots never
+	 * see this response.
+	 */
+	private function spamErrorResponse(\recranet\forms\models\Form $form, array $content, ?string $reason): ?Response
+	{
+		$message = Craft::t('recranet-forms', 'Your submission was flagged as spam and has not been sent.');
+
+		if ($reason) {
+			$message .= ' (' . $reason . ')';
+		}
+
+		if (Craft::$app->getRequest()->getAcceptsJson()) {
+			return $this->asJson(['success' => false, 'message' => $message, 'errors' => []]);
+		}
+
+		Craft::$app->getSession()->setError($message);
+		// Repopulate the form so a wrongly flagged visitor keeps their input
+		Craft::$app->getUrlManager()->setRouteParams([
+			'formContent' => $content,
+			'formHandle' => $form->handle,
+		]);
+
+		return null;
 	}
 
 	/**

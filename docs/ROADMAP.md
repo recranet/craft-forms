@@ -46,11 +46,7 @@ Still open:
 
 **Mostly shipped:** min-submit-time (v2.1.0), throttle per form+IP (v2.5.0), sender blocklist (v2.1.0), per-form retention with delete/anonymize modes (v2.5.0), consent field with snapshotted text (v2.3.0), double-submit dedupe via idempotency key (v2.0.0), tokenized self-service view/erase (v2.3.0).
 
-Still open:
-
-- **One-time submit token** (true replay guard — the idempotency key dedupes identical content but doesn't stop replays with varied content).
-- **Spam behaviour setting:** simulate-success (current, default) vs show-errors (debug).
-- **Spam retention cap:** prune stored spam faster than regular submissions.
+**✅ Rest shipped (2026-08-10):** one-time submit token (opt-in `oneTimeSubmitTokens` — replay = reviewable spam, forged hash = reject; documented as unusable behind a full-page cache), spam behaviour setting (`spamBehavior`: simulate-success default vs show-errors debug mode), and the spam retention cap (`spamRetentionDays`, plugin-wide hard delete).
 
 ## Explicitly skipped (bloat for our use case)
 

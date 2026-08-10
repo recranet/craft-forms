@@ -6,7 +6,7 @@ namespace recranet\forms;
  * Names of the hidden fields the plugin renders into forms and reads back on
  * submit.
  *
- * Both carry hashed values (Craft's security key), so a bot cannot forge them
+ * All carry hashed values (Craft's security key), so a bot cannot forge them
  * and a developer cannot accidentally make them visitor-controlled.
  */
 final class FormFields
@@ -24,4 +24,11 @@ final class FormFields
 	 * cannot be replayed here.
 	 */
 	public const CAPTCHA_ACTION = 'rfCaptchaAction';
+
+	/**
+	 * Hashed random nonce minted when the form is rendered (only with the
+	 * one-time token setting on). The first submit consumes it; a re-submit
+	 * carrying the same nonce is a replay.
+	 */
+	public const SUBMIT_TOKEN = 'rfSubmitToken';
 }

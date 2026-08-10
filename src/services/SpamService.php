@@ -21,9 +21,9 @@ use yii\base\Component;
 use yii\web\Request;
 
 /**
- * Runs the spam pipeline: blocklist, honeypot, throttle, submit timing, then
- * the configured captcha (including the action/hostname the token was minted
- * with).
+ * Runs the spam pipeline: blocklist, honeypot, throttle, submit timing, the
+ * one-time submit token, then the configured captcha (including the
+ * action/hostname the token was minted with).
  *
  * The cheap local checks run first so a bot never costs us a captcha
  * verification — which matters on reCAPTCHA Enterprise, where assessments are
@@ -39,6 +39,13 @@ class SpamService extends Component
 	 * cache, so an implausible age is logged rather than treated as spam.
 	 */
 	private const STALE_FORM_SECONDS = 604800;
+
+	/**
+	 * How long a consumed one-time token is remembered. A replay after this
+	 * window slips through — 24 hours covers the realistic capture-and-replay
+	 * scenario without keeping cache entries around forever.
+	 */
+	private const TOKEN_REPLAY_TTL_SECONDS = 86400;
 
 	/**
 	 * The active captcha provider, or null when none is configured.
@@ -92,6 +99,14 @@ class SpamService extends Component
 
 		if ($timingVerdict !== null) {
 			return $timingVerdict;
+		}
+
+		// Last of the local checks: consuming the token writes to the cache,
+		// so the free read-only checks above go first
+		$tokenVerdict = $this->checkOneTimeToken($request, $settings);
+
+		if ($tokenVerdict !== null) {
+			return $tokenVerdict;
 		}
 
 		$captcha = $this->getCaptcha();
@@ -257,6 +272,49 @@ class SpamService extends Component
 				reason: sprintf('throttled (%d submits in %ds)', $submits, $window),
 				reject: true,
 			);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Enforce the one-time submit token: each render mints a fresh signed
+	 * nonce, the first submit consumes it, and a repeat within the replay
+	 * window is flagged. Consuming uses the cache's add() — atomic on
+	 * backends that support it — so two racing submits cannot both pass.
+	 *
+	 * A replay is stored as reviewable spam rather than rejected: the guard
+	 * is coarse (a full-page cache hands the same token to every visitor),
+	 * so what it catches stays visible for human review. A token that fails
+	 * its hash check is different — that is a tampered request, rejected
+	 * like a forged timestamp. Requests without the field (custom templates,
+	 * pages cached before the setting was turned on) are not checked.
+	 */
+	private function checkOneTimeToken(Request $request, Settings $settings): ?SpamVerdict
+	{
+		if (!$settings->oneTimeSubmitTokens) {
+			return null;
+		}
+
+		$hashed = trim((string)$request->getBodyParam(FormFields::SUBMIT_TOKEN));
+
+		if ($hashed === '') {
+			return null;
+		}
+
+		// validateData() rather than getValidatedBodyParam(): a tampered
+		// field should be a spam verdict, not a 400 that tells a bot which
+		// check it tripped over
+		$token = Craft::$app->getSecurity()->validateData($hashed);
+
+		if ($token === false) {
+			return new SpamVerdict(isSpam: true, reason: 'submit-token-invalid', reject: true);
+		}
+
+		$key = sprintf('recranet-forms:submit-token:%s', $token);
+
+		if (!Craft::$app->getCache()->add($key, 1, self::TOKEN_REPLAY_TTL_SECONDS)) {
+			return new SpamVerdict(isSpam: true, reason: 'submit-token-replayed (token was already used)');
 		}
 
 		return null;

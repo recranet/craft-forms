@@ -69,6 +69,15 @@ class RecranetFormsVariable
 			Craft::$app->getSecurity()->hashData((string)time()),
 		);
 
+		// One-time token (opt-in): a fresh nonce per render, consumed by the
+		// first submit; a re-submit with the same nonce is flagged as a replay
+		if (Plugin::getInstance()->getSettings()->oneTimeSubmitTokens) {
+			$html .= Html::hiddenInput(
+				FormFields::SUBMIT_TOKEN,
+				Craft::$app->getSecurity()->hashData(bin2hex(random_bytes(16))),
+			);
+		}
+
 		$captcha = Plugin::getInstance()->spam->getCaptcha();
 
 		if ($captcha) {

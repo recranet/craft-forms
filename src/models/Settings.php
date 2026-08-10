@@ -18,6 +18,9 @@ class Settings extends Model
 	public const PAYMENT_NONE = 'none';
 	public const PAYMENT_MOLLIE = 'mollie';
 
+	public const SPAM_BEHAVIOR_SIMULATE = 'simulate';
+	public const SPAM_BEHAVIOR_SHOW_ERRORS = 'showErrors';
+
 	public const CAPTCHA_NONE = 'none';
 	public const CAPTCHA_RECAPTCHA_V2 = 'recaptcha-v2';
 	public const CAPTCHA_RECAPTCHA_V3 = 'recaptcha-v3';
@@ -94,6 +97,16 @@ class Settings extends Model
 	public int|string $throttleWindow = 60;
 
 	/**
+	 * Render a one-time token in each form and accept it exactly once — a
+	 * true replay guard on top of the idempotency dedupe (which only catches
+	 * identical content). A repeat submit with the same token is stored as
+	 * reviewable spam; a forged token is rejected outright. Off by default:
+	 * a full-page cache (Blitz, static HTML) serves the same token to every
+	 * visitor, which would flag everyone after the first.
+	 */
+	public bool $oneTimeSubmitTokens = false;
+
+	/**
 	 * Verify that v3/Enterprise tokens were minted on one of our hostnames,
 	 * so tokens farmed on another site sharing the key cannot be replayed.
 	 */
@@ -109,6 +122,16 @@ class Settings extends Model
 	 * (198.51.100. or 2001:1c00:).
 	 */
 	public string $blocklist = '';
+
+	/**
+	 * What a visitor sees when their submission is flagged as spam.
+	 * 'simulate' (default) pretends the submission succeeded, so bots and
+	 * human spammers learn nothing about which check caught them.
+	 * 'showErrors' tells the visitor the submission was flagged and why —
+	 * a debug aid while tuning thresholds or chasing a false positive with
+	 * the affected visitor; don't leave it on in production.
+	 */
+	public string $spamBehavior = self::SPAM_BEHAVIOR_SIMULATE;
 
 	/**
 	 * Which language the owner notification is rendered in:
@@ -136,6 +159,15 @@ class Settings extends Model
 	 * the privacy statement promises.
 	 */
 	public int|string $retentionDays = 0;
+
+	/**
+	 * Delete stored spam submissions older than this many days — spam rarely
+	 * deserves the retention window real submissions get. Plugin-wide and
+	 * always a hard delete (anonymized spam has no statistical value); the
+	 * per-form retention overrides govern real submissions only. 0 = spam
+	 * simply follows the regular retention rules.
+	 */
+	public int|string $spamRetentionDays = 0;
 
 	/**
 	 * URL of the site's privacy page (supports $ENV_VAR syntax; a relative
@@ -226,6 +258,11 @@ class Settings extends Model
 		return (int)$this->retentionDays;
 	}
 
+	public function getSpamRetentionDays(): int
+	{
+		return (int)$this->spamRetentionDays;
+	}
+
 	public function getThrottleCount(): int
 	{
 		return (int)$this->throttleCount;
@@ -313,9 +350,10 @@ class Settings extends Model
 				self::CAPTCHA_TURNSTILE,
 			]],
 			[['notificationLanguage'], 'in', 'range' => ['submission', 'primary']],
+			[['spamBehavior'], 'in', 'range' => [self::SPAM_BEHAVIOR_SIMULATE, self::SPAM_BEHAVIOR_SHOW_ERRORS]],
 			[['paymentProvider'], 'in', 'range' => [self::PAYMENT_NONE, self::PAYMENT_MOLLIE]],
 			[['recaptchaThreshold', 'recaptchaRejectThreshold'], 'number', 'min' => 0, 'max' => 1],
-			[['minSubmitSeconds', 'retentionDays', 'throttleCount', 'throttleWindow'], 'integer', 'min' => 0],
+			[['minSubmitSeconds', 'retentionDays', 'spamRetentionDays', 'throttleCount', 'throttleWindow'], 'integer', 'min' => 0],
 			[['maxUploadSize'], 'integer', 'min' => 1],
 			[['honeypotName'], 'required'],
 		];

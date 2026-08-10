@@ -258,6 +258,18 @@
 		errors: settings.getErrors('throttleWindow')
 	})
 }}
+
+<h3>{{ 'One-time token'|t('recranet-forms') }}</h3>
+<p class="rf-settings-hint">{{ 'settings.spam.token.hint'|t('recranet-forms') }}</p>
+
+{{
+	forms.lightswitchField({
+		label: 'One-time submit token'|t('recranet-forms'),
+		instructions: 'Each rendered form gets a token that is accepted exactly once, so a captured request cannot be replayed with varied content. Do not enable on sites that cache full pages (Blitz, static HTML) — every visitor would get the same token.'|t('recranet-forms'),
+		name: 'oneTimeSubmitTokens',
+		on: settings.oneTimeSubmitTokens
+	})
+}}
 </details>
 
 <details class="rfs-group">
@@ -272,6 +284,25 @@
 		rows: 3,
 		value: settings.blocklist,
 		errors: settings.getErrors('blocklist')
+	})
+}}
+</details>
+
+<details class="rfs-group">
+<summary><strong>{{ 'Spam behaviour'|t('recranet-forms') }}</strong><span class="rfs-group__hint">{{ 'What a flagged visitor sees — switch to errors only while debugging'|t('recranet-forms') }}</span></summary>
+<p class="rf-settings-hint">{{ 'settings.spam.behaviour.hint'|t('recranet-forms') }}</p>
+
+{{
+	forms.selectField({
+		label: 'Spam behaviour'|t('recranet-forms'),
+		instructions: 'What a visitor sees when their submission is flagged as spam. “Pretend success” keeps bots in the dark (default); “Show an error” tells the visitor the submission was flagged and why — a debug aid while tuning thresholds or chasing a false positive.'|t('recranet-forms'),
+		name: 'spamBehavior',
+		value: settings.spamBehavior,
+		options: [
+			{ value: 'simulate', label: 'Pretend success (recommended)'|t('recranet-forms') },
+			{ value: 'showErrors', label: 'Show an error with the spam reason (debug)'|t('recranet-forms') }
+		],
+		errors: settings.getErrors('spamBehavior')
 	})
 }}
 </details>
@@ -333,6 +364,17 @@
 		size: 5,
 		value: settings.retentionDays,
 		errors: settings.getErrors('retentionDays')
+	})
+}}
+
+{{
+	forms.textField({
+		label: 'Spam retention (days)'|t('recranet-forms'),
+		instructions: 'Delete stored spam submissions sooner than regular submissions — always a hard delete, on every form. 0 = spam follows the regular retention rules.'|t('recranet-forms'),
+		name: 'spamRetentionDays',
+		size: 5,
+		value: settings.spamRetentionDays,
+		errors: settings.getErrors('spamRetentionDays')
 	})
 }}
 

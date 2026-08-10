@@ -21,6 +21,10 @@ use yii\base\Component;
  * submission (element, data, uploaded files), "anonymize" keeps the row for
  * statistics but blanks all personal data (see Submission::anonymize()).
  *
+ * On top of the per-form rules, Settings::spamRetentionDays caps how long
+ * spam-flagged submissions are kept — plugin-wide and always a hard delete,
+ * since anonymized spam has no statistical value.
+ *
  * AVG/GDPR: retention should match what the site's privacy statement
  * promises about how long form data is kept.
  */
@@ -62,7 +66,49 @@ class Retention extends Component
 			}
 		}
 
+		// Spam cap after the per-form pass: a shorter regular retention has
+		// already removed what it covers; this only prunes the spam that
+		// would otherwise linger for the full window. Deliberately ignores
+		// per-form overrides — those promise how long REAL submissions live.
+		$spamDays = Plugin::getInstance()->getSettings()->getSpamRetentionDays();
+
+		if ($spamDays > 0) {
+			$deleted = $this->deleteOldSpam($spamDays);
+			$result['deleted'] += $deleted;
+
+			if ($deleted > 0) {
+				Plugin::info("Retention: deleted {$deleted} spam submission(s) older than {$spamDays} days.");
+			}
+		}
+
 		return $result;
+	}
+
+	/**
+	 * Hard-delete spam-flagged submissions older than the cutoff, across all
+	 * forms. Always a hard delete: anonymizing spam would keep meaningless
+	 * rows around forever.
+	 */
+	private function deleteOldSpam(int $days): int
+	{
+		$cutoff = Db::prepareDateForDb(new \DateTimeImmutable("-{$days} days"));
+
+		$ids = Submission::find()
+			->siteId('*')
+			->status(null)
+			->isSpam(true)
+			->andWhere(['<', 'elements.dateCreated', $cutoff])
+			->ids();
+
+		$deleted = 0;
+
+		foreach ($ids as $id) {
+			if (Craft::$app->getElements()->deleteElementById($id, hardDelete: true)) {
+				$deleted++;
+			}
+		}
+
+		return $deleted;
 	}
 
 	/**
