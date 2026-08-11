@@ -39,7 +39,11 @@ The shared foundation is **one rule shape** used everywhere: `{field: <uid>, ope
 
 ## Phase 0.5 — secure-forms absorption
 
-**✅ Shipped in v2.1.0 (2026-08-06).** Ported from `recranet/craft-secure-forms` (own IP): the captcha provider layer (reCAPTCHA v2/v3/Enterprise + Turnstile behind `CaptchaInterface`), token binding to form action + hostname, minimum fill time, sender blocklist, reject-vs-review spam split, storage switches (`saveSubmissions`, `saveSpamSubmissions`), retention (`retentionDays` + GC hook + `gc/prune`), the Email/SMTP test utility, and the expanded-fields CSV exporter. **Still open:** a `MigrateController` porting secure-forms submissions into recranet-forms (blocked on having the secure-forms schema at hand — the repo is not checked out alongside this one), and the decision to archive secure-forms once that path exists.
+**✅ Shipped in v2.1.0 (2026-08-06).** Ported from `recranet/craft-secure-forms` (own IP): the captcha provider layer (reCAPTCHA v2/v3/Enterprise + Turnstile behind `CaptchaInterface`), token binding to form action + hostname, minimum fill time, sender blocklist, reject-vs-review spam split, storage switches (`saveSubmissions`, `saveSpamSubmissions`), retention (`retentionDays` + GC hook + `gc/prune`), the Email/SMTP test utility, and the expanded-fields CSV exporter.
+
+**✅ Phase closed (2026-08-11).** The `MigrateController` that was going to port secure-forms submissions across is **dropped, deliberately**: nothing is left to migrate. No project requires `recranet/craft-secure-forms` in its `composer.json` or `composer.lock`, no `project.yaml` carries the plugin, and its tables appear in no database dump — against 133 local Craft projects. Building an importer for data that does not exist only buys maintenance. `recranet/craft-secure-forms` is archived on GitHub (read-only since 2026-07-30).
+
+Two loose ends live outside this repo, both cosmetic: the package is **not** flagged abandoned on Packagist (doing so, with `recranet/craft-forms` as the replacement, is what makes `composer` tell an installer to move — 15 downloads to date), and its README still reads as a live plugin rather than pointing here. The evidence above is local, so a site that was never cloned here would go unseen; `composer show recranet/craft-secure-forms` on a server is the definitive check.
 
 ## Phase 3 — spam & GDPR
 
