@@ -1511,30 +1511,57 @@
 			e.preventDefault();
 			e.dataTransfer.dropEffect = activeDrag.kind === 'card' ? 'move' : 'copy';
 
-			var card = e.target.closest('.rf-field');
 			list.classList.add('rf-drop-target');
 
-			// A card never targets itself
-			if (activeDrag.kind === 'card' && card === activeDrag.card) {
-				drop = null;
-				return;
-			}
+			// Everything droppable except the card being dragged
+			var cards = Array.prototype.slice.call(list.querySelectorAll('.rf-field'))
+				.filter(function (c) { return !(activeDrag.kind === 'card' && c === activeDrag.card); });
 
-			if (!card) {
-				// Free space: append at the end
+			if (!cards.length) {
 				if (!applyZone(null, 'append')) return;
 				drop = { append: true };
 				list.appendChild(dropMarker);
 				return;
 			}
 
+			var card = e.target.closest('.rf-field');
+			if (card && cards.indexOf(card) === -1) card = null;
+
+			// Not on a card: the gaps between rows, the space beside a
+			// half-width field and the list's own padding are all misses. They
+			// used to fall through to "append at the end", which made the drop
+			// area feel far smaller than it looks — so snap to the nearest card
+			// instead, and only append when genuinely past the last one.
+			var overCard = card !== null;
+
+			if (!overCard) {
+				var y = e.clientY;
+				var last = cards[cards.length - 1].getBoundingClientRect();
+
+				if (y > last.bottom) {
+					if (!applyZone(null, 'append')) return;
+					drop = { append: true };
+					list.appendChild(dropMarker);
+					return;
+				}
+
+				var best = Infinity;
+				cards.forEach(function (c) {
+					var r = c.getBoundingClientRect();
+					var distance = y < r.top ? r.top - y : (y > r.bottom ? y - r.bottom : 0);
+					if (distance < best) { best = distance; card = c; }
+				});
+			}
+
 			var rect = card.getBoundingClientRect();
 			var x = (e.clientX - rect.left) / rect.width;
 
 			// Outer quarters = side-by-side drop, the middle = row insert
-			var zone = x < 0.25 ? 'left'
+			var rowZone = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+			var zone = !overCard ? rowZone
+				: x < 0.25 ? 'left'
 				: x > 0.75 ? 'right'
-				: e.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+				: rowZone;
 
 			// Unchanged target: leave the DOM alone. Re-inserting the marker
 			// reflows the list, which slides the cards under the cursor and
