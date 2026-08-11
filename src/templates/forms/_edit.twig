@@ -732,7 +732,11 @@
 	.rf-builder__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; align-items: start; }
 	/* min-width: 0 — grid items default to min-content, so a half-width card
 	   would otherwise refuse to shrink below its bar's natural width */
-	.rf-field { grid-column: 1 / -1; min-width: 0; container-type: inline-size; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+	/* No container-type here: it implies contain: layout, and that made the
+	   native <select> popup (the field type dropdown) open away from its
+	   input in Chromium. The narrow-card tweaks below use a class that a
+	   ResizeObserver toggles instead — same breakpoint, no containment. */
+	.rf-field { grid-column: 1 / -1; min-width: 0; border: 1px solid var(--hairline-color); border-radius: var(--large-border-radius); background: var(--gray-050); transition: box-shadow 0.15s ease, border-color 0.15s ease; }
 	.rf-field[data-width='half'] { grid-column: span 1; }
 	.rf-field:hover { border-color: var(--medium-hairline-color, #cdd8e4); }
 	.rf-field.rf-open { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); border-color: var(--link-color, #1f5fea); }
@@ -757,12 +761,12 @@
 	.rf-field__toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0; border: 0; margin: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 	/* In a narrow card (half width, or the split view) the type badge and the
 	   Duplicate label go first — title, drag handle and delete always stay */
-	@container (max-width: 470px) {
-		.rf-field__badge { display: none; }
-		/* .btn.small outranks a single class, so match it in specificity */
-		.btn.rf-field__duplicate { font-size: 0; padding-left: 8px; padding-right: 8px; }
-		.btn.rf-field__duplicate::before { content: '⧉'; font-size: 13px; }
-	}
+	/* Narrow card (under 470px): drop the type badge and reduce Duplicate to
+	   its icon. Toggled by the ResizeObserver in the JS below. */
+	.rf-field--narrow .rf-field__badge { display: none; }
+	/* .btn.small outranks a single class, so match it in specificity */
+	.rf-field--narrow .btn.rf-field__duplicate { font-size: 0; padding-left: 8px; padding-right: 8px; }
+	.rf-field--narrow .btn.rf-field__duplicate::before { content: '⧉'; font-size: 13px; }
 	.rf-field__toggle:focus-visible { outline: 2px solid var(--link-color, #1f5fea); outline-offset: 2px; border-radius: 4px; }
 	.rf-field.rf-open .rf-field__bar { border-bottom: 1px solid var(--hairline-color); }
 	.rf-field__move { cursor: grab; }
@@ -1211,10 +1215,19 @@
 				}
 			});
 
+			if (narrowCards) narrowCards.observe(card);
 			conditionsUI(card.querySelector('[data-rf-conditions-editor]'));
 			updateChips(card);
 			makeCardDraggable(card);
 		}
+
+		// Replaces the container query that used to live on .rf-field — see the
+		// CSS note there for why containment had to go.
+		var narrowCards = window.ResizeObserver ? new ResizeObserver(function (entries) {
+			entries.forEach(function (entry) {
+				entry.target.classList.toggle('rf-field--narrow', entry.contentRect.width < 470);
+			});
+		}) : null;
 
 		list.querySelectorAll('.rf-field').forEach(initCard);
 		// renumber() drives this after every change; the first paint needs it too
