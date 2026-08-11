@@ -51,6 +51,8 @@ return [
 	'JSON file' => 'JSON-Datei',
 	'Or paste JSON' => 'Oder JSON einfügen',
 	'Drag to reorder' => 'Zum Sortieren ziehen',
+	'Move up' => 'Nach oben',
+	'Move down' => 'Nach unten',
 	'New field' => 'Neues Feld',
 	'Duplicate field' => 'Feld duplizieren',
 	'Delete field' => 'Feld löschen',

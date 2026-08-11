@@ -130,6 +130,13 @@
 		   so it is hidden from assistive tech instead of posing as a control. #}
 		<div class="rf-field__bar">
 			<a class="move icon rf-field__move" aria-hidden="true"></a>
+			{# Dragging is mouse-only and fiddly over long forms; these do the
+			   same one-step move with a click, and give keyboard users a
+			   visible equivalent of Alt+arrows. Disabled at the ends by JS. #}
+			<span class="rf-field__nudge">
+				<button type="button" class="rf-field__up" title="{{ 'Move up'|t('recranet-forms') }}" aria-label="{{ 'Move up'|t('recranet-forms') }}">&uarr;</button>
+				<button type="button" class="rf-field__down" title="{{ 'Move down'|t('recranet-forms') }}" aria-label="{{ 'Move down'|t('recranet-forms') }}">&darr;</button>
+			</span>
 			<button type="button" class="rf-field__toggle" aria-expanded="false"
 				aria-label="{{ field.label ?: 'New field'|t('recranet-forms') }}"
 				title="{{ 'Click to edit, Alt+arrow keys to move'|t('recranet-forms') }}">
@@ -759,6 +766,13 @@
 	.rf-field__toggle:focus-visible { outline: 2px solid var(--link-color, #1f5fea); outline-offset: 2px; border-radius: 4px; }
 	.rf-field.rf-open .rf-field__bar { border-bottom: 1px solid var(--hairline-color); }
 	.rf-field__move { cursor: grab; }
+	/* Position controls grouped on the left, away from the destructive
+	   actions on the right */
+	.rf-field__nudge { display: inline-flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+	.rf-field__nudge button { width: 18px; height: 13px; padding: 0; border: 0; background: none; cursor: pointer; font-size: 11px; line-height: 1; color: var(--medium-text-color); border-radius: 3px; }
+	.rf-field__nudge button:hover:not(:disabled) { background: var(--gray-200); color: var(--text-color); }
+	.rf-field__nudge button:disabled { opacity: 0.25; cursor: default; }
+	.rf-field__nudge button:focus-visible { outline: 2px solid var(--link-color, #1f5fea); outline-offset: 1px; }
 	.rf-field__title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	.rf-field__badge { font-size: 11px; text-transform: uppercase; color: var(--medium-text-color); background: var(--gray-100); border-radius: 3px; padding: 2px 6px; }
 
@@ -852,7 +866,12 @@
 	   aside to preview the half-width pair, with an edge bar where the
 	   dragged field will land */
 	.rf-builder__fields.rf-drop-target { min-height: 56px; outline: 2px dashed var(--hairline-color); outline-offset: 4px; border-radius: var(--large-border-radius); }
-	.rf-drop-marker { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--link-color, #0b69a3); }
+	/* pointer-events: none is load-bearing. The marker lands under the
+	   cursor, so without it the next dragover targets the marker instead
+	   of a card, the code reads that as empty space, and the marker jumps
+	   to the end of the list — worst when dragging upward, where you are
+	   always hovering the marker you just placed. */
+	.rf-drop-marker { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--link-color, #0b69a3); pointer-events: none; }
 	.rf-field { transition: transform 0.15s ease, opacity 0.15s ease; }
 	.rf-field.rf-drop-side-left { transform: translateX(6%) scaleX(0.88); transform-origin: right center; box-shadow: -6px 0 0 var(--link-color, #0b69a3); }
 	.rf-field.rf-drop-side-right { transform: translateX(-6%) scaleX(0.88); transform-origin: left center; box-shadow: 6px 0 0 var(--link-color, #0b69a3); }
@@ -957,6 +976,18 @@
 			{ value: 'isNotEmpty', label: i18n.opIsNotEmpty },
 		];
 
+		// Up/down disabled at the ends. Called from renumber(), which already
+		// runs after every structural change.
+		function refreshNudges() {
+			var cards = list.querySelectorAll('.rf-field');
+			cards.forEach(function (card, i) {
+				var up = card.querySelector('.rf-field__up');
+				var down = card.querySelector('.rf-field__down');
+				if (up) up.disabled = i === 0;
+				if (down) down.disabled = i === cards.length - 1;
+			});
+		}
+
 		// Rewrite fields[N][...] names (and checkbox id/for pairs) to match visual order
 		function renumber() {
 			list.querySelectorAll('.rf-field').forEach(function (card, i) {
@@ -970,6 +1001,8 @@
 					label.setAttribute('for', checkbox.id);
 				}
 			});
+
+			refreshNudges();
 		}
 
 		// ---- Conditions rule editor: renders rows from the hidden JSON input,
@@ -1078,6 +1111,31 @@
 			render();
 		}
 
+		// One-step move via the arrow buttons. Same operation as Alt+arrows,
+		// just reachable with a mouse — dragging over a long form is fiddly.
+		list.addEventListener('click', function (e) {
+			var button = e.target.closest('.rf-field__up, .rf-field__down');
+			if (!button || button.disabled) return;
+
+			var card = button.closest('.rf-field');
+			var up = button.classList.contains('rf-field__up');
+			var sibling = up ? card.previousElementSibling : card.nextElementSibling;
+			if (!sibling) return;
+
+			up ? sibling.before(card) : sibling.after(card);
+			renumber();
+			fixLonelyHalves();
+			landCard(card);
+
+			// The button moved with the card; keep focus on it so a second
+			// click (or Enter) keeps nudging in the same direction
+			button.focus();
+			live.textContent = i18n.movedTo.replace(
+				'{position}',
+				Array.prototype.indexOf.call(list.children, card) + 1,
+			);
+		});
+
 		// Screen-reader announcements for keyboard moves
 		var live = document.createElement('div');
 		live.setAttribute('aria-live', 'polite');
@@ -1159,6 +1217,8 @@
 		}
 
 		list.querySelectorAll('.rf-field').forEach(initCard);
+		// renumber() drives this after every change; the first paint needs it too
+		refreshNudges();
 
 		// Extra notifications (Notification tab): add/remove rows; every row
 		// gets the same conditions editor the field cards use, here serving
@@ -1388,7 +1448,22 @@
 		var activeDrag = null; // {kind: 'tile', fieldType} | {kind: 'card', card}
 		var drop = null; // {card, zone: 'before'|'after'|'left'|'right'} | {append: true}
 
-		function clearDropUi() {
+		// Remembers the last rendered target so dragover can skip repainting an
+		// identical one; reset whenever the drop UI is torn down
+		var shownZone = null;
+
+		function applyZone(card, zone) {
+			var key = zone === 'append' ? 'append' : (card.dataset.rfKey || (card.dataset.rfKey = 'c' + (++zoneSeq))) + ':' + zone;
+			if (key === shownZone) return false;
+			shownZone = key;
+			clearDropUi(true);
+			return true;
+		}
+
+		var zoneSeq = 0;
+
+		function clearDropUi(keepTargetClass) {
+			shownZone = keepTargetClass ? shownZone : null;
 			dropMarker.remove();
 			list.querySelectorAll('.rf-drop-side-left, .rf-drop-side-right').forEach(function (card) {
 				card.classList.remove('rf-drop-side-left', 'rf-drop-side-right');
@@ -1437,7 +1512,6 @@
 			e.dataTransfer.dropEffect = activeDrag.kind === 'card' ? 'move' : 'copy';
 
 			var card = e.target.closest('.rf-field');
-			clearDropUi();
 			list.classList.add('rf-drop-target');
 
 			// A card never targets itself
@@ -1448,6 +1522,7 @@
 
 			if (!card) {
 				// Free space: append at the end
+				if (!applyZone(null, 'append')) return;
 				drop = { append: true };
 				list.appendChild(dropMarker);
 				return;
@@ -1457,17 +1532,24 @@
 			var x = (e.clientX - rect.left) / rect.width;
 
 			// Outer quarters = side-by-side drop, the middle = row insert
-			if (x < 0.25) {
-				drop = { card: card, zone: 'left' };
+			var zone = x < 0.25 ? 'left'
+				: x > 0.75 ? 'right'
+				: e.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+
+			// Unchanged target: leave the DOM alone. Re-inserting the marker
+			// reflows the list, which slides the cards under the cursor and
+			// sets the whole thing oscillating.
+			if (!applyZone(card, zone)) return;
+
+			drop = { card: card, zone: zone };
+
+			if (zone === 'left') {
 				card.classList.add('rf-drop-side-left');
-			} else if (x > 0.75) {
-				drop = { card: card, zone: 'right' };
+			} else if (zone === 'right') {
 				card.classList.add('rf-drop-side-right');
-			} else if (e.clientY < rect.top + rect.height / 2) {
-				drop = { card: card, zone: 'before' };
+			} else if (zone === 'before') {
 				card.before(dropMarker);
 			} else {
-				drop = { card: card, zone: 'after' };
 				card.after(dropMarker);
 			}
 		});

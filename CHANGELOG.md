@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Fixed: dragging a field upward jumped it to the bottom of the list.** The insertion marker had no `pointer-events: none`, so it landed under the cursor and the next drag event targeted the marker instead of a card — which the code read as "empty space, append at the end". Dragging up is exactly where you hover the marker you just placed. Dragover also stopped rebuilding the marker on every event, which was reflowing the list and making the marker oscillate.
+- **Fields have up/down arrows.** One click moves a field a single position, disabled at the ends. Dragging over a long form is fiddly with a mouse and impossible without one; this is the same move Alt+arrows already did, now visible.
 - **Fixed: two forms on one page both claimed the success message.** A session flash is global, so submitting one form showed "thank you" above every form on the page. Each form now checks the message is its own. Different forms on one page work; the *same* form rendered twice still duplicates its HTML ids and is not supported.
 - **Fixed: the submit button said "Send" on every non-English site.** The default label was a bare string in the template, so it never went through translation. It now does — and where a form is rendered with an explicit `buttonLabel`, that still wins.
 - **The submit button label is now a per-form setting.** A contact form sends, a shop form orders, a course form signs you up. Set it under After submit ("Bestellen", "Inschrijven", "Aanvragen"); empty keeps the translated default. Translatable per site like the other visitor-facing form text, and it survives export, import and duplicate.

@@ -51,6 +51,8 @@ return [
 	'JSON file' => 'JSON-bestand',
 	'Or paste JSON' => 'Of plak JSON',
 	'Drag to reorder' => 'Sleep om te sorteren',
+	'Move up' => 'Omhoog',
+	'Move down' => 'Omlaag',
 	'New field' => 'Nieuw veld',
 	'Duplicate field' => 'Veld dupliceren',
 	'Delete field' => 'Veld verwijderen',
