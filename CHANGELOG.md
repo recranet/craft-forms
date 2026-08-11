@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Fixed: two forms on one page both claimed the success message.** A session flash is global, so submitting one form showed "thank you" above every form on the page. Each form now checks the message is its own. Different forms on one page work; the *same* form rendered twice still duplicates its HTML ids and is not supported.
 - **Fixed: the submit button said "Send" on every non-English site.** The default label was a bare string in the template, so it never went through translation. It now does — and where a form is rendered with an explicit `buttonLabel`, that still wins.
 - **The submit button label is now a per-form setting.** A contact form sends, a shop form orders, a course form signs you up. Set it under After submit ("Bestellen", "Inschrijven", "Aanvragen"); empty keeps the translated default. Translatable per site like the other visitor-facing form text, and it survives export, import and duplicate.
 - **Payment forms show a running total.** A visitor was sent to the checkout without ever seeing the amount. The form now shows the total, starting at the base amount and updating as options and quantities change — including options that disappear behind conditional rules. Display only: the charge is still computed server-side from the form definition, and a unit test pins the displayed figures to what `PaymentCalculator` bills.

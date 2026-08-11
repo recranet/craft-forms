@@ -24,7 +24,7 @@
 	   message is off screen and the submit looks like it did nothing. Works
 	   without JS; the block at the bottom of this template covers the
 	   validation-error path, which re-renders instead of redirecting. #}
-	{{ redirectInput(options.redirect ?? (craft.app.request.pathInfo ~ '?submitted=true#' ~ formId)) }}
+	{{ redirectInput(options.redirect ?? (craft.app.request.pathInfo ~ '?submitted=' ~ form.handle ~ '#' ~ formId)) }}
 	{{ hiddenInput('formHandle', form.handle|hash) }}
 
 	{% if settings.honeypotEnabled %}
@@ -34,11 +34,19 @@
 		</div>
 	{% endif %}
 
+	{# A session flash is global, so with two forms on one page BOTH would
+	   claim the success message of whichever was submitted. The redirect
+	   carries the handle, so each form can check the flash is its own.
+	   Falls open: an absent or legacy (`true`) param still shows the
+	   message, which keeps custom `redirect` options working. #}
+	{% set submittedHandle = craft.app.request.getQueryParam('submitted') %}
+	{% set flashIsOurs = submittedHandle is empty or submittedHandle == 'true' or submittedHandle == form.handle %}
+
 	{# tabindex="-1" so the JS at the bottom can move focus here after a submit:
 	   that both announces the outcome and brings it into view #}
-	{% if craft.app.session.hasFlash('success') %}
+	{% if flashIsOurs and craft.app.session.hasFlash('success') %}
 		<div class="alert alert-success" role="status" tabindex="-1" data-rf-feedback>{{ craft.app.session.getFlash('success') }}</div>
-	{% elseif craft.app.session.hasFlash('error') %}
+	{% elseif flashIsOurs and craft.app.session.hasFlash('error') %}
 		<div class="alert alert-danger" role="alert" tabindex="-1" data-rf-feedback>{{ craft.app.session.getFlash('error') }}</div>
 	{% endif %}
 
