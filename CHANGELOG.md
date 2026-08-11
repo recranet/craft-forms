@@ -1,7 +1,8 @@
 # Release Notes for Recranet Forms
 
-## Unreleased
+## 2.12.0 - 2026-08-11
 
+- **Block a spam sender straight from a submission.** The blocklist in the plugin settings is project config, so it is read-only on production — exactly where editors triage spam, and they are rarely admins either. Submissions now carry “Block <sender>” and “Block all of @domain” buttons, with a management screen under Forms (never under Settings) listing stored entries and their origin submission, plus the config-based half read-only so a sender blocked in `.env` doesn’t look unblocked. Both lists are matched at submit time, with the same entry shapes as before. Entries deliberately outlive the submission that prompted them: a block is an abuse measure, not correspondence, so retention pruning must not quietly lift it.
 - **Fixed: the field type dropdown opened away from its input.** The field card used a CSS container query, and `container-type` implies layout containment — which moves the containing block the browser positions a native `<select>` popup against. The narrow-card tweaks now come from a class toggled by a `ResizeObserver`, same breakpoint, no containment.
 - **The drop area now covers the gaps.** The space between rows, beside a half-width field and in the list's own padding were all misses that fell through to "append at the end", so the target felt much smaller than it looked. A miss now snaps to the nearest row; only a drop genuinely below the last field appends.
 - **Fixed: dragging a field upward jumped to the bottom of the list.** The insertion marker had no `pointer-events: none`, so it landed under the cursor and the next drag event targeted the marker instead of a card — which the code read as "empty space, append at the end". Dragging up is exactly where you hover the marker you just placed. Dragover also stopped rebuilding the marker on every event, which was reflowing the list and making the marker oscillate.
