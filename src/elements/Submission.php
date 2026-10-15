@@ -349,22 +349,23 @@ class Submission extends Element
 				|| isset($this->pendingUploads[$field['uid']]);
 
 			if (!empty($field['required']) && !$skipRequired && !$hasValue) {
-				// Editors can override the default message per field (Advanced tab).
-				// This is also the consent check: an unchecked consent box is false = empty.
-				$message = !empty($field['errorMessage'])
-					? Craft::t('site', $field['errorMessage'])
-					: Craft::t('recranet-forms', '{label} is required.', ['label' => Craft::t('site', $field['label'])]);
-				$this->addError("field.{$handle}", $message);
+				// One generic message, no label: it renders right under the field,
+				// and the summary above the form puts the label in front. This is
+				// also the consent check: an unchecked consent box is false = empty,
+				// and "<consent text> is required" would read badly.
+				$this->addError("field.{$handle}", $field['type'] === 'consent'
+					? Craft::t('recranet-forms', 'Tick this box to continue.')
+					: Craft::t('recranet-forms', 'This field is required.'));
 				continue;
 			}
 
 			if ($field['type'] === 'email' && $value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => Craft::t('site', $field['label'])]));
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Enter a valid email address.'));
 			}
 
 			// Digits, separators and a leading + only — see PhoneNumber
 			if ($field['type'] === 'tel' && is_string($value) && $value !== '' && !PhoneNumber::isValid($value)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid phone number.', ['label' => Craft::t('site', $field['label'])]));
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Enter a valid phone number.'));
 			}
 
 			// Reject values that aren't one of the configured choice options
@@ -372,7 +373,7 @@ class Submission extends Element
 				$options = array_map('trim', explode(',', $field['options'] ?? ''));
 
 				if (!in_array($value, $options, true)) {
-					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => Craft::t('site', $field['label'])]));
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Choose one of the listed options.'));
 				}
 			}
 
@@ -381,12 +382,12 @@ class Submission extends Element
 				$options = array_map('trim', explode(',', $field['options'] ?? ''));
 
 				if (array_diff($value, $options) !== []) {
-					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} has an invalid value.', ['label' => Craft::t('site', $field['label'])]));
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Choose one of the listed options.'));
 				}
 			}
 
 			if ($field['type'] === 'number' && $value !== null && $value !== '' && !is_numeric($value)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a number.', ['label' => Craft::t('site', $field['label'])]));
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Enter a number.'));
 			}
 
 			// Dates must be exactly what <input type="date"> posts: Y-m-d
@@ -394,7 +395,7 @@ class Submission extends Element
 				$parsed = is_string($value) ? \DateTimeImmutable::createFromFormat('Y-m-d', $value) : false;
 
 				if (!$parsed || $parsed->format('Y-m-d') !== $value) {
-					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid date.', ['label' => Craft::t('site', $field['label'])]));
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Enter a valid date.'));
 				}
 			}
 
@@ -413,12 +414,12 @@ class Submission extends Element
 				}
 
 				if (!$valid) {
-					$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid time.', ['label' => Craft::t('site', $field['label'])]));
+					$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Enter a valid time.'));
 				}
 			}
 
 			if ($field['type'] === 'url' && $value && !filter_var($value, FILTER_VALIDATE_URL)) {
-				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid URL.', ['label' => Craft::t('site', $field['label'])]));
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Enter a valid web address (starting with https://).'));
 			}
 
 			if ($field['type'] === 'file') {
@@ -446,7 +447,7 @@ class Submission extends Element
 		$settings = Plugin::getInstance()->getSettings();
 
 		if ($upload->hasError) {
-			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} could not be uploaded. Please try again.', ['label' => Craft::t('site', $field['label'])]));
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', 'The file could not be uploaded. Please try again.'));
 
 			return;
 		}
@@ -462,15 +463,13 @@ class Submission extends Element
 		$allowed = $settings->getAllowedFileExtensions();
 
 		if (!in_array($extension, $allowed, true)) {
-			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be one of the following file types: {extensions}.', [
-				'label' => $field['label'],
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', 'Allowed file types: {extensions}.', [
 				'extensions' => implode(', ', $allowed),
 			]));
 		}
 
 		if ($upload->size > $settings->getMaxUploadSize() * 1024 * 1024) {
-			$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} may be at most {max} MB.', [
-				'label' => $field['label'],
+			$this->addError("field.{$handle}", Craft::t('recranet-forms', 'The file may be at most {max} MB.', [
 				'max' => $settings->getMaxUploadSize(),
 			]));
 		}

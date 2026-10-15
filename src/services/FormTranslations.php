@@ -24,7 +24,7 @@ use yii\base\Component;
  *
  *   name
  *   subject | notificationIntro | confirmationSubject | confirmationBody
- *   field.<uid>.label | .placeholder | .description | .options | .errorMessage
+ *   field.<uid>.label | .placeholder | .description | .options
  *
  * Structure (type, handle, width, required, conditions) is deliberately NOT
  * translatable: a translated form must stay the same form, or submissions
@@ -35,7 +35,7 @@ class FormTranslations extends Component
 	private const TABLE = '{{%recranetforms_form_translations}}';
 
 	/** Per-field keys that carry visitor-facing text */
-	private const FIELD_KEYS = ['label', 'placeholder', 'description', 'options', 'errorMessage'];
+	private const FIELD_KEYS = ['label', 'placeholder', 'description', 'options'];
 
 	/** Form-level keys that carry visitor- or owner-facing text */
 	private const FORM_KEYS = ['name', 'subject', 'notificationIntro', 'confirmationSubject', 'confirmationBody', 'successMessage', 'submitLabel'];

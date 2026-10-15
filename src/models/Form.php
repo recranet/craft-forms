@@ -65,8 +65,6 @@ class Form extends Model
 		return [
 			'placeholder' => ['text', 'email', 'tel', 'textarea', 'number', 'url'],
 			'required' => $visible,
-			// The custom message replaces "… is required.", so it follows required
-			'errorMessage' => $visible,
 			'defaultValue' => array_values(array_diff($inputs, ['file', 'consent'])),
 			// Paragraph: the description IS the content; consent: the box's text
 			'description' => array_values(array_diff(self::FIELD_TYPES, ['heading', 'divider', 'hidden'])),

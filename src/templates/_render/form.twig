@@ -53,9 +53,20 @@
 	{# Error summary: announced immediately by screen readers on re-render #}
 	{% if errors|length %}
 		<div class="alert alert-danger" role="alert" tabindex="-1" id="{{ formId }}-errors">
+			{# Field messages are generic ("This field is required.") because they
+			   sit right under their field; up here the label goes in front, as a
+			   link that jumps to the input. Errors not tied to a form field (the
+			   privacy agreement) are listed as they are. #}
 			<ul class="mb-0">
-				{% for fieldErrors in errors %}
-					{% for error in fieldErrors %}<li>{{ error }}</li>{% endfor %}
+				{% set fieldHandles = form.fields|map(f => f.handle) %}
+				{% for field in form.fields|filter(f => errors[f.handle] ?? false) %}
+					{% set target = formId ~ '-' ~ field.handle ~ (field.type in ['radio', 'checkboxes'] ? '-1') %}
+					{% for error in errors[field.handle] %}
+						<li><a href="#{{ target }}" class="alert-link">{{ field.label|t }}</a>: {{ error }}</li>
+					{% endfor %}
+				{% endfor %}
+				{% for handle, otherErrors in errors|filter((e, handle) => handle not in fieldHandles) %}
+					{% for error in otherErrors %}<li>{{ error }}</li>{% endfor %}
 				{% endfor %}
 			</ul>
 		</div>

@@ -266,11 +266,6 @@
 					<label class="rf-label">{{ 'Default value'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][defaultValue]" value="{{ field.defaultValue ?? '' }}" />
 				</div>
-				<div class="rf-cell--wide rf-cell--full" data-rf-setting="errorMessage" {{ 'errorMessage' in offSettings ? 'hidden' }}>
-					<label class="rf-label">{{ 'Custom validation message'|t('recranet-forms') }}</label>
-					<input type="text" class="text fullwidth" name="fields[{{ index }}][errorMessage]" value="{{ field.errorMessage ?? '' }}" />
-					<p class="rf-hint">{{ 'Shown instead of the default "… is required." message.'|t('recranet-forms') }}</p>
-				</div>
 				<div class="rf-cell--wide rf-cell--full rf-conditions" data-rf-conditions-editor
 					data-rf-empty-note="{{ 'No rules — this field is always visible.'|t('recranet-forms') }}">
 					<label class="rf-label">{{ 'Conditional visibility'|t('recranet-forms') }}</label>

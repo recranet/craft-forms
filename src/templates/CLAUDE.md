@@ -22,6 +22,7 @@ Front-end form: site `templates/recranet-forms/form.twig` → plugin `_render/fo
 
 Variables: `form` (translations already applied), `options` (class, buttonLabel, redirect), `formErrors` (by handle), `formContent` (values by handle), `erroredFormHandle`. Conventions:
 
+- Validation messages are generic and label-free ("This field is required.") — they render under their field; the error summary on top prefixes each with the field label as a link to the input. There is no per-field custom message
 - Bootstrap 5 classes, `is-invalid` on errors, a11y wiring (`for`/fieldset+legend, `aria-describedby`, `aria-invalid`, visible error text)
 - Inputs post as `fields[<handle>]` (multi-value: `fields[<handle>][]`); repopulate from `value` after failed submit
 - `craft.recranetForms.captchaTag(form.handle)` inside the `<form>` — timestamp field + captcha widget, action = form handle
@@ -47,4 +48,4 @@ Inline CSS + JS, `rf-` prefix on classes/ids/data attributes. Key parts:
 - JS reindexes `fields[N][…]` names after reorder/delete; `#rf-known-fields` JSON feeds the conditions rule dropdowns
 - Translation mode (`isTranslation`, non-primary site via `?site=<handle>`): structure is read-only, only `translations[<key>]` inputs post — key shapes in `FormTranslations`
 - Which card settings show per field type comes from `Form::fieldSettingTypes()` (cells carry `data-rf-setting`, JS `syncTypeSettings()` re-syncs on a type change, `normalizeFieldRows()` blanks the rest on save) — a new setting or type updates that map
-- Field JSON shape: `{uid, handle, label, type, required, options, width, placeholder, description, adminLabel, defaultValue, errorMessage, conditions}` — extending it touches the card, the JS template, `normalizeFieldRows()` and `Form::validateFields()`
+- Field JSON shape: `{uid, handle, label, type, required, options, width, placeholder, description, adminLabel, defaultValue, conditions}` — extending it touches the card, the JS template, `normalizeFieldRows()` and `Form::validateFields()`

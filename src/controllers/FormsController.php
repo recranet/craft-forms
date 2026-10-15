@@ -480,7 +480,6 @@ class FormsController extends Controller
 				'description' => trim((string)($row['description'] ?? '')),
 				'adminLabel' => trim((string)($row['adminLabel'] ?? '')),
 				'defaultValue' => trim((string)($row['defaultValue'] ?? '')),
-				'errorMessage' => trim((string)($row['errorMessage'] ?? '')),
 				'conditions' => $conditions,
 			];
 

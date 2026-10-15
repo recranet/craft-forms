@@ -2,12 +2,12 @@
 	"name": "Contactformulier",
 	"handle": "contact",
 	"fields": [
-		{ "handle": "naam", "label": "Naam", "type": "text", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
-		{ "handle": "email", "label": "E-mailadres", "type": "email", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
-		{ "handle": "telefoon", "label": "Telefoonnummer", "type": "tel", "required": false, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
-		{ "handle": "onderwerp", "label": "Onderwerp", "type": "text", "required": false, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
-		{ "handle": "bericht", "label": "Bericht", "type": "textarea", "required": true, "options": "", "width": "full", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "", "errorMessage": "" },
-		{ "handle": "privacy", "label": "Privacyverklaring", "type": "consent", "required": true, "options": "", "width": "full", "placeholder": "", "description": "Ik ga akkoord met de verwerking van mijn gegevens volgens de privacyverklaring.", "adminLabel": "", "defaultValue": "", "errorMessage": "" }
+		{ "handle": "naam", "label": "Naam", "type": "text", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "" },
+		{ "handle": "email", "label": "E-mailadres", "type": "email", "required": true, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "" },
+		{ "handle": "telefoon", "label": "Telefoonnummer", "type": "tel", "required": false, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "" },
+		{ "handle": "onderwerp", "label": "Onderwerp", "type": "text", "required": false, "options": "", "width": "half", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "" },
+		{ "handle": "bericht", "label": "Bericht", "type": "textarea", "required": true, "options": "", "width": "full", "placeholder": "", "description": "", "adminLabel": "", "defaultValue": "" },
+		{ "handle": "privacy", "label": "Privacyverklaring", "type": "consent", "required": true, "options": "", "width": "full", "placeholder": "", "description": "Ik ga akkoord met de verwerking van mijn gegevens volgens de privacyverklaring.", "adminLabel": "", "defaultValue": "" }
 	],
 	"settings": {
 		"subject": "Contactaanvraag {onderwerp} — #{ref}",
