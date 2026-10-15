@@ -67,8 +67,10 @@
 			{% set errorId = inputId ~ '-error' %}
 			{% set descriptionId = inputId ~ '-description' %}
 			{% set fieldErrors = errors[field.handle] ?? [] %}
-			{# Editor-set default value fills the initial render; posted values win on re-render #}
-			{% set value = values[field.handle] ?? field.defaultValue ?? null %}
+			{# Editor-set default value fills the initial render; posted values win on re-render.
+			   Never for consent: a pre-ticked box is not consent (forms saved before
+			   the builder blanked it may still carry one). #}
+			{% set value = values[field.handle] ?? (field.type != 'consent' ? field.defaultValue ?? null) %}
 			{% set autocomplete = autocompleteMap[field.type] ?? null %}
 			{% set inputmode = inputmodeMap[field.type] ?? null %}
 			{% set description = field.description ?? '' %}

@@ -107,7 +107,10 @@
 	</div>
 {% endmacro %}
 
-{% macro fieldCard(field, index, fieldTypes, allFields, paymentEnabled = false) %}
+{% macro fieldCard(field, index, fieldTypes, allFields, paymentEnabled = false, settingTypes = {}) %}
+	{# Settings this type ignores are hidden (the JS re-syncs on a type
+	   change; saving blanks them) — see Form::fieldSettingTypes() #}
+	{% set offSettings = settingTypes|filter(types => field.type not in types)|keys %}
 	{# data-width drives the builder's two-column grid (mirrors the site layout);
 	   the card starts collapsed — the bar is the toggle #}
 	<div class="rf-field" data-type="{{ field.type }}" data-width="{{ field.width ?? 'full' }}">
@@ -215,7 +218,7 @@
 					<input type="hidden" name="fields[{{ index }}][prices]" value="{{ field.prices ?? '' }}" />
 					<input type="hidden" name="fields[{{ index }}][price]" value="{{ field.price ?? '' }}" />
 				{% endif %}
-				<div class="rf-field__required">
+				<div class="rf-field__required" data-rf-setting="required" {{ 'required' in offSettings ? 'hidden' }}>
 					<input
 						type="checkbox"
 						class="checkbox"
@@ -231,7 +234,7 @@
 
 		<div class="rf-pane" data-rf-pane="appearance" hidden>
 			<div class="rf-field__grid">
-				<div>
+				<div data-rf-setting="width" {{ 'width' in offSettings ? 'hidden' }}>
 					<label class="rf-label">{{ 'Width'|t('recranet-forms') }}</label>
 					<div class="select fullwidth">
 						<select name="fields[{{ index }}][width]">
@@ -240,11 +243,11 @@
 						</select>
 					</div>
 				</div>
-				<div class="rf-cell--wide">
+				<div class="rf-cell--wide" data-rf-setting="placeholder" {{ 'placeholder' in offSettings ? 'hidden' }}>
 					<label class="rf-label">{{ 'Placeholder'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][placeholder]" value="{{ field.placeholder ?? '' }}" />
 				</div>
-				<div class="rf-cell--wide rf-cell--full">
+				<div class="rf-cell--wide rf-cell--full" data-rf-setting="description" {{ 'description' in offSettings ? 'hidden' }}>
 					<label class="rf-label">{{ 'Description'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][description]" value="{{ field.description ?? '' }}" />
 					<p class="rf-hint">{{ 'Help text shown under the input. For a consent field this IS the consent text (stored with each submission); for a paragraph it is the content.'|t('recranet-forms') }}</p>
@@ -254,16 +257,16 @@
 
 		<div class="rf-pane" data-rf-pane="advanced" hidden>
 			<div class="rf-field__grid">
-				<div class="rf-cell--wide">
+				<div class="rf-cell--wide" data-rf-setting="adminLabel" {{ 'adminLabel' in offSettings ? 'hidden' }}>
 					<label class="rf-label">{{ 'Admin label'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][adminLabel]" value="{{ field.adminLabel ?? '' }}" />
 					<p class="rf-hint">{{ 'Short label for the CP and exports; the front end keeps the normal label.'|t('recranet-forms') }}</p>
 				</div>
-				<div class="rf-cell--wide">
+				<div class="rf-cell--wide" data-rf-setting="defaultValue" {{ 'defaultValue' in offSettings ? 'hidden' }}>
 					<label class="rf-label">{{ 'Default value'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][defaultValue]" value="{{ field.defaultValue ?? '' }}" />
 				</div>
-				<div class="rf-cell--wide rf-cell--full">
+				<div class="rf-cell--wide rf-cell--full" data-rf-setting="errorMessage" {{ 'errorMessage' in offSettings ? 'hidden' }}>
 					<label class="rf-label">{{ 'Custom validation message'|t('recranet-forms') }}</label>
 					<input type="text" class="text fullwidth" name="fields[{{ index }}][errorMessage]" value="{{ field.errorMessage ?? '' }}" />
 					<p class="rf-hint">{{ 'Shown instead of the default "… is required." message.'|t('recranet-forms') }}</p>
@@ -534,7 +537,7 @@
 		<div id="rf-builder" class="rf-builder">
 			<div class="rf-builder__fields">
 				{% for field in form.fields %}
-					{{ _self.fieldCard(field, loop.index0, fieldTypes, form.fields, form.paymentEnabled) }}
+					{{ _self.fieldCard(field, loop.index0, fieldTypes, form.fields, form.paymentEnabled, settingTypes) }}
 				{% endfor %}
 			</div>
 
@@ -580,9 +583,12 @@
 			{{ form.fields|filter(f => f.uid is defined and f.uid and f.type not in layoutTypes)|map(f => { uid: f.uid, label: f.label, handle: f.handle })|values|json_encode|raw }}
 		</script>
 
+		{# Which field types each card setting applies to (Form::fieldSettingTypes) #}
+		<script type="application/json" id="rf-setting-types">{{ settingTypes|json_encode|raw }}</script>
+
 		{# Blank card cloned by JS when adding a field; __INDEX__/__TYPE__ are replaced #}
 		<template id="rf-field-template">
-			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields, form.paymentEnabled) }}
+			{{ _self.fieldCard({ label: '', handle: '', type: '__TYPE__', required: false, options: '', width: 'full' }, '__INDEX__', fieldTypes, form.fields, form.paymentEnabled, settingTypes) }}
 		</template>
 	</div>
 	{# /.field — end of the builder column #}
@@ -1148,10 +1154,39 @@
 
 		// Status chips on the collapsed bar: derived from the card's inputs so
 		// they stay honest after every edit
+		// Show only the settings the card's type uses. Hidden inputs still
+		// post; FormsController::normalizeFieldRows() blanks them on save.
+		var settingTypes = JSON.parse(document.getElementById('rf-setting-types').textContent || '{}');
+		var choiceTypes = ['select', 'radio', 'checkboxes'];
+
+		function syncTypeSettings(card, type) {
+			card.querySelectorAll('[data-rf-setting]').forEach(function (cell) {
+				var types = settingTypes[cell.dataset.rfSetting];
+				cell.hidden = Array.isArray(types) && !types.includes(type);
+			});
+			card.querySelector('.rf-field__options').hidden = !choiceTypes.includes(type);
+			var prices = card.querySelector('.rf-field__prices');
+			if (prices) prices.hidden = !choiceTypes.includes(type);
+			var price = card.querySelector('.rf-field__price');
+			if (price) price.hidden = type !== 'number';
+			syncTabs(card);
+		}
+
+		// A tab whose pane has nothing visible left (Appearance on a hidden
+		// field) is hidden too; if it was the open tab, fall back to General
+		function syncTabs(card) {
+			card.querySelectorAll('.rf-tab').forEach(function (tab) {
+				var pane = card.querySelector('.rf-pane[data-rf-pane="' + tab.dataset.rfTab + '"]');
+				var cells = pane.querySelectorAll('.rf-field__grid > *');
+				tab.hidden = cells.length > 0 && Array.prototype.every.call(cells, function (c) { return c.hidden; });
+				if (tab.hidden && tab.classList.contains('sel')) card.querySelector('.rf-tab[data-rf-tab="general"]').click();
+			});
+		}
+
 		function updateChips(card) {
 			var chips = [];
 			var required = card.querySelector('.rf-field__required input[type="checkbox"]');
-			if (required && required.checked) chips.push('<span class="rf-chip rf-chip--required">' + Craft.escapeHtml(i18n.chipRequired) + '</span>');
+			if (required && required.checked && !required.closest('[data-rf-setting]').hidden) chips.push('<span class="rf-chip rf-chip--required">' + Craft.escapeHtml(i18n.chipRequired) + '</span>');
 			var conditions = card.querySelector('.rf-conditions-json');
 			if (conditions && conditions.value) chips.push('<span class="rf-chip rf-chip--conditional">' + Craft.escapeHtml(i18n.chipConditional) + '</span>');
 			if (card.dataset.width === 'half') chips.push('<span class="rf-chip">' + Craft.escapeHtml(i18n.chipHalf) + '</span>');
@@ -1218,6 +1253,7 @@
 			if (narrowCards) narrowCards.observe(card);
 			conditionsUI(card.querySelector('[data-rf-conditions-editor]'));
 			updateChips(card);
+			syncTabs(card);
 			makeCardDraggable(card);
 		}
 
@@ -1326,11 +1362,7 @@
 			if (event.target.classList.contains('rf-input-type')) {
 				card.dataset.type = event.target.value;
 				card.querySelector('.rf-field__badge').textContent = event.target.value;
-				card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(event.target.value);
-				var prices = card.querySelector('.rf-field__prices');
-				if (prices) prices.hidden = !['select', 'radio', 'checkboxes'].includes(event.target.value);
-				var price = card.querySelector('.rf-field__price');
-				if (price) price.hidden = event.target.value !== 'number';
+				syncTypeSettings(card, event.target.value);
 			}
 
 			// Width select drives the builder grid span, live
@@ -1421,11 +1453,7 @@
 			card.dataset.type = type;
 			card.querySelector('.rf-field__badge').textContent = type;
 			card.querySelector('.rf-input-type').value = type;
-			card.querySelector('.rf-field__options').hidden = !['select', 'radio', 'checkboxes'].includes(type);
-			var newPrices = card.querySelector('.rf-field__prices');
-			if (newPrices) newPrices.hidden = !['select', 'radio', 'checkboxes'].includes(type);
-			var newPrice = card.querySelector('.rf-field__price');
-			if (newPrice) newPrice.hidden = type !== 'number';
+			syncTypeSettings(card, type);
 			initCard(card);
 			renumber();
 			closePalette();

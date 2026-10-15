@@ -41,7 +41,7 @@ Validation lives on the element, not the controller:
 The type appears automatically in the "Add a field" menu (it loops `fieldTypes`). Check whether the card needs more than the defaults:
 
 - Types with choices must show the **options** input (see how `select` toggles it)
-- New per-field settings mean extending the field JSON shape `{uid, handle, label, type, required, options, width, placeholder, description, adminLabel, defaultValue, errorMessage, conditions}` — update the card, the JS template (`#rf-field-template`), and `Form::validateFields`
+- New per-field settings mean extending the field JSON shape `{uid, handle, label, type, required, options, width, placeholder, description, adminLabel, defaultValue, errorMessage, conditions}` — update the card, the JS template (`#rf-field-template`), and `Form::validateFields`. A new type (or setting) also needs a decision in `Form::fieldSettingTypes()` — which card settings it shows; anything not listed there is hidden and blanked on save
 
 ## 5. Value formatting — emails + CP + export
 

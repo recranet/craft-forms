@@ -1,5 +1,10 @@
 # Release Notes for Recranet Forms
 
+## Unreleased
+
+- **Field cards only show the settings that field type uses.** Every card offered every setting: a placeholder on a checkbox, "required" and a validation message on a hidden field, a default value on a file upload, width on a field nobody sees. Now a placeholder appears only on text, email, phone, textarea, number and URL fields (browsers ignore it on date and time), a hidden field shows just its default value and admin label, and headings and dividers keep only their width. A tab with nothing left in it disappears. Switching the type updates the card live, and saving clears the settings the new type doesn't use, so a stale placeholder no longer turns up in the translation list.
+- **Fixed: a consent checkbox could start out ticked.** A default value on a consent field rendered the box pre-checked, and a pre-ticked box is not valid consent. The builder no longer offers it, saving clears it, and the default template ignores it on forms saved earlier.
+
 ## 2.12.1 - 2026-08-11
 
 - **The privacy agreement now sits above the submit button.** With a privacy statement URL configured, the required "I agree to the privacy statement" checkbox rendered *below* the button — asking the visitor to agree to something after the action they were about to take, and pushing a required field out of the reading order. It now renders directly above the button, as does the privacy link on forms that carry their own consent field. Sites with their own `templates/recranet-forms/form.twig` override keep their existing order.

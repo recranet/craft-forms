@@ -46,6 +46,36 @@ class Form extends Model
 	 */
 	public const LAYOUT_TYPES = ['heading', 'paragraph', 'divider'];
 
+	/**
+	 * Which field types each per-field builder setting means something for.
+	 * The builder hides a setting on every other type, and saving blanks it,
+	 * so a placeholder typed on a text field doesn't linger (or show up in
+	 * the translation list) after the field became a checkbox. Notably:
+	 * date/time inputs ignore a placeholder in every browser, a hidden field
+	 * is never required, and a consent box must never start out ticked.
+	 * `options` and the payment prices keep their own type checks.
+	 *
+	 * @return array<string, string[]>
+	 */
+	public static function fieldSettingTypes(): array
+	{
+		$inputs = array_values(array_diff(self::FIELD_TYPES, self::LAYOUT_TYPES));
+		$visible = array_values(array_diff($inputs, ['hidden']));
+
+		return [
+			'placeholder' => ['text', 'email', 'tel', 'textarea', 'number', 'url'],
+			'required' => $visible,
+			// The custom message replaces "… is required.", so it follows required
+			'errorMessage' => $visible,
+			'defaultValue' => array_values(array_diff($inputs, ['file', 'consent'])),
+			// Paragraph: the description IS the content; consent: the box's text
+			'description' => array_values(array_diff(self::FIELD_TYPES, ['heading', 'divider', 'hidden'])),
+			// Shown in the CP and exports — only fields that store a value
+			'adminLabel' => $inputs,
+			'width' => array_values(array_diff(self::FIELD_TYPES, ['hidden'])),
+		];
+	}
+
 	/** Retention mode: prune hard-deletes the whole submission (current behavior) */
 	public const RETENTION_MODE_DELETE = 'delete';
 

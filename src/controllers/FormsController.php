@@ -64,6 +64,7 @@ class FormsController extends Controller
 			'form' => $form,
 			'fieldTypes' => Form::FIELD_TYPES,
 			'layoutTypes' => Form::LAYOUT_TYPES,
+			'settingTypes' => Form::fieldSettingTypes(),
 			'emailTemplates' => $this->findEmailTemplates(),
 			'editedSite' => $editedSite,
 			'primarySite' => $primarySite,
@@ -460,7 +461,7 @@ class FormsController extends Controller
 				}
 			}
 
-			$fields[] = [
+			$field = [
 				// Existing uid carries the field's identity across saves;
 				// empty for new cards (assigned in Forms::saveForm)
 				'uid' => trim((string)($row['uid'] ?? '')),
@@ -482,6 +483,20 @@ class FormsController extends Controller
 				'errorMessage' => trim((string)($row['errorMessage'] ?? '')),
 				'conditions' => $conditions,
 			];
+
+			// Blank the settings this type ignores — the builder only hides
+			// them, so a type switch would otherwise keep the old values
+			foreach (Form::fieldSettingTypes() as $setting => $types) {
+				if (!in_array($field['type'], $types, true)) {
+					$field[$setting] = match ($setting) {
+						'required' => false,
+						'width' => 'full',
+						default => '',
+					};
+				}
+			}
+
+			$fields[] = $field;
 		}
 
 		return $fields;
