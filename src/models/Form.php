@@ -34,12 +34,14 @@ class Form extends Model
 	public const FIELD_TYPES = [
 		'text', 'email', 'tel', 'textarea', 'select', 'checkbox',
 		'radio', 'checkboxes', 'number', 'date', 'time', 'url', 'hidden',
-		'consent', 'heading', 'paragraph', 'divider', 'file',
+		'consent', 'paragraph', 'divider', 'file',
 	];
 
 	/**
-	 * Layout-only types: they render markup (a heading, a paragraph) but carry
-	 * no input. Everything that touches submitted values — validation,
+	 * Layout-only types: they render markup (a text block, a rule) but carry
+	 * no input. 'heading' is no longer offered — a text block's label is its
+	 * heading — but stays here because submission snapshots from before 2.13
+	 * still contain heading rows, and those must keep being skipped. Everything that touches submitted values — validation,
 	 * formData storage, emails, the CP detail view, exports, search keywords —
 	 * must skip these. Always check against this const instead of hardcoding
 	 * type names, so adding a layout type stays a one-line change.
@@ -67,7 +69,7 @@ class Form extends Model
 			'required' => $visible,
 			'defaultValue' => array_values(array_diff($inputs, ['file', 'consent'])),
 			// Paragraph: the description IS the content; consent: the box's text
-			'description' => array_values(array_diff(self::FIELD_TYPES, ['heading', 'divider', 'hidden'])),
+			'description' => array_values(array_diff(self::FIELD_TYPES, ['divider', 'hidden'])),
 			// Shown in the CP and exports — only fields that store a value
 			'adminLabel' => $inputs,
 			'width' => array_values(array_diff(self::FIELD_TYPES, ['hidden'])),
@@ -90,6 +92,20 @@ class Form extends Model
 
 	/** @var array<int, array{uid: string, handle: string, label: string, type: string, required: bool, options: string, width: string}> */
 	public array $fields = [];
+
+	public function init(): void
+	{
+		parent::init();
+
+		// The heading type merged into the text block ('paragraph') in 2.13:
+		// a heading row is a text block with just a label. Converted on every
+		// load — DB, import, stencil — so no migration has to touch the JSON.
+		foreach ($this->fields as $i => $field) {
+			if (($field['type'] ?? '') === 'heading') {
+				$this->fields[$i]['type'] = 'paragraph';
+			}
+		}
+	}
 
 	/** Comma-separated notification recipients; falls back to the system email when empty */
 	public string $recipients = '';
@@ -237,8 +253,8 @@ class Form extends Model
 		foreach ($this->fields as $i => $field) {
 			$row = $i + 1;
 
-			// A paragraph's content is its description (label = optional small
-			// heading); a divider is pure markup and needs no label at all
+			// A text block needs a heading (label) or text (description), not
+			// both; a divider is pure markup and needs no label at all
 			$labelOptional = in_array($field['type'] ?? '', ['paragraph', 'divider'], true);
 
 			if (empty($field['handle']) || (empty($field['label']) && !$labelOptional)) {

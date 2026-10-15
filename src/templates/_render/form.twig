@@ -123,13 +123,12 @@
 				{% if field.type == 'divider' %}
 					{# Layout-only: a horizontal rule, never stores a value #}
 					<hr class="mb-0" />
-				{% elseif field.type == 'heading' %}
-					{# Layout-only: renders a heading, never stores a value #}
-					<h3 class="mb-0">{{ field.label|t }}</h3>
 				{% elseif field.type == 'paragraph' %}
-					{# Layout-only: the description is the content, the label an optional small heading #}
-					{% if field.label %}<h4 class="h6">{{ field.label|t }}</h4>{% endif %}
-					<p class="mb-0">{{ description|t|nl2br }}</p>
+					{# Layout-only text block: the label is the heading, the description
+					   the text — either may be empty (a heading-only block replaced the
+					   old heading type) #}
+					{% if field.label %}<h3 class="{{ description ? 'mb-2' : 'mb-0' }}">{{ field.label|t }}</h3>{% endif %}
+					{% if description %}<p class="mb-0">{{ description|t|nl2br }}</p>{% endif %}
 				{% elseif field.type == 'radio' %}
 					{# Radio group: fieldset + legend gives the group an accessible name #}
 					<fieldset {% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}>
