@@ -11,7 +11,7 @@ class SpamVerdict
 		public bool $isSpam = false,
 		/** Captcha score when the provider reports one (reCAPTCHA v3/Enterprise) */
 		public ?float $score = null,
-		/** Why the submission was classified as spam (honeypot, captcha-failed, captcha-score, blocklist, too-fast) */
+		/** Why the submission was classified as spam (honeypot, captcha-failed, captcha-score, too-fast) */
 		public ?string $reason = null,
 		/**
 		 * Definite spam (honeypot hit, forged timestamp or score below the

@@ -9,7 +9,7 @@ use craft\helpers\App;
  * Plugin settings. Keys support environment variables ($RECAPTCHA_SITE_KEY etc.)
  * so per-project config stays in .env, matching the boilerplate convention.
  *
- * Spam pipeline order (see services/SpamService): blocklist → honeypot →
+ * Spam pipeline order (see services/SpamService): honeypot →
  * throttle → submit timing → captcha (with token binding). Cheap local checks
  * run first so a bot never costs a captcha verification.
  */
@@ -114,14 +114,6 @@ class Settings extends Model
 
 	/** Comma-separated hostname allowlist; empty = the request's hostname */
 	public string $captchaAllowedHostnames = '';
-
-	/**
-	 * Comma-separated sender blocklist for human-driven spam a captcha score
-	 * cannot catch. Entry shapes: full address (someone@example.com), domain
-	 * suffix (@spamdomain.ru), local-part prefix (someone), IP prefix
-	 * (198.51.100. or 2001:1c00:).
-	 */
-	public string $blocklist = '';
 
 	/**
 	 * What a visitor sees when their submission is flagged as spam.
@@ -298,25 +290,6 @@ class Settings extends Model
 		return array_values(array_filter(array_map(
 			fn($ext) => ltrim(mb_strtolower(trim($ext)), '.'),
 			explode(',', $this->allowedFileExtensions),
-		)));
-	}
-
-	/**
-	 * Blocklist entries, lowercased and trimmed.
-	 *
-	 * @return string[] empty when not configured
-	 */
-	public function getBlocklist(): array
-	{
-		$blocklist = trim((string)App::parseEnv($this->blocklist));
-
-		if ($blocklist === '') {
-			return [];
-		}
-
-		return array_values(array_filter(array_map(
-			fn($entry) => mb_strtolower(trim($entry)),
-			explode(',', $blocklist),
 		)));
 	}
 

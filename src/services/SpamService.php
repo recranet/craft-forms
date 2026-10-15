@@ -11,7 +11,6 @@ use recranet\forms\captchas\RecaptchaEnterprise;
 use recranet\forms\captchas\RecaptchaV2;
 use recranet\forms\captchas\RecaptchaV3;
 use recranet\forms\captchas\Turnstile;
-use recranet\forms\elements\Submission;
 use recranet\forms\FormFields;
 use recranet\forms\models\Form;
 use recranet\forms\models\Settings;
@@ -21,7 +20,7 @@ use yii\base\Component;
 use yii\web\Request;
 
 /**
- * Runs the spam pipeline: blocklist, honeypot, throttle, submit timing, the
+ * Runs the spam pipeline: honeypot, throttle, submit timing, the
  * one-time submit token, then the configured captcha (including the
  * action/hostname the token was minted with).
  *
@@ -69,17 +68,9 @@ class SpamService extends Component
 	 * @throws CaptchaError when the captcha cannot be verified due to
 	 * configuration or availability problems
 	 */
-	public function check(Request $request, Form $form, Submission $submission): SpamVerdict
+	public function check(Request $request, Form $form): SpamVerdict
 	{
 		$settings = Plugin::getInstance()->getSettings();
-
-		// Blocklist first: it is an explicit decision about a known sender, so
-		// it should win over every heuristic below
-		$blocklistVerdict = $this->checkBlocklist($request, $settings, $form, $submission);
-
-		if ($blocklistVerdict !== null) {
-			return $blocklistVerdict;
-		}
 
 		// Honeypot: a filled-in hidden field is definitely a bot — reject
 		// outright, there is nothing worth reviewing
@@ -172,62 +163,6 @@ class SpamService extends Component
 			isSpam: true,
 			reason: sprintf('captcha-failed (%s)', implode(', ', $verification->errorCodes) ?: 'invalid token'),
 		);
-	}
-
-	/**
-	 * Match the sender against the blocklist.
-	 *
-	 * A captcha score says nothing when a human is doing the spamming — those
-	 * submissions score 1.0 — so no threshold can stop a persistent sender.
-	 * This is the escape hatch. Entry shapes:
-	 *
-	 *   full address:   someone@example.com
-	 *   domain suffix:  @spamdomain.ru
-	 *   local prefix:   someone          (start of the part before the @, so
-	 *                                    numbered variants all match)
-	 *   IP prefix:      2001:1c00:6703:  or  198.51.100.
-	 *
-	 * Hits are stored rather than rejected outright: prefix matching is coarse
-	 * and can catch an unrelated sender, so the decision stays reviewable.
-	 */
-	private function checkBlocklist(Request $request, Settings $settings, Form $form, Submission $submission): ?SpamVerdict
-	{
-		// Union of the config list (project config, deploy-managed) and the
-		// stored list an editor can add to on production — see the Blocklist
-		// service for why there are two
-		$blocklist = Plugin::getInstance()->blocklist->allPatterns();
-
-		if ($blocklist === []) {
-			return null;
-		}
-
-		// The sender address is the form's first email field, when it has one
-		$emailHandle = $form->getEmailFieldHandle();
-		$email = mb_strtolower(trim((string)($emailHandle ? $submission->value($emailHandle) : '')));
-		$localPart = explode('@', $email)[0];
-		$ip = mb_strtolower((string)$request->getUserIP());
-
-		foreach ($blocklist as $entry) {
-			if (str_contains($entry, '@')) {
-				// full address, or a domain suffix like "@spamdomain.ru"
-				$matches = $email !== '' && ($entry === $email || str_ends_with($email, $entry));
-			} elseif (preg_match('/^(\d[\d.]*|[0-9a-f:][0-9a-f.:]*:)$/', $entry)) {
-				// IPv4 prefix (digits and dots) or IPv6 prefix (ends in a colon)
-				$matches = $ip !== '' && str_starts_with($ip, $entry);
-			} else {
-				// local-part prefix: "someone" catches every numbered variant
-				$matches = $localPart !== '' && str_starts_with($localPart, $entry);
-			}
-
-			if ($matches) {
-				return new SpamVerdict(
-					isSpam: true,
-					reason: sprintf('blocklist (entry "%s")', $entry),
-				);
-			}
-		}
-
-		return null;
 	}
 
 	/**

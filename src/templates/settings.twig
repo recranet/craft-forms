@@ -273,22 +273,6 @@
 </details>
 
 <details class="rfs-group">
-<summary><strong>{{ 'Blocklist'|t('recranet-forms') }}</strong><span class="rfs-group__hint">{{ 'Block known senders by address, domain or IP — for human spam a captcha can’t catch'|t('recranet-forms') }}</span></summary>
-<p class="rf-settings-hint">{{ 'settings.spam.blocklist.hint'|t('recranet-forms') }}</p>
-
-{{
-	forms.textareaField({
-		label: 'Sender blocklist'|t('recranet-forms'),
-		instructions: 'Comma-separated, for human-driven spam a captcha score cannot catch. Entry shapes: full address (`someone@example.com`), domain suffix (`@spamdomain.ru`), local-part prefix (`someone`), IP prefix (`198.51.100.`). Matches are stored as reviewable spam.'|t('recranet-forms'),
-		name: 'blocklist',
-		rows: 3,
-		value: settings.blocklist,
-		errors: settings.getErrors('blocklist')
-	})
-}}
-</details>
-
-<details class="rfs-group">
 <summary><strong>{{ 'Spam behaviour'|t('recranet-forms') }}</strong><span class="rfs-group__hint">{{ 'What a flagged visitor sees — switch to errors only while debugging'|t('recranet-forms') }}</span></summary>
 <p class="rf-settings-hint">{{ 'settings.spam.behaviour.hint'|t('recranet-forms') }}</p>
 

@@ -1,5 +1,9 @@
 # Release Notes for Recranet Forms
 
+## Unreleased
+
+- **Removed: the sender blocklist.** Both halves are gone — the blocklist in the plugin settings and the editor-managed screen under Forms, with its "Block sender" buttons on a submission. On client sites editors don't triage spam, so it was screen and settings surface nobody used; spam protection rests on the captcha, honeypot, throttle and timing checks. A migration drops the `recranetforms_blocklist` table and its entries. A `blocklist` value left in project config is ignored.
+
 ## 2.12.1 - 2026-08-11
 
 - **The privacy agreement now sits above the submit button.** With a privacy statement URL configured, the required "I agree to the privacy statement" checkbox rendered *below* the button — asking the visitor to agree to something after the action they were about to take, and pushing a required field out of the reading order. It now renders directly above the button, as does the privacy link on forms that carry their own consent field. Sites with their own `templates/recranet-forms/form.twig` override keep their existing order.

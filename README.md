@@ -16,7 +16,6 @@ Form builder plugin for Craft CMS 5. Built for the Elloro Craft boilerplate as a
   - *error* (bad keys, provider down) → **never treated as spam.** Fail-open (default): submission accepted + flagged with the reason, warning logged, note in the notification email. Fail-closed: visitor sees a real error.
 - **Token binding** — v3/Enterprise tokens are checked against the per-form action and the hostname they were minted on, so a token farmed elsewhere cannot be replayed here.
 - **Minimum fill time** — submissions arriving faster than a human could type (default 3s, hashed render timestamp) are rejected before any captcha call is made.
-- **Sender blocklist** — for human-driven spam a captcha score cannot catch: match a full address, `@domain` suffix, local-part prefix or IP prefix. Matches are stored as reviewable spam.
 - **Honeypot** — hidden field, toggleable, configurable name.
 - **Throttle** — submissions per IP + form are rate-limited (default 5 per 60s); a hammering bot is rejected before any captcha call.
 - **Storage switches + retention** — mail-only mode (`saveSubmissions` off), drop spam instead of storing it (`saveSpamSubmissions` off), and auto-prune stored submissions after N days (`retentionDays`, runs with Craft's GC or `php craft recranet-forms/gc/prune`). Retention is overridable per form, with a choice between **delete** and **anonymize** (row and reference number survive for statistics, all personal data — values, token, uploads — is blanked). Match retention to the site's privacy statement.
@@ -103,7 +102,6 @@ Plugin settings (CP → Settings → Recranet Forms, stored in project config):
 | Honeypot | on, `rf_website` | |
 | Minimum submit time | 3s | 0 disables |
 | Throttle | 5 per 60s | per IP + form; 0 disables |
-| Sender blocklist | empty | address / @domain / local-part / IP prefix |
 | Notification language | submission's site | or always the primary site |
 | Save submissions | on | off = mail-only mode |
 | Save spam submissions | on | off = flagged spam is dropped |

@@ -104,10 +104,10 @@ class SubmissionsController extends Controller
 			return $this->successResponse($form, $submission);
 		}
 
-		// Spam pipeline: blocklist → honeypot → timing → captcha + token binding.
+		// Spam pipeline: honeypot → throttle → timing → captcha + token binding.
 		// A CaptchaError is a config/infra problem — our bug, never visitor spam.
 		try {
-			$verdict = Plugin::getInstance()->spam->check($request, $form, $submission);
+			$verdict = Plugin::getInstance()->spam->check($request, $form);
 
 			$submission->isSpam = $verdict->isSpam;
 			$submission->spamScore = $verdict->score;
@@ -407,19 +407,9 @@ class SubmissionsController extends Controller
 			throw new NotFoundHttpException('Submission not found.');
 		}
 
-		$form = $submission->getForm();
-		$blocklist = Plugin::getInstance()->blocklist;
-		// The sender is only offerable when the form has an email field and
-		// the value survived (an anonymized submission has none)
-		$sender = $form ? $blocklist->senderAddress($form, $submission) : null;
-
 		return $this->renderTemplate('recranet-forms/submissions/view', [
 			'submission' => $submission,
-			'form' => $form,
-			'sender' => $sender,
-			'senderDomain' => $sender ? $blocklist->senderDomain($sender) : null,
-			'senderBlocked' => $sender && $blocklist->has($sender),
-			'domainBlocked' => $sender && ($d = $blocklist->senderDomain($sender)) && $blocklist->has($d),
+			'form' => $submission->getForm(),
 		]);
 	}
 

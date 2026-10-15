@@ -47,7 +47,7 @@ Two loose ends live outside this repo, both cosmetic: the package is **not** fla
 
 ## Phase 3 — spam & GDPR
 
-**Mostly shipped:** min-submit-time (v2.1.0), throttle per form+IP (v2.5.0), sender blocklist (v2.1.0), per-form retention with delete/anonymize modes (v2.5.0), consent field with snapshotted text (v2.3.0), double-submit dedupe via idempotency key (v2.0.0), tokenized self-service view/erase (v2.3.0).
+**Mostly shipped:** min-submit-time (v2.1.0), throttle per form+IP (v2.5.0), sender blocklist (v2.1.0, removed in 2.13), per-form retention with delete/anonymize modes (v2.5.0), consent field with snapshotted text (v2.3.0), double-submit dedupe via idempotency key (v2.0.0), tokenized self-service view/erase (v2.3.0).
 
 **✅ Rest shipped (2026-08-10):** one-time submit token (opt-in `oneTimeSubmitTokens` — replay = reviewable spam, forged hash = reject; documented as unusable behind a full-page cache), spam behaviour setting (`spamBehavior`: simulate-success default vs show-errors debug mode), and the spam retention cap (`spamRetentionDays`, plugin-wide hard delete).
 
