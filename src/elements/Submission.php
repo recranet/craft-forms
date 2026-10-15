@@ -17,6 +17,7 @@ use recranet\forms\elements\actions\ResendNotification;
 use recranet\forms\elements\db\SubmissionQuery;
 use recranet\forms\models\Form;
 use recranet\forms\Plugin;
+use recranet\forms\helpers\PhoneNumber;
 use recranet\forms\rules\RuleEvaluator;
 
 /**
@@ -359,6 +360,11 @@ class Submission extends Element
 
 			if ($field['type'] === 'email' && $value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
 				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid email address.', ['label' => Craft::t('site', $field['label'])]));
+			}
+
+			// Digits, separators and a leading + only — see PhoneNumber
+			if ($field['type'] === 'tel' && is_string($value) && $value !== '' && !PhoneNumber::isValid($value)) {
+				$this->addError("field.{$handle}", Craft::t('recranet-forms', '{label} must be a valid phone number.', ['label' => Craft::t('site', $field['label'])]));
 			}
 
 			// Reject values that aren't one of the configured choice options

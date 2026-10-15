@@ -9,6 +9,8 @@ return [
 	'{label} must be a valid email address.' => '{label} moet een geldig e-mailadres zijn.',
 	'{label} has an invalid value.' => '{label} heeft een ongeldige waarde.',
 	'{label} must be a number.' => '{label} moet een getal zijn.',
+	'{label} must be a valid phone number.' => '{label} moet een geldig telefoonnummer zijn.',
+	'Use digits only, optionally starting with + (e.g. +31 6 12345678).' => 'Gebruik alleen cijfers, eventueel beginnend met + (bijv. +31 6 12345678).',
 	'{label} must be a valid date.' => '{label} moet een geldige datum zijn.',
 	'{label} must be a valid time.' => '{label} moet een geldige tijd zijn.',
 	'{label} must be a valid URL.' => '{label} moet een geldige URL zijn.',

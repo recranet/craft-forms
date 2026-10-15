@@ -244,6 +244,8 @@
 							{{ field.required ? 'required' }}
 							{% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
 							{% if inputmode %}inputmode="{{ inputmode }}"{% endif %}
+							{# Digits, spaces, - ( ) and a leading + — the server re-checks (PhoneNumber) #}
+							{% if field.type == 'tel' %}pattern="{{ constant('recranet\\forms\\helpers\\PhoneNumber::PATTERN') }}" title="{{ 'Use digits only, optionally starting with + (e.g. +31 6 12345678).'|t('recranet-forms') }}"{% endif %}
 							{% if fieldErrors %}aria-invalid="true"{% endif %}
 							{% if describedBy %}aria-describedby="{{ describedBy }}"{% endif %}
 						/>

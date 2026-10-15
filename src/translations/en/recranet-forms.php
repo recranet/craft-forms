@@ -10,6 +10,8 @@ return [
 	'{label} must be a valid email address.' => '{label} must be a valid email address.',
 	'{label} has an invalid value.' => '{label} has an invalid value.',
 	'{label} must be a number.' => '{label} must be a number.',
+	'{label} must be a valid phone number.' => '{label} must be a valid phone number.',
+	'Use digits only, optionally starting with + (e.g. +31 6 12345678).' => 'Use digits only, optionally starting with + (e.g. +31 6 12345678).',
 	'{label} must be a valid date.' => '{label} must be a valid date.',
 	'{label} must be a valid time.' => '{label} must be a valid time.',
 	'{label} must be a valid URL.' => '{label} must be a valid URL.',

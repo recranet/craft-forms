@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **Field cards only show the settings that field type uses.** Every card offered every setting: a placeholder on a checkbox, "required" and a validation message on a hidden field, a default value on a file upload, width on a field nobody sees. Now a placeholder appears only on text, email, phone, textarea, number and URL fields (browsers ignore it on date and time), a hidden field shows just its default value and admin label, and headings and dividers keep only their width. A tab with nothing left in it disappears. Switching the type updates the card live, and saving clears the settings the new type doesn't use, so a stale placeholder no longer turns up in the translation list.
+- **Phone fields only accept phone numbers.** A phone field took any text, so "bel me maar" or an email address landed where a number belonged. It now accepts digits with spaces, hyphens and parentheses and one leading `+` ("06-12345678", "+31 6 1234 5678", "(010) 123 45 67") — 6 to 15 digits, any country. The browser checks it before submitting with a hint on what to type, and the server checks it again.
 - **Fixed: a consent checkbox could start out ticked.** A default value on a consent field rendered the box pre-checked, and a pre-ticked box is not valid consent. The builder no longer offers it, saving clears it, and the default template ignores it on forms saved earlier.
 
 ## 2.12.1 - 2026-08-11
